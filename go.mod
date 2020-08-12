@@ -32,7 +32,7 @@ require (
 	github.com/open-telemetry/opentelemetry-collector-contrib/receiver/collectdreceiver v0.0.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/receiver/k8sclusterreceiver v0.0.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/receiver/kubeletstatsreceiver v0.0.0
-	github.com/open-telemetry/opentelemetry-collector-contrib/receiver/receivercreator v0.0.0
+	github.com/open-telemetry/opentelemetry-collector-contrib/receiver/receivercreator v0.7.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/receiver/redisreceiver v0.0.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/receiver/sapmreceiver v0.0.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/receiver/signalfxreceiver v0.0.0
