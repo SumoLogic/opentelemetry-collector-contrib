@@ -36,6 +36,7 @@ import (
 	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/stackdriverexporter"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/extension/observer/hostobserver"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/extension/observer/k8sobserver"
+	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/fluentbitk8sprocessor"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/k8sprocessor"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/metricstransformprocessor"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/resourcedetectionprocessor"
@@ -119,6 +120,7 @@ func components() (component.Factories, error) {
 	}
 
 	processors := []component.ProcessorFactoryBase{
+		fluentbitk8sprocessor.NewFactory(),
 		&sourceprocessor.Factory{},
 		k8sprocessor.NewFactory(),
 		resourcedetectionprocessor.NewFactory(),
