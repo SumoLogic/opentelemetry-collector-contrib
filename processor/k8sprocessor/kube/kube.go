@@ -60,6 +60,7 @@ var (
 // Client defines the main interface that allows querying pods by metadata.
 type Client interface {
 	GetPodByIP(string) (*Pod, bool)
+	GetPodByName(string) (*Pod, bool)
 	Start()
 	Stop()
 }
@@ -78,8 +79,6 @@ type Pod struct {
 	Attributes map[string]string
 	StartTime  *metav1.Time
 	Ignore     bool
-
-	LogStreamName string
 
 	DeletedAt time.Time
 }
