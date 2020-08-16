@@ -46,7 +46,7 @@ require (
 	honnef.co/go/tools v0.0.1-2020.1.5
 )
 
-replace go.opentelemetry.io/collector => github.com/SumoLogic/opentelemetry-collector v0.8.0
+replace go.opentelemetry.io/collector => github.com/SumoLogic/opentelemetry-collector v0.8.1-0.20200816095155-88ae32e7a7f1
 
 // Replace references to modules that are in this repository with their relateive paths
 // so that we always build with current (latest) version of the source code.
