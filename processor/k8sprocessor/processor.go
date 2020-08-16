@@ -44,6 +44,7 @@ type kubernetesprocessor struct {
 	filters             kube.Filters
 	nextTraceConsumer   consumer.TraceConsumer
 	nextMetricsConsumer consumer.MetricsConsumer
+	nextLogsConsumer 	consumer.LogsConsumer
 }
 
 var _ (component.TraceProcessor) = (*kubernetesprocessor)(nil)
@@ -86,6 +87,32 @@ func newMetricsProcessor(
 	err := kp.initKubeClient(logger, kubeClient)
 	if err != nil {
 		return nil, err
+	}
+	return kp, nil
+}
+
+func newLogsProcessor(
+	logger *zap.Logger,
+	nextLogsConsumer consumer.LogsConsumer,
+	kubeClient kube.ClientProvider,
+	options ...Option,
+) (component.LogsProcessor, error) {
+	kp := &kubernetesprocessor{logger: logger, nextLogsConsumer: nextLogsConsumer}
+	for _, opt := range options {
+		if err := opt(kp); err != nil {
+			return nil, err
+		}
+	}
+
+	if kubeClient == nil {
+		kubeClient = kube.New
+	}
+	if !kp.passthroughMode {
+		kc, err := kubeClient(logger, kp.apiConfig, kp.rules, kp.filters, nil, nil, nil)
+		if err != nil {
+			return nil, err
+		}
+		kp.kc = kc
 	}
 	return kp, nil
 }
@@ -237,6 +264,80 @@ func (kp *kubernetesprocessor) ConsumeMetrics(ctx context.Context, metrics pdata
 	}
 
 	return kp.nextMetricsConsumer.ConsumeMetrics(ctx, metrics)
+}
+
+
+func (kp *kubernetesprocessor) ConsumeLogs(ctx context.Context, md pdata.Logs) error {
+	rss := md.ResourceLogs()
+	kp.logger.Info("received rss len: ", zap.Int("size", rss.Len()))
+	for i := 0; i < rss.Len(); i++ {
+		rs := rss.At(i)
+		if rs.IsNil() {
+			continue
+		}
+
+		var podIP string
+
+		for j := 0; j < rs.InstrumentationLibraryLogs().Len(); j++ {
+			library := rs.InstrumentationLibraryLogs().At(j)
+			for k := 0; k < library.Logs().Len(); k++ {
+				resource := library.Logs().At(k)
+
+				if !resource.IsNil() {
+					podAttr, ok := resource.Attributes().Get("pod_name")
+
+					if ok {
+						pod, ok := kp.kc.GetPodByName(podAttr.StringVal())
+						if ok {
+							podIP = pod.Address
+						}
+					}
+
+					if podIP == "" {
+						podIP = kp.k8sIPFromAttributes(resource.Attributes())
+					}
+				}
+
+				// Check if the receiver detected client IP.
+				if podIP == "" {
+					if c, ok := client.FromContext(ctx); ok {
+						podIP = c.IP
+					}
+				}
+
+				if podIP != "" {
+					if resource.IsNil() {
+						resource.InitEmpty()
+					}
+					resource.Attributes().InsertString(k8sIPLabelName, podIP)
+				}
+
+				// Don't invoke any k8s client functionality in passthrough mode.
+				// Just tag the IP and forward the batch.
+				if kp.passthroughMode {
+					continue
+				}
+
+				// add k8s tags to resource
+				attrsToAdd := kp.getAttributesForPodIP(podIP)
+				if len(attrsToAdd) == 0 {
+					continue
+				}
+
+				if resource.IsNil() {
+					resource.InitEmpty()
+				}
+
+				attrs := resource.Attributes()
+				for k, v := range attrsToAdd {
+					attrs.InsertString(k, v)
+				}
+			}
+		}
+	}
+
+	kp.nextLogsConsumer.ConsumeLogs(ctx, md)
+	return nil
 }
 
 //func (kp *kubernetesprocessor) consumeZipkinSpan(ctx context.Context, span *tracepb.Span) error {

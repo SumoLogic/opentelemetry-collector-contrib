@@ -39,7 +39,8 @@ func NewFactory() component.ProcessorFactory {
 		typeStr,
 		createDefaultConfig,
 		processorhelper.WithTraces(createTraceProcessor),
-		processorhelper.WithMetrics(createMetricsProcessor))
+		processorhelper.WithMetrics(createMetricsProcessor),
+		processorhelper.WithLogs(createLogsProcessor))
 }
 
 func createDefaultConfig() configmodels.Processor {
@@ -68,6 +69,16 @@ func createMetricsProcessor(
 	nextMetricsConsumer consumer.MetricsConsumer,
 ) (component.MetricsProcessor, error) {
 	return newMetricsProcessor(params.Logger, nextMetricsConsumer, kubeClientProvider, createProcessorOpts(cfg)...)
+}
+
+// createLogsProcessor creates a logs processor based on this config.
+func createLogsProcessor(
+	ctx context.Context,
+	params component.ProcessorCreateParams,
+	cfg configmodels.Processor,
+	nextLogsConsumer consumer.LogsConsumer,
+) (component.LogsProcessor, error) {
+	return newLogsProcessor(params.Logger, nextLogsConsumer, kubeClientProvider, createProcessorOpts(cfg)...)
 }
 
 func createProcessorOpts(cfg configmodels.Processor) []Option {
