@@ -336,8 +336,7 @@ func (kp *kubernetesprocessor) ConsumeLogs(ctx context.Context, md pdata.Logs) e
 		}
 	}
 
-	kp.nextLogsConsumer.ConsumeLogs(ctx, md)
-	return nil
+	return kp.nextLogsConsumer.ConsumeLogs(ctx, md)
 }
 
 //func (kp *kubernetesprocessor) consumeZipkinSpan(ctx context.Context, span *tracepb.Span) error {
