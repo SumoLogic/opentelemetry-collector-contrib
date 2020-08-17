@@ -77,6 +77,7 @@ type sourceTraceProcessor struct {
 	excludeContainerRegex *regexp.Regexp
 	excludeHostRegex      *regexp.Regexp
 	nextConsumer          consumer.TraceConsumer
+	nextLogConsumer       consumer.LogsConsumer
 	keys                  sourceTraceKeys
 }
 
@@ -423,4 +424,70 @@ func (f *attributeFiller) resourceLabelValues(atts *pdata.AttributeMap) []interf
 		arr = append(arr, value.StringVal())
 	}
 	return arr
+}
+
+func newSourceLogsProcessor(next consumer.LogsConsumer, cfg *Config) (*sourceTraceProcessor, error) {
+	keys := sourceTraceKeys{
+		annotationPrefix:   cfg.AnnotationPrefix,
+		containerKey:       cfg.ContainerKey,
+		namespaceKey:       cfg.NamespaceKey,
+		podIDKey:           cfg.PodIDKey,
+		podKey:             cfg.PodKey,
+		podNameKey:         cfg.PodNameKey,
+		podTemplateHashKey: cfg.PodTemplateHashKey,
+		sourceHostKey:      cfg.SourceHostKey,
+	}
+
+	return &sourceTraceProcessor{
+		nextLogConsumer:       next,
+		collector:             cfg.Collector,
+		keys:                  keys,
+		source:                cfg.Source,
+		sourceHostFiller:      createSourceHostFiller(keys),
+		sourceCategoryFiller:  createSourceCategoryFiller(cfg, keys),
+		sourceNameFiller:      createSourceNameFiller(cfg, keys),
+		excludeNamespaceRegex: compileRegex(cfg.ExcludeNamespaceRegex),
+		excludeHostRegex:      compileRegex(cfg.ExcludeHostRegex),
+		excludeContainerRegex: compileRegex(cfg.ExcludeContainerRegex),
+		excludePodRegex:       compileRegex(cfg.ExcludePodRegex),
+	}, nil
+}
+
+func (stp *sourceTraceProcessor) ConsumeLogs(ctx context.Context, td pdata.Logs) error {
+	rss := td.ResourceLogs()
+	for i := 0; i < rss.Len(); i++ {
+		rs := rss.At(i)
+		if rs.IsNil() {
+			continue
+		}
+
+		for j := 0; j < rs.InstrumentationLibraryLogs().Len(); j++ {
+			library := rs.InstrumentationLibraryLogs().At(j)
+			validLogs := pdata.NewLogSlice()
+			for k := 0; k < library.Logs().Len(); k++ {
+
+				res := library.Logs().At(k)
+				filledAnySource := false
+
+				if !res.IsNil() {
+					atts := res.Attributes()
+
+					stp.enrichPodName(&atts)
+					stp.fillOtherMeta(atts)
+
+					filledAnySource = stp.sourceHostFiller.fillResourceOrUseAnnotation(&atts, stp.annotationAttribute(sourceHostSpecialAnnotation), stp.keys) || filledAnySource
+					filledAnySource = stp.sourceCategoryFiller.fillResourceOrUseAnnotation(&atts, stp.annotationAttribute(sourceCategorySpecialAnnotation), stp.keys) || filledAnySource
+					filledAnySource = stp.sourceNameFiller.fillResourceOrUseAnnotation(&atts, stp.annotationAttribute(sourceNameSpecialAnnotation), stp.keys) || filledAnySource
+
+					if stp.isFilteredOut(atts) {
+						break
+					}
+					validLogs.Append(&res)
+				}
+			}
+			library.Logs().Resize(0)
+			validLogs.MoveAndAppendTo(library.Logs())
+		}
+	}
+	return stp.nextLogConsumer.ConsumeLogs(ctx, td)
 }

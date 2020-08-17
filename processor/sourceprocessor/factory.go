@@ -101,3 +101,14 @@ func (f *Factory) CreateMetricsProcessor(
 	// Span Processor does not support Metrics.
 	return nil, configerror.ErrDataTypeIsNotSupported
 }
+
+// CreateLogsProcessor creates a logs processor based on this config.
+func (f *Factory) CreateLogsProcessor(
+	_ context.Context,
+	_ component.ProcessorCreateParams,
+	cfg configmodels.Processor,
+	nextConsumer consumer.LogsConsumer) (component.LogsProcessor, error) {
+
+	oCfg := cfg.(*Config)
+	return newSourceLogsProcessor(nextConsumer, oCfg)
+}
