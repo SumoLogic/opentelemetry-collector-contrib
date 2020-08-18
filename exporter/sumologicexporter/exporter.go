@@ -124,6 +124,14 @@ func (se *sumologicexporter) Send(buffer []pdata.LogRecord, fields string) {
 
 	if err != nil {
 		fmt.Printf("Error during sending data to sumo: %q\n", err)
+		go se.PushBack(buffer)
+	}
+}
+
+func (se *sumologicexporter) PushBack(buffer []pdata.LogRecord) {
+	for i := 0; i < len(buffer); i++ {
+		// Put logs back to the channel
+		se.ch <- buffer[i]
 	}
 }
 
