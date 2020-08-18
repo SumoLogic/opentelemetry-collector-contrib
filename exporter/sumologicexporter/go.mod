@@ -6,6 +6,7 @@ replace go.opentelemetry.io/collector => github.com/SumoLogic/opentelemetry-coll
 
 require (
 	github.com/open-telemetry/opentelemetry-collector-contrib/exporter/stackdriverexporter v0.7.0 // indirect
+	github.com/stretchr/testify v1.6.1
 	go.opentelemetry.io/collector v0.7.0
 	go.uber.org/zap v1.15.0
 )

@@ -19,6 +19,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 	"sync"
 
 	"go.opentelemetry.io/collector/component"
@@ -97,11 +98,14 @@ func (se *sumologicexporter) Sender() {
 }
 
 func (se *sumologicexporter) GetMetadata(attributes pdata.AttributeMap) string {
-	buf := bytes.Buffer{}
+	buf := strings.Builder{}
+	i := 0
 	attributes.Sort().ForEach(func(k string, v pdata.AttributeValue) {
-		buf.WriteString(k)
-		buf.WriteString("=")
-		buf.WriteString(v.StringVal())
+		buf.WriteString(fmt.Sprintf("%s=%s", k, v.StringVal()))
+		i++
+		if i == attributes.Len() {
+			return
+		}
 		buf.WriteString(", ")
 	})
 	return buf.String()
