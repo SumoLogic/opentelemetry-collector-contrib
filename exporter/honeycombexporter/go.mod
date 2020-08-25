@@ -6,7 +6,7 @@ require (
 	github.com/census-instrumentation/opencensus-proto v0.3.0
 	github.com/golang/protobuf v1.4.2
 	github.com/google/go-cmp v0.5.1
-	github.com/honeycombio/libhoney-go v1.12.4
+	github.com/honeycombio/libhoney-go v1.13.0
 	github.com/klauspost/compress v1.10.11
 	github.com/stretchr/testify v1.6.1
 	go.opentelemetry.io/collector v0.8.1-0.20200815205113-8e5c6065eb0e
