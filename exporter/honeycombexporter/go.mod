@@ -5,7 +5,7 @@ go 1.14
 require (
 	github.com/census-instrumentation/opencensus-proto v0.3.0
 	github.com/golang/protobuf v1.4.2
-	github.com/google/go-cmp v0.5.1
+	github.com/google/go-cmp v0.5.2
 	github.com/honeycombio/libhoney-go v1.12.4
 	github.com/klauspost/compress v1.10.11
 	github.com/stretchr/testify v1.6.1
