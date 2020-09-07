@@ -10,5 +10,5 @@ require (
 	github.com/jaegertracing/jaeger v1.18.2-0.20200707061226-97d2319ff2be
 	github.com/stretchr/testify v1.6.1
 	go.opentelemetry.io/collector v0.8.1-0.20200815205113-8e5c6065eb0e
-	go.uber.org/zap v1.15.0
+	go.uber.org/zap v1.16.0
 )
