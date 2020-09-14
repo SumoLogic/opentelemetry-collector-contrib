@@ -15,6 +15,6 @@ require (
 	go.uber.org/zap v1.15.0
 	google.golang.org/api v0.30.0
 	google.golang.org/genproto v0.0.0-20200804131852-c06518451d9c
-	google.golang.org/grpc v1.31.0
+	google.golang.org/grpc v1.32.0
 	google.golang.org/grpc/examples v0.0.0-20200728194956-1c32b02682df // indirect
 )
