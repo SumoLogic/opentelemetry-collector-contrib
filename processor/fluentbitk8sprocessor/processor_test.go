@@ -15,14 +15,14 @@
 package fluentbitk8sprocessor
 
 import (
-	"testing"
 	"context"
+	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.opentelemetry.io/collector/consumer/pdata"
-	"go.uber.org/zap"
 	"go.opentelemetry.io/collector/component"
+	"go.opentelemetry.io/collector/consumer/pdata"
 	"go.opentelemetry.io/collector/exporter/exportertest"
+	"go.uber.org/zap"
 )
 
 func TestExtractMetadata(t *testing.T) {
@@ -30,7 +30,7 @@ func TestExtractMetadata(t *testing.T) {
 	ttn := exportertest.NewNopLogsExporter()
 	factory := NewFactory()
 	processor, err := factory.CreateLogsProcessor(context.Background(), component.ProcessorCreateParams{Logger: zap.NewNop()}, cfg, ttn)
-	
+
 	assert.NoError(t, err)
 
 	attributes := pdata.NewAttributeMap()
