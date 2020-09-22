@@ -75,7 +75,7 @@ func (fbkp *fluentbitk8sprocessor) ConsumeLogs(ctx context.Context, logs pdata.L
 	for i := 0; i < logs.ResourceLogs().Len(); i++ {
 		resource := logs.ResourceLogs().At(i)
 
-		// ToDo: fluent bit tag can potantially by in resource attributes
+		// ToDo: fluent bit tag can potantially be in resource attributes
 
 		for j := 0; j < resource.InstrumentationLibraryLogs().Len(); j++ {
 			library := resource.InstrumentationLibraryLogs().At(j)
