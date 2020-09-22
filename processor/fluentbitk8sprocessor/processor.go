@@ -70,7 +70,7 @@ func (fbkp *fluentbitk8sprocessor) ExtractMetadata(attributes pdata.AttributeMap
 	}
 }
 
-// ConsumeLogs process logs and convberts fluentbit k8s tag to metadata
+// ConsumeLogs processes logs and converts fluentbit k8s tags to metadata
 func (fbkp *fluentbitk8sprocessor) ConsumeLogs(ctx context.Context, logs pdata.Logs) error {
 	for i := 0; i < logs.ResourceLogs().Len(); i++ {
 		resource := logs.ResourceLogs().At(i)
