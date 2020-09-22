@@ -15,7 +15,6 @@
 package sumologicexporter
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"net/http"
@@ -126,7 +125,7 @@ func (se *sumologicexporter) GetMetadata(attributes pdata.AttributeMap) string {
 // Send sends data to sumologic
 func (se *sumologicexporter) Send(buffer []pdata.LogRecord, fields string) {
 	client := &http.Client{}
-	body := bytes.Buffer{}
+	body := strings.Builder{}
 
 	// Concatenate log lines using `\n`
 	for j := 0; j < len(buffer); j++ {
@@ -138,7 +137,7 @@ func (se *sumologicexporter) Send(buffer []pdata.LogRecord, fields string) {
 	}
 
 	// Add headers
-	req, _ := http.NewRequest("POST", se.endpoint, bytes.NewBuffer(body.Bytes()))
+	req, _ := http.NewRequest("POST", se.endpoint, strings.NewReader(body.String()))
 	req.Header.Add("X-Sumo-Fields", fields)
 	// ToDo: Make X-Sumo-Name configurable
 	req.Header.Add("X-Sumo-Name", "otelcol")
