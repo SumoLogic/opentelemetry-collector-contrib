@@ -47,6 +47,7 @@ func newLogsExporter(
 	return se, nil
 }
 
+// StartWorkers create workers according to configuration
 func (se *sumologicexporter) StartWorkers() {
 	for i := 0; i < se.workers; i++ {
 		go se.Sender()
@@ -58,8 +59,10 @@ func (se *sumologicexporter) Start(_ context.Context, _ component.Host) error {
 }
 
 func (se *sumologicexporter) Shutdown(context.Context) error {
+	// ToDo: Handle sending error while the channel is closed
 	close(se.ch)
 
+	// Wait for all workers to finish
 	for {
 		se.mux.Lock()
 		if se.workers == 0 {
@@ -70,7 +73,10 @@ func (se *sumologicexporter) Shutdown(context.Context) error {
 	}
 }
 
+// Sender creates a worker which is responsible for creating batches and sending data further
+// LogRecords are grouped basing on the metadata set
 func (se *sumologicexporter) Sender() {
+	// Limit amount of logs in one batch to 100
 	buffer := make([]pdata.LogRecord, 0, 100)
 	previousMetadata := ""
 	currentMetadata := ""
@@ -85,13 +91,18 @@ func (se *sumologicexporter) Sender() {
 		previousMetadata = currentMetadata
 
 		buffer = append(buffer, i)
+
+		// Flush buffer, if it reaches the limit
 		if len(buffer) == 100 {
 			se.Send(buffer, previousMetadata)
 			buffer = buffer[:0]
 		}
 	}
+
+	// Send rest of data
 	se.Send(buffer, previousMetadata)
 
+	// Close the worker and decrement counter
 	se.mux.Lock()
 	se.workers--
 	se.mux.Unlock()
@@ -111,27 +122,34 @@ func (se *sumologicexporter) GetMetadata(attributes pdata.AttributeMap) string {
 	return buf.String()
 }
 
+// Send sends data to sumologic
 func (se *sumologicexporter) Send(buffer []pdata.LogRecord, fields string) {
 	client := &http.Client{}
 	body := bytes.Buffer{}
+
+	// Concatenate log lines using `\n`
 	for j := 0; j < len(buffer); j++ {
 		log := buffer[j]
 		logBody := log.Body()
 		body.WriteString(logBody.StringVal())
 		body.WriteString("\n")
 	}
+
+	// Add headers
 	req, _ := http.NewRequest("POST", se.endpoint, bytes.NewBuffer(body.Bytes()))
 	req.Header.Add("X-Sumo-Fields", fields)
 	req.Header.Add("X-Sumo-Name", "otelcol")
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	_, err := client.Do(req)
 
+	// In case of error, push logs back to the channel
 	if err != nil {
 		fmt.Printf("Error during sending data to sumo: %q\n", err)
 		go se.PushBack(buffer)
 	}
 }
 
+// PushBack pushes data back to the channel, so they can be processed again
 func (se *sumologicexporter) PushBack(buffer []pdata.LogRecord) {
 	for i := 0; i < len(buffer); i++ {
 		// Put logs back to the channel
@@ -146,6 +164,7 @@ func (se *sumologicexporter) ConsumeLogs(ctx context.Context, logs pdata.Logs) e
 
 		// ToDo: merge resources
 
+		// Extract LogRecord and push it to the channel
 		for j := 0; j < resource.InstrumentationLibraryLogs().Len(); j++ {
 			library := resource.InstrumentationLibraryLogs().At(j)
 			for k := 0; k < library.Logs().Len(); k++ {
