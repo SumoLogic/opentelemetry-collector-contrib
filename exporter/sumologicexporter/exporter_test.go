@@ -80,7 +80,7 @@ func extractBody(req *http.Request) string {
 func TestSend(t *testing.T) {
 	test := getExporter(t, func(req *http.Request) {
 		body := extractBody(req)
-		assert.Equal(t, body, "Example log\nAnother example log\n")
+		assert.Equal(t, body, "Example log\nAnother example log")
 		assert.Equal(t, req.Header.Get("X-Sumo-Fields"), "")
 		assert.Equal(t, req.Header.Get("X-Sumo-Name"), "otelcol")
 		assert.Equal(t, req.Header.Get("Content-Type"), "application/x-www-form-urlencoded")

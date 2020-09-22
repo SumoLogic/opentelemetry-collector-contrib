@@ -130,9 +130,10 @@ func (se *sumologicexporter) Send(buffer []pdata.LogRecord, fields string) {
 
 	// Concatenate log lines using `\n`
 	for j := 0; j < len(buffer); j++ {
-		log := buffer[j]
-		logBody := log.Body()
-		body.WriteString(logBody.StringVal())
+		body.WriteString(buffer[j].Body().StringVal())
+		if j == len(buffer) - 1 {
+			continue
+		}
 		body.WriteString("\n")
 	}
 
