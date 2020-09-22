@@ -15,11 +15,12 @@
 package fluentbitk8sprocessor
 
 import (
-	"go.opentelemetry.io/collector/processor/processorhelper"
-	"go.opentelemetry.io/collector/consumer"
-	"go.opentelemetry.io/collector/config/configmodels"
-	"go.opentelemetry.io/collector/component"
 	"context"
+
+	"go.opentelemetry.io/collector/component"
+	"go.opentelemetry.io/collector/config/configmodels"
+	"go.opentelemetry.io/collector/consumer"
+	"go.opentelemetry.io/collector/processor/processorhelper"
 )
 
 const (
