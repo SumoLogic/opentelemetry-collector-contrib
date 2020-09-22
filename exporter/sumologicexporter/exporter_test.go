@@ -16,6 +16,10 @@ package sumologicexporter
 
 import (
 	"context"
+	"io"
+	"net/http"
+	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"go.opentelemetry.io/collector/component"
@@ -25,14 +29,34 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func getExporter(t *testing.T) *sumologicexporter {
-	cfg := &Config{}
+type test struct {
+	srv *httptest.Server
+	se  *sumologicexporter
+}
+
+func getExporter(t *testing.T, cb func(req *http.Request)) *test {
+	// generate a test server so we can capture and inspect the request
+	testServer := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		res.WriteHeader(200)
+		res.Write([]byte(""))
+		if cb != nil {
+			cb(req)
+		}
+	}))
+	// defer func() { testServer.Close() }()
+
+	cfg := &Config{
+		Endpoint: testServer.URL,
+	}
 	factory := NewFactory()
 	se, err := factory.CreateLogsExporter(context.Background(), component.ExporterCreateParams{Logger: zap.NewNop()}, cfg)
 
 	assert.NoError(t, err)
 
-	return se.(*sumologicexporter)
+	return &test{
+		se:  se.(*sumologicexporter),
+		srv: testServer,
+	}
 }
 
 func TestGetMetadata(t *testing.T) {
@@ -41,8 +65,31 @@ func TestGetMetadata(t *testing.T) {
 	attributes.InsertString("key1", "value1")
 	attributes.InsertString("key2", "value2")
 
-	se := getExporter(t)
-	metadata := se.GetMetadata(attributes)
+	test := getExporter(t, func(req *http.Request) {})
+	metadata := test.se.GetMetadata(attributes)
 	expected := "key1=value1, key2=value2, key3=value3"
 	assert.Equal(t, expected, metadata)
+}
+
+func extractBody(req *http.Request) string {
+	buf := new(strings.Builder)
+	io.Copy(buf, req.Body)
+	return buf.String()
+}
+
+func TestSend(t *testing.T) {
+	test := getExporter(t, func(req *http.Request) {
+		body := extractBody(req)
+		assert.Equal(t, body, "Example log\nAnother example log\n")
+	})
+	defer func() { test.srv.Close() }()
+
+	buffer := make([]pdata.LogRecord, 2)
+	buffer[0] = pdata.NewLogRecord()
+	buffer[0].InitEmpty()
+	buffer[0].Body().SetStringVal("Example log")
+	buffer[1] = pdata.NewLogRecord()
+	buffer[1].InitEmpty()
+	buffer[1].Body().SetStringVal("Another example log")
+	test.se.Send(buffer, test.se.GetMetadata(buffer[0].Attributes()))
 }
