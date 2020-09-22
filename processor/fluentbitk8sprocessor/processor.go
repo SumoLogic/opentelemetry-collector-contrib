@@ -52,6 +52,7 @@ func (fbkp *fluentbitk8sprocessor) Shutdown(context.Context) error {
 	return nil
 }
 
+// ExtractMetadata converts fluent.tag attribute to pod name, namespace, container name and docker id
 func (fbkp *fluentbitk8sprocessor) ExtractMetadata(attributes pdata.AttributeMap) {
 	attr, exists := attributes.Get("fluent.tag")
 
@@ -60,13 +61,17 @@ func (fbkp *fluentbitk8sprocessor) ExtractMetadata(attributes pdata.AttributeMap
 		regex := regexp.MustCompile(`\.containers\.([^_]+)_([^_]+)_(.+)-([a-z0-9]{64})\.log$`)
 		details := regex.FindAllStringSubmatch(tag, -1)
 
-		if len(details) == 1 && len(details[0]) == 5 {
-			attributes.InsertString("k8s.pod.name", details[0][1])
-			attributes.InsertString("pod_name", details[0][1])
-			attributes.InsertString("namespace", details[0][2])
-			attributes.InsertString("container_name", details[0][3])
-			attributes.InsertString("docker_id", details[0][4])
+		// We expect that regex will return array [1][5], where the inner array consists of
+		// five regex groups (full match, pod name, namespace, container name and docker id)
+		if len(details) != 1 || len(details[0]) != 5 {
+			return
 		}
+
+		attributes.InsertString("k8s.pod.name", details[0][1])
+		attributes.InsertString("pod_name", details[0][1])
+		attributes.InsertString("namespace", details[0][2])
+		attributes.InsertString("container_name", details[0][3])
+		attributes.InsertString("docker_id", details[0][4])
 	}
 }
 
