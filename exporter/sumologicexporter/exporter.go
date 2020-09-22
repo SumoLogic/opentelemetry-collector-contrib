@@ -138,6 +138,7 @@ func (se *sumologicexporter) Send(buffer []pdata.LogRecord, fields string) {
 	// Add headers
 	req, _ := http.NewRequest("POST", se.endpoint, bytes.NewBuffer(body.Bytes()))
 	req.Header.Add("X-Sumo-Fields", fields)
+	// ToDo: Make X-Sumo-Name configurable
 	req.Header.Add("X-Sumo-Name", "otelcol")
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	_, err := client.Do(req)
