@@ -108,6 +108,7 @@ func (se *sumologicexporter) Sender() {
 	se.mux.Unlock()
 }
 
+// GetMetadata builds string which represents metadata on alphabetical order
 func (se *sumologicexporter) GetMetadata(attributes pdata.AttributeMap) string {
 	buf := strings.Builder{}
 	i := 0
