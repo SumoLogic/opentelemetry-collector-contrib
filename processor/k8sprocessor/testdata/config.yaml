@@ -16,6 +16,8 @@ processors:
         - namespace
         - node
         - startTime
+        - hostName
+        - containerName
 
       annotations:
         - tag_name: a1 # extracts value of annotation with key `annotation-one` and inserts it as a tag with key `a1`

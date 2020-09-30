@@ -31,13 +31,15 @@ const (
 	filterOPExists       = "exists"
 	filterOPDoesNotExist = "does-not-exist"
 
-	metdataNamespace   = "namespace"
-	metadataPodName    = "podName"
-	metadataPodUID     = "podUID"
-	metadataStartTime  = "startTime"
-	metadataDeployment = "deployment"
-	metadataCluster    = "cluster"
-	metadataNode       = "node"
+	metadataNamespace     = "namespace"
+	metadataPodName       = "podName"
+	metadataPodUID        = "podUID"
+	metadataStartTime     = "startTime"
+	metadataDeployment    = "deployment"
+	metadataCluster       = "cluster"
+	metadataNode          = "node"
+	metadataHostName      = "hostName"
+	metadataContainerName = "containerName"
 )
 
 // Option represents a configuration option that can be passes.
@@ -68,18 +70,20 @@ func WithExtractMetadata(fields ...string) Option {
 	return func(p *kubernetesprocessor) error {
 		if len(fields) == 0 {
 			fields = []string{
-				metdataNamespace,
+				metadataNamespace,
 				metadataPodName,
 				metadataPodUID,
 				metadataStartTime,
 				metadataDeployment,
 				metadataCluster,
 				metadataNode,
+				metadataHostName,
+				metadataContainerName,
 			}
 		}
 		for _, field := range fields {
 			switch field {
-			case metdataNamespace:
+			case metadataNamespace:
 				p.rules.Namespace = true
 			case metadataPodName:
 				p.rules.PodName = true
@@ -93,6 +97,10 @@ func WithExtractMetadata(fields ...string) Option {
 				p.rules.Cluster = true
 			case metadataNode:
 				p.rules.Node = true
+			case metadataHostName:
+				p.rules.HostName = true
+			case metadataContainerName:
+				p.rules.ContainerName = true
 			default:
 				return fmt.Errorf("\"%s\" is not a supported metadata field", field)
 			}
