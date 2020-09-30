@@ -70,37 +70,37 @@ func WithExtractMetadata(fields ...string) Option {
 	return func(p *kubernetesprocessor) error {
 		if len(fields) == 0 {
 			fields = []string{
+				metadataCluster,
+				metadataContainerName,
+				metadataDeployment,
+				metadataHostName,
 				metadataNamespace,
+				metadataNode,
 				metadataPodName,
 				metadataPodUID,
 				metadataStartTime,
-				metadataDeployment,
-				metadataCluster,
-				metadataNode,
-				metadataHostName,
-				metadataContainerName,
 			}
 		}
 		for _, field := range fields {
 			switch field {
+			case metadataCluster:
+				p.rules.Cluster = true
+			case metadataContainerName:
+				p.rules.ContainerName = true
+			case metadataDeployment:
+				p.rules.Deployment = true
+			case metadataHostName:
+				p.rules.HostName = true
 			case metadataNamespace:
 				p.rules.Namespace = true
+			case metadataNode:
+				p.rules.Node = true
 			case metadataPodName:
 				p.rules.PodName = true
 			case metadataPodUID:
 				p.rules.PodUID = true
 			case metadataStartTime:
 				p.rules.StartTime = true
-			case metadataDeployment:
-				p.rules.Deployment = true
-			case metadataCluster:
-				p.rules.Cluster = true
-			case metadataNode:
-				p.rules.Node = true
-			case metadataHostName:
-				p.rules.HostName = true
-			case metadataContainerName:
-				p.rules.ContainerName = true
 			default:
 				return fmt.Errorf("\"%s\" is not a supported metadata field", field)
 			}

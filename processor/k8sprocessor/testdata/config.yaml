@@ -9,15 +9,15 @@ processors:
     extract:
       metadata:
         # extract the following well-known metadata fields
-        - podName
-        - podUID
-        - deployment
         - cluster
+        - containerName
+        - deployment
+        - hostName
         - namespace
         - node
+        - podName
+        - podUID
         - startTime
-        - hostName
-        - containerName
 
       annotations:
         - tag_name: a1 # extracts value of annotation with key `annotation-one` and inserts it as a tag with key `a1`
