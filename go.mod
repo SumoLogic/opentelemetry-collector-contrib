@@ -44,7 +44,7 @@ require (
 	github.com/tcnksm/ghr v0.13.0
 	go.opentelemetry.io/collector v0.8.1-0.20200815205113-8e5c6065eb0e
 	golang.org/x/sys v0.0.0-20200803210538-64077c9b5642
-	honnef.co/go/tools v0.0.1-2020.1.5
+	honnef.co/go/tools v0.0.1-2020.1.6
 )
 
 replace go.opentelemetry.io/collector => github.com/SumoLogic/opentelemetry-collector v0.8.0
