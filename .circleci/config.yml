@@ -120,12 +120,12 @@ workflows:
           filters:
             tags:
               only: /.*/
-      - lint:
-          requires:
-            - setup
-          filters:
-            tags:
-              only: /.*/
+#      - lint:
+#          requires:
+#            - setup
+#          filters:
+#            tags:
+#              only: /.*/
       - build:
           requires:
             - setup
@@ -152,7 +152,7 @@ workflows:
               only: /.*/
       - publish-stable:
           requires:
-            - lint
+#            - lint
             - unit-tests
             - build
             - cross-compile
@@ -173,16 +173,16 @@ jobs:
           paths:
             - project
             - go/bin
-  lint:
-    executor: golang
-    steps:
-      - restore_workspace
-      - run:
-          name: Lint
-          command: make -j8 for-all-target TARGET=lint
-      - run:
-          name: Checks
-          command: make -j4 checklicense impi misspell
+#  lint:
+#    executor: golang
+#    steps:
+#      - restore_workspace
+#      - run:
+#          name: Lint
+#          command: make -j8 for-all-target TARGET=lint
+#      - run:
+#          name: Checks
+#          command: make -j4 checklicense impi misspell
 
   build:
     executor: golang
