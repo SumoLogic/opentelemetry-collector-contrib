@@ -24,4 +24,4 @@ SumoLogic version of OpenTelemetry Collector introduces a number of additions ov
   adds additional tags (mostly relevant to K8s environment) and provides some data filtering rules
 * [Tail sampling processor](https://github.com/SumoLogic/opentelemetry-collector/tree/master/processor/samplingprocessor/tailsamplingprocessor) 
   extensions, which include *cascading* policy with two-pass rules for determining span budget for each of the defined rules
-* Additonal release schedule, which allows to quickly introduce bugfixes and extensions
+* Additional release schedule, which allows to quickly introduce bugfixes and extensions
