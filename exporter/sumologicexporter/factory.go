@@ -15,6 +15,8 @@
 package sumologicexporter
 
 import (
+	"context"
+
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/config/configmodels"
 	"go.opentelemetry.io/collector/exporter/exporterhelper"
@@ -30,6 +32,7 @@ func NewFactory() component.ExporterFactory {
 	return exporterhelper.NewFactory(
 		typeStr,
 		createDefaultConfig,
+		exporterhelper.WithLogs(createLogsExporter),
 	)
 }
 
@@ -57,4 +60,12 @@ func createDefaultConfig() configmodels.Exporter {
 		RetrySettings:   exporterhelper.CreateDefaultRetrySettings(),
 		QueueSettings:   qs,
 	}
+}
+
+func createLogsExporter(
+	_ context.Context,
+	params component.ExporterCreateParams,
+	cfg configmodels.Exporter,
+) (component.LogsExporter, error) {
+	return newLogsExporter(params.Logger, cfg.(*Config))
 }

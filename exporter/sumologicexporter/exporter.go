@@ -16,6 +16,11 @@ package sumologicexporter
 
 import (
 	"context"
+	"fmt"
+	"net/http"
+	"strings"
+
+	"go.opentelemetry.io/collector/exporter/exporterhelper"
 
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/consumer/pdata"
@@ -24,36 +29,111 @@ import (
 
 type sumologicexporter struct {
 	logger *zap.Logger
+	config *Config
 }
-
-var _ (component.LogsExporter) = (*sumologicexporter)(nil)
 
 func newLogsExporter(
 	logger *zap.Logger,
+	cfg *Config,
 ) (component.LogsExporter, error) {
-	se := &sumologicexporter{logger: logger}
-	return se, nil
+	se := &sumologicexporter{
+		logger: logger,
+		config: cfg,
+	}
+
+	return exporterhelper.NewLogsExporter(
+		cfg,
+		se.pushLogsData,
+	)
 }
 
-func newMetricsExporter(
-	logger *zap.Logger,
-) (component.MetricsExporter, error) {
-	se := &sumologicexporter{logger: logger}
-	return se, nil
+// GetMetadata builds string which represents metadata on alphabetical order
+func (se *sumologicexporter) GetMetadata(attributes pdata.AttributeMap) string {
+	buf := strings.Builder{}
+	i := 0
+	attributes.Sort().ForEach(func(k string, v pdata.AttributeValue) {
+		buf.WriteString(fmt.Sprintf("%s=%s", k, v.StringVal()))
+		i++
+		if i == attributes.Len() {
+			return
+		}
+		buf.WriteString(", ")
+	})
+	return buf.String()
 }
 
-func (se *sumologicexporter) Start(_ context.Context, _ component.Host) error {
-	return nil
+// pushLogsData groups data with common metadata uses Send to send data to sumologic
+func (se *sumologicexporter) pushLogsData(ctx context.Context, ld pdata.Logs) (droppedTimeSeries int, err error) {
+	buffer := make([]pdata.LogRecord, 0, 100)
+	previousMetadata := ""
+	currentMetadata := ""
+
+	// Iterate over ResourceLogs
+	for i := 0; i < ld.ResourceLogs().Len(); i++ {
+		resource := ld.ResourceLogs().At(i)
+
+		// iterate over InstrumentationLibraryLogs
+		for j := 0; j < resource.InstrumentationLibraryLogs().Len(); j++ {
+			library := resource.InstrumentationLibraryLogs().At(j)
+
+			// iterate over Logs
+			for k := 0; k < library.Logs().Len(); k++ {
+				log := library.Logs().At(k)
+				currentMetadata = se.GetMetadata(log.Attributes())
+
+				// If metadate differs from currently buffered, flush the buffer
+				if currentMetadata != previousMetadata && previousMetadata != "" {
+					se.Send(buffer, previousMetadata)
+					buffer = buffer[:0]
+				}
+
+				// assign metadata
+				previousMetadata = currentMetadata
+
+				// add log to the buffer
+				buffer = append(buffer, log)
+
+				// Flush buffer to avoid overlow
+				if len(buffer) == 100 {
+					se.Send(buffer, previousMetadata)
+					buffer = buffer[:0]
+				}
+			}
+		}
+	}
+
+	// Flush pending logs
+	se.Send(buffer, previousMetadata)
+
+	return 0, nil
 }
 
-func (se *sumologicexporter) Shutdown(context.Context) error {
-	return nil
-}
+// Send sends data to sumologic
+func (se *sumologicexporter) Send(buffer []pdata.LogRecord, fields string) error {
+	client := &http.Client{}
+	body := strings.Builder{}
 
-func (se *sumologicexporter) ConsumeLogs(_ context.Context, _ pdata.Logs) error {
-	return nil
-}
+	// Concatenate log lines using `\n`
+	for j := 0; j < len(buffer); j++ {
+		body.WriteString(buffer[j].Body().StringVal())
+		if j == len(buffer)-1 {
+			continue
+		}
+		body.WriteString("\n")
+	}
 
-func (se *sumologicexporter) ConsumeMetrics(_ context.Context, _ pdata.Metrics) error {
+	// Add headers
+	req, _ := http.NewRequest("POST", se.config.URL, strings.NewReader(body.String()))
+	req.Header.Add("X-Sumo-Fields", fields)
+	// ToDo: Make X-Sumo-Name configurable
+	req.Header.Add("X-Sumo-Name", "otelcol")
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	_, err := client.Do(req)
+
+	// In case of error, push logs back to the channel
+	if err != nil {
+		fmt.Printf("Error during sending data to sumo: %q\n", err)
+		return err
+	}
 	return nil
 }
