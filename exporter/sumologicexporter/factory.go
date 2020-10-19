@@ -67,5 +67,10 @@ func createLogsExporter(
 	params component.ExporterCreateParams,
 	cfg configmodels.Exporter,
 ) (component.LogsExporter, error) {
-	return newLogsExporter(params.Logger, cfg.(*Config))
+	exp, err := newLogsExporter(cfg.(*Config))
+	if err != nil {
+		return nil, err
+	}
+
+	return exp, nil
 }

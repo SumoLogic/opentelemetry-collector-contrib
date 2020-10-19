@@ -24,26 +24,24 @@ import (
 
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/consumer/pdata"
-	"go.uber.org/zap"
 )
 
 type sumologicexporter struct {
-	logger *zap.Logger
 	config *Config
 }
 
 func newLogsExporter(
-	logger *zap.Logger,
 	cfg *Config,
 ) (component.LogsExporter, error) {
 	se := &sumologicexporter{
-		logger: logger,
 		config: cfg,
 	}
-
 	return exporterhelper.NewLogsExporter(
 		cfg,
 		se.pushLogsData,
+		exporterhelper.WithTimeout(cfg.TimeoutSettings),
+		exporterhelper.WithRetry(cfg.RetrySettings),
+		exporterhelper.WithQueue(cfg.QueueSettings),
 	)
 }
 
@@ -83,7 +81,7 @@ func (se *sumologicexporter) pushLogsData(ctx context.Context, ld pdata.Logs) (d
 
 				// If metadate differs from currently buffered, flush the buffer
 				if currentMetadata != previousMetadata && previousMetadata != "" {
-					se.Send(buffer, previousMetadata)
+					se.send(buffer, previousMetadata)
 					buffer = buffer[:0]
 				}
 
@@ -95,7 +93,7 @@ func (se *sumologicexporter) pushLogsData(ctx context.Context, ld pdata.Logs) (d
 
 				// Flush buffer to avoid overlow
 				if len(buffer) == 100 {
-					se.Send(buffer, previousMetadata)
+					se.send(buffer, previousMetadata)
 					buffer = buffer[:0]
 				}
 			}
@@ -103,13 +101,13 @@ func (se *sumologicexporter) pushLogsData(ctx context.Context, ld pdata.Logs) (d
 	}
 
 	// Flush pending logs
-	se.Send(buffer, previousMetadata)
+	se.send(buffer, previousMetadata)
 
 	return 0, nil
 }
 
 // Send sends data to sumologic
-func (se *sumologicexporter) Send(buffer []pdata.LogRecord, fields string) error {
+func (se *sumologicexporter) send(buffer []pdata.LogRecord, fields string) error {
 	client := &http.Client{}
 	body := strings.Builder{}
 
@@ -128,6 +126,7 @@ func (se *sumologicexporter) Send(buffer []pdata.LogRecord, fields string) error
 	// ToDo: Make X-Sumo-Name configurable
 	req.Header.Add("X-Sumo-Name", "otelcol")
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
 	_, err := client.Do(req)
 
 	// In case of error, push logs back to the channel
