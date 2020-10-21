@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
+	"sort"
 	"strings"
 
 	"go.opentelemetry.io/collector/component/componenterror"
@@ -72,31 +73,48 @@ func (se *sumologicexporter) refreshMetadataRegexes() error {
 	return nil
 }
 
-// GetMetadata builds string which represents metadata on alphabetical order
-func (se *sumologicexporter) GetMetadata(attributes pdata.AttributeMap) string {
-	buf := strings.Builder{}
-	i := 0
-	attributes.Sort().ForEach(func(k string, v pdata.AttributeValue) {
-		skip := true
+// filterMetadata returns map of attributes which are (or are not, it depends on filterOut argument) metadata
+func (se *sumologicexporter) filterMetadata(attributes pdata.AttributeMap, filterOut bool) map[string]string {
+	returnValue := make(map[string]string)
+	attributes.ForEach(func(k string, v pdata.AttributeValue) {
+		skip := !filterOut
 		for j := 0; j < len(se.metadataRegexes); j++ {
 			if se.metadataRegexes[j].MatchString(k) {
 				skip = false
+				if filterOut {
+					return
+				}
 			}
 		}
 
 		if skip {
 			return
 		}
+
+		returnValue[k] = v.StringVal()
+	})
+
+	return returnValue
+}
+
+// GetMetadata builds string which represents metadata in alphabetical order
+func (se *sumologicexporter) GetMetadata(attributes pdata.AttributeMap) string {
+	attrs := se.filterMetadata(attributes, false)
+	keys := make([]string, 0, len(attrs))
+	buf := strings.Builder{}
+
+	for k := range attrs {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	for _, k := range keys {
 		if buf.Len() > 0 {
 			buf.WriteString(", ")
 		}
-		// ToDo: filter out non-metadata fields
-		buf.WriteString(fmt.Sprintf("%s=%s", k, v.StringVal()))
-		i++
-		if i == attributes.Len() {
-			return
-		}
-	})
+		buf.WriteString(fmt.Sprintf("%s=%s", k, attrs[k]))
+	}
+
 	return buf.String()
 }
 

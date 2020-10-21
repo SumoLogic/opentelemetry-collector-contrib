@@ -81,6 +81,26 @@ func TestGetMetadata(t *testing.T) {
 	assert.Equal(t, expected, metadata)
 }
 
+func TestFilterOutMetadata(t *testing.T) {
+	attributes := pdata.NewAttributeMap()
+	attributes.InsertString("key3", "value3")
+	attributes.InsertString("key1", "value1")
+	attributes.InsertString("key2", "value2")
+	attributes.InsertString("additional_key2", "value2")
+	attributes.InsertString("additional_key3", "value3")
+
+	test := getExporter(t, func(req *http.Request) {})
+	test.se.config.MetadataFields = []string{"^key[12]", "^key3"}
+	test.se.refreshMetadataRegexes()
+
+	data := test.se.filterMetadata(attributes, true)
+	expected := map[string]string{
+		"additional_key2": "value2",
+		"additional_key3": "value3",
+	}
+	assert.Equal(t, data, expected)
+}
+
 func extractBody(req *http.Request) string {
 	buf := new(strings.Builder)
 	io.Copy(buf, req.Body)
