@@ -149,8 +149,7 @@ func (se *sumologicexporter) send(pipeline string, body string, fields string) e
 
 	// Add headers
 	req, _ := http.NewRequest("POST", se.config.URL, strings.NewReader(body))
-	// ToDo: Make X-Sumo-Client configurable
-	req.Header.Add("X-Sumo-Client", "otelcol")
+	req.Header.Add("X-Sumo-Client", se.config.Client)
 
 	if len(se.config.SourceHost) > 0 {
 		req.Header.Add("X-Sumo-Host", se.config.SourceHost)
