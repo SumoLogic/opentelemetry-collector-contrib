@@ -46,7 +46,8 @@ func getExporter(t *testing.T, cb func(req *http.Request)) *test {
 	}))
 
 	cfg := &Config{
-		URL: testServer.URL,
+		URL:       testServer.URL,
+		LogFormat: "text",
 	}
 	factory := NewFactory()
 	exp, err := factory.CreateLogsExporter(context.Background(), component.ExporterCreateParams{Logger: zap.NewNop()}, cfg)
@@ -97,5 +98,24 @@ func TestSend(t *testing.T) {
 	buffer[1] = pdata.NewLogRecord()
 	buffer[1].InitEmpty()
 	buffer[1].Body().SetStringVal("Another example log")
-	test.se.send(buffer, test.se.GetMetadata(buffer[0].Attributes()))
+
+	err := test.se.send(buffer, test.se.GetMetadata(buffer[0].Attributes()))
+	assert.Nil(t, err)
+}
+
+func TestSendUnexpectedFormat(t *testing.T) {
+	test := getExporter(t, func(req *http.Request) {})
+	defer func() { test.srv.Close() }()
+	test.se.config.LogFormat = "dummy"
+
+	buffer := make([]pdata.LogRecord, 2)
+	buffer[0] = pdata.NewLogRecord()
+	buffer[0].InitEmpty()
+	buffer[0].Body().SetStringVal("Example log")
+	buffer[1] = pdata.NewLogRecord()
+	buffer[1].InitEmpty()
+	buffer[1].Body().SetStringVal("Another example log")
+
+	err := test.se.send(buffer, test.se.GetMetadata(buffer[0].Attributes()))
+	assert.Error(t, err)
 }
