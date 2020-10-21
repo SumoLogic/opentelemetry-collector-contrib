@@ -54,6 +54,7 @@ func (se *sumologicexporter) GetMetadata(attributes pdata.AttributeMap) string {
 	buf := strings.Builder{}
 	i := 0
 	attributes.Sort().ForEach(func(k string, v pdata.AttributeValue) {
+		// ToDo: filter out non-metadata fields
 		buf.WriteString(fmt.Sprintf("%s=%s", k, v.StringVal()))
 		i++
 		if i == attributes.Len() {
