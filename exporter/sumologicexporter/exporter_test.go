@@ -138,6 +138,33 @@ func TestSend(t *testing.T) {
 	assert.Nil(t, err)
 }
 
+func TestSendJson(t *testing.T) {
+	test := getExporter(t, func(req *http.Request) {
+		body := extractBody(req)
+		assert.Equal(t, body, "{\"key1\":\"value1\",\"key2\":\"value2\",\"log\":\"Example log\"}\n{\"key1\":\"value1\",\"key2\":\"value2\",\"log\":\"Another example log\"}")
+		assert.Equal(t, req.Header.Get("X-Sumo-Fields"), "")
+		assert.Equal(t, req.Header.Get("X-Sumo-Client"), "otelcol")
+		assert.Equal(t, req.Header.Get("Content-Type"), "application/x-www-form-urlencoded")
+	})
+	defer func() { test.srv.Close() }()
+	test.se.config.LogFormat = JSONFormat
+
+	buffer := make([]pdata.LogRecord, 2)
+	buffer[0] = pdata.NewLogRecord()
+	buffer[0].InitEmpty()
+	buffer[0].Body().SetStringVal("Example log")
+	buffer[0].Attributes().InsertString("key1", "value1")
+	buffer[0].Attributes().InsertString("key2", "value2")
+	buffer[1] = pdata.NewLogRecord()
+	buffer[1].InitEmpty()
+	buffer[1].Body().SetStringVal("Another example log")
+	buffer[1].Attributes().InsertString("key1", "value1")
+	buffer[1].Attributes().InsertString("key2", "value2")
+
+	err := test.se.sendLogs(buffer, test.se.GetMetadata(buffer[0].Attributes()))
+	assert.Nil(t, err)
+}
+
 func TestSendUnexpectedFormat(t *testing.T) {
 	test := getExporter(t, func(req *http.Request) {})
 	defer func() { test.srv.Close() }()

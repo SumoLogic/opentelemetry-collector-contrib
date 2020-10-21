@@ -16,6 +16,7 @@ package sumologicexporter
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -186,7 +187,16 @@ func (se *sumologicexporter) sendLogs(buffer []pdata.LogRecord, fields string) e
 			body.WriteString("\n")
 		}
 	} else if se.config.LogFormat == JSONFormat {
-
+		for j := 0; j < len(buffer); j++ {
+			data := se.filterMetadata(buffer[j].Attributes(), true)
+			data["log"] = buffer[j].Body().StringVal()
+			jsonString, _ := json.Marshal(data)
+			body.Write(jsonString)
+			if j == len(buffer)-1 {
+				continue
+			}
+			body.WriteString("\n")
+		}
 	} else {
 		return errors.New("Unexpected log format")
 	}
