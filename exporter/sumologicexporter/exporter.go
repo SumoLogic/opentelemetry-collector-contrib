@@ -137,21 +137,28 @@ func (se *sumologicexporter) sendLogs(buffer []pdata.LogRecord, fields string) e
 		return errors.New("Unexpected log format")
 	}
 
-	return se.send(body.String(), fields)
+	return se.send(LogsPipeline, body.String(), fields)
 }
 
 // Send sends data to sumologic
-func (se *sumologicexporter) send(body string, fields string) error {
+func (se *sumologicexporter) send(pipeline string, body string, fields string) error {
 	client := &http.Client{
 		Timeout: se.config.TimeoutSettings.Timeout,
 	}
 
 	// Add headers
 	req, _ := http.NewRequest("POST", se.config.URL, strings.NewReader(body))
-	req.Header.Add("X-Sumo-Fields", fields)
 	// ToDo: Make X-Sumo-Name configurable
 	req.Header.Add("X-Sumo-Name", "otelcol")
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
+	if pipeline == LogsPipeline {
+		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+		req.Header.Add("X-Sumo-Fields", fields)
+	} else if pipeline == MetricsPipeline {
+
+	} else {
+		return errors.New("Unexpected pipeline")
+	}
 
 	_, err := client.Do(req)
 
