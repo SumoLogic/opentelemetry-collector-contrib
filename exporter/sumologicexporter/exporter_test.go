@@ -99,7 +99,7 @@ func TestSend(t *testing.T) {
 	buffer[1].InitEmpty()
 	buffer[1].Body().SetStringVal("Another example log")
 
-	err := test.se.send(buffer, test.se.GetMetadata(buffer[0].Attributes()))
+	err := test.se.sendLogs(buffer, test.se.GetMetadata(buffer[0].Attributes()))
 	assert.Nil(t, err)
 }
 
@@ -116,6 +116,6 @@ func TestSendUnexpectedFormat(t *testing.T) {
 	buffer[1].InitEmpty()
 	buffer[1].Body().SetStringVal("Another example log")
 
-	err := test.se.send(buffer, test.se.GetMetadata(buffer[0].Attributes()))
+	err := test.se.sendLogs(buffer, test.se.GetMetadata(buffer[0].Attributes()))
 	assert.Error(t, err)
 }

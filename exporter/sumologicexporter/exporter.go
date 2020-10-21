@@ -15,8 +15,8 @@
 package sumologicexporter
 
 import (
-	"errors"
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -66,7 +66,7 @@ func (se *sumologicexporter) GetMetadata(attributes pdata.AttributeMap) string {
 
 // This function tries to send data and modify pass values
 func (se *sumologicexporter) sendAndPushErrors(buffer *[]pdata.LogRecord, fields string, droppedTimeSeries *int, errors *[]error) {
-	err := se.send(*buffer, fields)
+	err := se.sendLogs(*buffer, fields)
 	if err != nil {
 		*droppedTimeSeries += len(*buffer)
 		*errors = append(*errors, err)
@@ -119,14 +119,10 @@ func (se *sumologicexporter) pushLogsData(ctx context.Context, ld pdata.Logs) (d
 	return droppedTimeSeries, componenterror.CombineErrors(errs)
 }
 
-// Send sends data to sumologic
-func (se *sumologicexporter) send(buffer []pdata.LogRecord, fields string) error {
-	client := &http.Client{
-		Timeout: se.config.TimeoutSettings.Timeout,
-	}
+func (se *sumologicexporter) sendLogs(buffer []pdata.LogRecord, fields string) error {
 	body := strings.Builder{}
 
-	if se.config.LogFormat == "text" {
+	if se.config.LogFormat == TextFormat {
 		// Concatenate log lines using `\n`
 		for j := 0; j < len(buffer); j++ {
 			body.WriteString(buffer[j].Body().StringVal())
@@ -135,14 +131,23 @@ func (se *sumologicexporter) send(buffer []pdata.LogRecord, fields string) error
 			}
 			body.WriteString("\n")
 		}
-	} else if se.config.LogFormat == "json" {
+	} else if se.config.LogFormat == JSONFormat {
 
 	} else {
 		return errors.New("Unexpected log format")
 	}
 
+	return se.send(body.String(), fields)
+}
+
+// Send sends data to sumologic
+func (se *sumologicexporter) send(body string, fields string) error {
+	client := &http.Client{
+		Timeout: se.config.TimeoutSettings.Timeout,
+	}
+
 	// Add headers
-	req, _ := http.NewRequest("POST", se.config.URL, strings.NewReader(body.String()))
+	req, _ := http.NewRequest("POST", se.config.URL, strings.NewReader(body))
 	req.Header.Add("X-Sumo-Fields", fields)
 	// ToDo: Make X-Sumo-Name configurable
 	req.Header.Add("X-Sumo-Name", "otelcol")
