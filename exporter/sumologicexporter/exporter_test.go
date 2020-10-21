@@ -48,6 +48,7 @@ func getExporter(t *testing.T, cb func(req *http.Request)) *test {
 	cfg := &Config{
 		URL:       testServer.URL,
 		LogFormat: "text",
+		Client:    "otelcol",
 	}
 	factory := NewFactory()
 	exp, err := factory.CreateLogsExporter(context.Background(), component.ExporterCreateParams{Logger: zap.NewNop()}, cfg)
@@ -68,8 +69,13 @@ func TestGetMetadata(t *testing.T) {
 	attributes.InsertString("key3", "value3")
 	attributes.InsertString("key1", "value1")
 	attributes.InsertString("key2", "value2")
+	attributes.InsertString("additional_key2", "value2")
+	attributes.InsertString("additional_key3", "value3")
 
 	test := getExporter(t, func(req *http.Request) {})
+	test.se.config.MetadataFields = []string{"^key[12]", "^key3"}
+	test.se.refreshMetadataRegexes()
+
 	metadata := test.se.GetMetadata(attributes)
 	expected := "key1=value1, key2=value2, key3=value3"
 	assert.Equal(t, expected, metadata)

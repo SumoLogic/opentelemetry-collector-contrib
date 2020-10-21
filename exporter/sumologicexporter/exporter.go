@@ -19,6 +19,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"regexp"
 	"strings"
 
 	"go.opentelemetry.io/collector/component/componenterror"
@@ -29,7 +30,8 @@ import (
 )
 
 type sumologicexporter struct {
-	config *Config
+	config          *Config
+	metadataRegexes []*regexp.Regexp
 }
 
 func newLogsExporter(
@@ -38,6 +40,12 @@ func newLogsExporter(
 	se := &sumologicexporter{
 		config: cfg,
 	}
+	err := se.refreshMetadataRegexes()
+
+	if err != nil {
+		return nil, err
+	}
+
 	return exporterhelper.NewLogsExporter(
 		cfg,
 		se.pushLogsData,
@@ -49,18 +57,45 @@ func newLogsExporter(
 	)
 }
 
+func (se *sumologicexporter) refreshMetadataRegexes() error {
+	cfg := se.config
+	metadataRegexes := make([]*regexp.Regexp, len(cfg.MetadataFields))
+	for i := 0; i < len(cfg.MetadataFields); i++ {
+		regex, err := regexp.Compile(cfg.MetadataFields[i])
+		if err != nil {
+			return err
+		}
+		metadataRegexes[i] = regex
+	}
+
+	se.metadataRegexes = metadataRegexes
+	return nil
+}
+
 // GetMetadata builds string which represents metadata on alphabetical order
 func (se *sumologicexporter) GetMetadata(attributes pdata.AttributeMap) string {
 	buf := strings.Builder{}
 	i := 0
 	attributes.Sort().ForEach(func(k string, v pdata.AttributeValue) {
+		skip := true
+		for j := 0; j < len(se.metadataRegexes); j++ {
+			if se.metadataRegexes[j].MatchString(k) {
+				skip = false
+			}
+		}
+
+		if skip {
+			return
+		}
+		if buf.Len() > 0 {
+			buf.WriteString(", ")
+		}
 		// ToDo: filter out non-metadata fields
 		buf.WriteString(fmt.Sprintf("%s=%s", k, v.StringVal()))
 		i++
 		if i == attributes.Len() {
 			return
 		}
-		buf.WriteString(", ")
 	})
 	return buf.String()
 }
