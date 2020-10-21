@@ -97,5 +97,5 @@ func TestSend(t *testing.T) {
 	buffer[1] = pdata.NewLogRecord()
 	buffer[1].InitEmpty()
 	buffer[1].Body().SetStringVal("Another example log")
-	test.se.Send(buffer, test.se.GetMetadata(buffer[0].Attributes()))
+	test.se.send(buffer, test.se.GetMetadata(buffer[0].Attributes()))
 }

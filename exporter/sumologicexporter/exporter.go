@@ -20,6 +20,7 @@ import (
 	"net/http"
 	"strings"
 
+	"go.opentelemetry.io/collector/component/componenterror"
 	"go.opentelemetry.io/collector/exporter/exporterhelper"
 
 	"go.opentelemetry.io/collector/component"
@@ -39,7 +40,9 @@ func newLogsExporter(
 	return exporterhelper.NewLogsExporter(
 		cfg,
 		se.pushLogsData,
-		exporterhelper.WithTimeout(cfg.TimeoutSettings),
+		// Disable exporterhelper Timeout, since we are using a custom mechanism
+		// within exporter itself
+		exporterhelper.WithTimeout(exporterhelper.TimeoutSettings{Timeout: 0}),
 		exporterhelper.WithRetry(cfg.RetrySettings),
 		exporterhelper.WithQueue(cfg.QueueSettings),
 	)
@@ -60,11 +63,22 @@ func (se *sumologicexporter) GetMetadata(attributes pdata.AttributeMap) string {
 	return buf.String()
 }
 
+// This function tries to send data and modify pass values
+func (se *sumologicexporter) sendAndPushErrors(buffer *[]pdata.LogRecord, fields string, droppedTimeSeries *int, errors *[]error) {
+	err := se.send(*buffer, fields)
+	if err != nil {
+		*droppedTimeSeries += len(*buffer)
+		*errors = append(*errors, err)
+	}
+	*buffer = (*buffer)[:0]
+}
+
 // pushLogsData groups data with common metadata uses Send to send data to sumologic
 func (se *sumologicexporter) pushLogsData(ctx context.Context, ld pdata.Logs) (droppedTimeSeries int, err error) {
 	buffer := make([]pdata.LogRecord, 0, 100)
 	previousMetadata := ""
 	currentMetadata := ""
+	var errs []error
 
 	// Iterate over ResourceLogs
 	for i := 0; i < ld.ResourceLogs().Len(); i++ {
@@ -81,8 +95,7 @@ func (se *sumologicexporter) pushLogsData(ctx context.Context, ld pdata.Logs) (d
 
 				// If metadate differs from currently buffered, flush the buffer
 				if currentMetadata != previousMetadata && previousMetadata != "" {
-					se.send(buffer, previousMetadata)
-					buffer = buffer[:0]
+					se.sendAndPushErrors(&buffer, previousMetadata, &droppedTimeSeries, &errs)
 				}
 
 				// assign metadata
@@ -93,22 +106,23 @@ func (se *sumologicexporter) pushLogsData(ctx context.Context, ld pdata.Logs) (d
 
 				// Flush buffer to avoid overlow
 				if len(buffer) == 100 {
-					se.send(buffer, previousMetadata)
-					buffer = buffer[:0]
+					se.sendAndPushErrors(&buffer, previousMetadata, &droppedTimeSeries, &errs)
 				}
 			}
 		}
 	}
 
 	// Flush pending logs
-	se.send(buffer, previousMetadata)
+	se.sendAndPushErrors(&buffer, previousMetadata, &droppedTimeSeries, &errs)
 
-	return 0, nil
+	return droppedTimeSeries, componenterror.CombineErrors(errs)
 }
 
 // Send sends data to sumologic
 func (se *sumologicexporter) send(buffer []pdata.LogRecord, fields string) error {
-	client := &http.Client{}
+	client := &http.Client{
+		Timeout: se.config.TimeoutSettings.Timeout,
+	}
 	body := strings.Builder{}
 
 	// Concatenate log lines using `\n`
