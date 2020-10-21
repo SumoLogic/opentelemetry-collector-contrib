@@ -81,12 +81,21 @@ func extractBody(req *http.Request) string {
 	return buf.String()
 }
 
+func exampleLog() []pdata.LogRecord {
+	buffer := make([]pdata.LogRecord, 1)
+	buffer[0] = pdata.NewLogRecord()
+	buffer[0].InitEmpty()
+	buffer[0].Body().SetStringVal("Example log")
+
+	return buffer
+}
+
 func TestSend(t *testing.T) {
 	test := getExporter(t, func(req *http.Request) {
 		body := extractBody(req)
 		assert.Equal(t, body, "Example log\nAnother example log")
 		assert.Equal(t, req.Header.Get("X-Sumo-Fields"), "")
-		assert.Equal(t, req.Header.Get("X-Sumo-Name"), "otelcol")
+		assert.Equal(t, req.Header.Get("X-Sumo-Client"), "otelcol")
 		assert.Equal(t, req.Header.Get("Content-Type"), "application/x-www-form-urlencoded")
 	})
 	defer func() { test.srv.Close() }()
@@ -108,14 +117,50 @@ func TestSendUnexpectedFormat(t *testing.T) {
 	defer func() { test.srv.Close() }()
 	test.se.config.LogFormat = "dummy"
 
-	buffer := make([]pdata.LogRecord, 2)
+	buffer := make([]pdata.LogRecord, 1)
 	buffer[0] = pdata.NewLogRecord()
 	buffer[0].InitEmpty()
 	buffer[0].Body().SetStringVal("Example log")
-	buffer[1] = pdata.NewLogRecord()
-	buffer[1].InitEmpty()
-	buffer[1].Body().SetStringVal("Another example log")
 
 	err := test.se.sendLogs(buffer, test.se.GetMetadata(buffer[0].Attributes()))
 	assert.Error(t, err)
+}
+
+func TestOverrideSourceName(t *testing.T) {
+	test := getExporter(t, func(req *http.Request) {
+		assert.Equal(t, req.Header.Get("X-Sumo-Name"), "Test source name")
+	})
+	defer func() { test.srv.Close() }()
+
+	test.se.config.SourceName = "Test source name"
+	log := exampleLog()
+
+	err := test.se.sendLogs(log, test.se.GetMetadata(log[0].Attributes()))
+	assert.Nil(t, err)
+}
+
+func TestOverrideSourceCategory(t *testing.T) {
+	test := getExporter(t, func(req *http.Request) {
+		assert.Equal(t, req.Header.Get("X-Sumo-Category"), "Test source category")
+	})
+	defer func() { test.srv.Close() }()
+
+	test.se.config.SourceCategory = "Test source category"
+	log := exampleLog()
+
+	err := test.se.sendLogs(log, test.se.GetMetadata(log[0].Attributes()))
+	assert.Nil(t, err)
+}
+
+func TestOverrideSourceHost(t *testing.T) {
+	test := getExporter(t, func(req *http.Request) {
+		assert.Equal(t, req.Header.Get("X-Sumo-Host"), "Test source host")
+	})
+	defer func() { test.srv.Close() }()
+
+	test.se.config.SourceHost = "Test source host"
+	log := exampleLog()
+
+	err := test.se.sendLogs(log, test.se.GetMetadata(log[0].Attributes()))
+	assert.Nil(t, err)
 }

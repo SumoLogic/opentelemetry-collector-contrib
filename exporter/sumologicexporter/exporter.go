@@ -148,8 +148,20 @@ func (se *sumologicexporter) send(pipeline string, body string, fields string) e
 
 	// Add headers
 	req, _ := http.NewRequest("POST", se.config.URL, strings.NewReader(body))
-	// ToDo: Make X-Sumo-Name configurable
-	req.Header.Add("X-Sumo-Name", "otelcol")
+	// ToDo: Make X-Sumo-Client configurable
+	req.Header.Add("X-Sumo-Client", "otelcol")
+
+	if len(se.config.SourceHost) > 0 {
+		req.Header.Add("X-Sumo-Host", se.config.SourceHost)
+	}
+
+	if len(se.config.SourceName) > 0 {
+		req.Header.Add("X-Sumo-Name", se.config.SourceName)
+	}
+
+	if len(se.config.SourceCategory) > 0 {
+		req.Header.Add("X-Sumo-Category", se.config.SourceCategory)
+	}
 
 	if pipeline == LogsPipeline {
 		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
