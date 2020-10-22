@@ -131,7 +131,8 @@ func (se *sumologicexporter) sendAndPushErrors(buffer *[]pdata.LogRecord, fields
 
 // pushLogsData groups data with common metadata uses Send to send data to sumologic
 func (se *sumologicexporter) pushLogsData(ctx context.Context, ld pdata.Logs) (droppedTimeSeries int, err error) {
-	buffer := make([]pdata.LogRecord, 0, 100)
+	maxBufferSize := 100
+	buffer := make([]pdata.LogRecord, 0, maxBufferSize)
 	previousMetadata := ""
 	currentMetadata := ""
 	var errs []error
@@ -161,7 +162,7 @@ func (se *sumologicexporter) pushLogsData(ctx context.Context, ld pdata.Logs) (d
 				buffer = append(buffer, log)
 
 				// Flush buffer to avoid overlow
-				if len(buffer) == 100 {
+				if len(buffer) == maxBufferSize {
 					se.sendAndPushErrors(&buffer, previousMetadata, &droppedTimeSeries, &errs)
 				}
 			}
