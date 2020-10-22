@@ -120,11 +120,11 @@ func (se *sumologicexporter) GetMetadata(attributes pdata.AttributeMap) string {
 }
 
 // This function tries to send data and modify pass values
-func (se *sumologicexporter) sendAndPushErrors(buffer *[]pdata.LogRecord, fields string, droppedTimeSeries *int, errors *[]error) {
+func (se *sumologicexporter) sendAndPushErrors(buffer *[]pdata.LogRecord, fields string, droppedTimeSeries *int, errs *[]error) {
 	err := se.sendLogs(*buffer, fields)
 	if err != nil {
 		*droppedTimeSeries += len(*buffer)
-		*errors = append(*errors, err)
+		*errs = append(*errs, err)
 	}
 	*buffer = (*buffer)[:0]
 }
