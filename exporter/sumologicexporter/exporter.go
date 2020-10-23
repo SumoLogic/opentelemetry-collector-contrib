@@ -31,9 +31,9 @@ import (
 	"go.opentelemetry.io/collector/consumer/pdata"
 )
 
-const {
+const (
 	logKey string = "log"
-}
+)
 
 type sumologicexporter struct {
 	config          *Config
@@ -181,32 +181,69 @@ func (se *sumologicexporter) pushLogsData(ctx context.Context, ld pdata.Logs) (d
 
 func (se *sumologicexporter) sendLogs(buffer []pdata.LogRecord, fields string) error {
 	body := strings.Builder{}
+	var errs []error
 
 	if se.config.LogFormat == TextFormat {
 		// Concatenate log lines using `\n`
 		for j := 0; j < len(buffer); j++ {
-			body.WriteString(buffer[j].Body().StringVal())
-			if j == len(buffer)-1 {
-				continue
+			nextLine := buffer[j].Body().StringVal()
+
+			if body.Len() > 0 && body.Len()+len(nextLine) > se.config.MaxRequestBodySize {
+				err := se.send(LogsPipeline, body.String(), fields)
+				if err != nil {
+					errs = append(errs, err)
+				}
+				body.Reset()
 			}
-			body.WriteString("\n")
+
+			if body.Len() > 0 {
+				// Do not add newline after last line
+				body.WriteString("\n")
+			}
+
+			body.WriteString(nextLine)
 		}
+		err := se.send(LogsPipeline, body.String(), fields)
+
+		if err != nil {
+			errs = append(errs, err)
+		}
+
 	} else if se.config.LogFormat == JSONFormat {
 		for j := 0; j < len(buffer); j++ {
 			data := se.filterMetadata(buffer[j].Attributes(), true)
 			data[logKey] = buffer[j].Body().StringVal()
-			jsonString, _ := json.Marshal(data)
-			body.Write(jsonString)
-			if j == len(buffer)-1 {
-				continue
+			nextLine, _ := json.Marshal(data)
+
+			if body.Len() > 0 && body.Len()+len(nextLine) > se.config.MaxRequestBodySize {
+				err := se.send(LogsPipeline, body.String(), fields)
+				if err != nil {
+					errs = append(errs, err)
+				}
+				body.Reset()
 			}
-			body.WriteString("\n")
+
+			if body.Len() > 0 {
+				// Do not add newline after last line
+				body.WriteString("\n")
+			}
+
+			body.Write(nextLine)
+		}
+		err := se.send(LogsPipeline, body.String(), fields)
+
+		if err != nil {
+			errs = append(errs, err)
 		}
 	} else {
-		return errors.New("Unexpected log format")
+		errs = append(errs, errors.New("Unexpected log format"))
 	}
 
-	return se.send(LogsPipeline, body.String(), fields)
+	if len(errs) > 0 {
+		return componenterror.CombineErrors(errs)
+	}
+
+	return nil
 }
 
 // Send sends data to sumologic
