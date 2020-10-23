@@ -31,6 +31,10 @@ import (
 	"go.opentelemetry.io/collector/consumer/pdata"
 )
 
+const {
+	logKey string = "log"
+}
+
 type sumologicexporter struct {
 	config          *Config
 	metadataRegexes []*regexp.Regexp
@@ -190,7 +194,7 @@ func (se *sumologicexporter) sendLogs(buffer []pdata.LogRecord, fields string) e
 	} else if se.config.LogFormat == JSONFormat {
 		for j := 0; j < len(buffer); j++ {
 			data := se.filterMetadata(buffer[j].Attributes(), true)
-			data["log"] = buffer[j].Body().StringVal()
+			data[logKey] = buffer[j].Body().StringVal()
 			jsonString, _ := json.Marshal(data)
 			body.Write(jsonString)
 			if j == len(buffer)-1 {
