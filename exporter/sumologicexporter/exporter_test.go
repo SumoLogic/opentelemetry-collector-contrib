@@ -191,7 +191,7 @@ func TestSendJson(t *testing.T) {
 	buffer[1].Attributes().InsertString("key2", "value2")
 
 	err := test.se.sendLogs(buffer, test.se.GetMetadata(buffer[0].Attributes()))
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 }
 
 func TestSendJsonSplit(t *testing.T) {
