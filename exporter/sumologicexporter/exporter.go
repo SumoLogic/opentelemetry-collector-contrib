@@ -282,7 +282,7 @@ func (se *sumologicexporter) send(pipeline string, body string, fields string) e
 		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 		req.Header.Add("X-Sumo-Fields", fields)
 	} else if pipeline == MetricsPipeline {
-
+		// ToDo: Implement metrics pipeline
 	} else {
 		return errors.New("Unexpected pipeline")
 	}
