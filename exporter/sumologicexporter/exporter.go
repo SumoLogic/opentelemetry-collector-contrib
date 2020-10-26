@@ -15,6 +15,7 @@
 package sumologicexporter
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -193,32 +194,37 @@ func (se *sumologicexporter) pushLogsData(ctx context.Context, ld pdata.Logs) (d
 	return droppedTimeSeries, componenterror.CombineErrors(errs)
 }
 
+// appendAndSend appends line to the body and eventually sends data to avoid exceeding the request limit
+func (se *sumologicexporter) appendAndSend(line string, pipeline string, body *strings.Builder, fields string) error {
+	var err error
+
+	if body.Len() > 0 && body.Len()+len(line) > se.config.MaxRequestBodySize {
+		err = se.send(LogsPipeline, body.String(), fields)
+		body.Reset()
+	}
+
+	if body.Len() > 0 {
+		// Do not add newline if the body is empty
+		body.WriteString("\n")
+	}
+
+	body.WriteString(line)
+	return err
+}
+
 func (se *sumologicexporter) sendLogs(buffer []pdata.LogRecord, fields string) error {
 	body := strings.Builder{}
 	var errs []error
 
 	if se.config.LogFormat == TextFormat {
-		// Concatenate log lines using `\n`
 		for j := 0; j < len(buffer); j++ {
-			nextLine := buffer[j].Body().StringVal()
-
-			if body.Len() > 0 && body.Len()+len(nextLine) > se.config.MaxRequestBodySize {
-				err := se.send(LogsPipeline, body.String(), fields)
-				if err != nil {
-					errs = append(errs, err)
-				}
-				body.Reset()
+			err := se.appendAndSend(buffer[j].Body().StringVal(), LogsPipeline, &body, fields)
+			if err != nil {
+				errs = append(errs, err)
 			}
-
-			if body.Len() > 0 {
-				// Do not add newline after last line
-				body.WriteString("\n")
-			}
-
-			body.WriteString(nextLine)
 		}
-		err := se.send(LogsPipeline, body.String(), fields)
 
+		err := se.send(LogsPipeline, body.String(), fields)
 		if err != nil {
 			errs = append(errs, err)
 		}
@@ -229,23 +235,13 @@ func (se *sumologicexporter) sendLogs(buffer []pdata.LogRecord, fields string) e
 			data[logKey] = buffer[j].Body().StringVal()
 			nextLine, _ := json.Marshal(data)
 
-			if body.Len() > 0 && body.Len()+len(nextLine) > se.config.MaxRequestBodySize {
-				err := se.send(LogsPipeline, body.String(), fields)
-				if err != nil {
-					errs = append(errs, err)
-				}
-				body.Reset()
+			err := se.appendAndSend(bytes.NewBuffer(nextLine).String(), LogsPipeline, &body, fields)
+			if err != nil {
+				errs = append(errs, err)
 			}
-
-			if body.Len() > 0 {
-				// Do not add newline after last line
-				body.WriteString("\n")
-			}
-
-			body.Write(nextLine)
 		}
-		err := se.send(LogsPipeline, body.String(), fields)
 
+		err := se.send(LogsPipeline, body.String(), fields)
 		if err != nil {
 			errs = append(errs, err)
 		}
