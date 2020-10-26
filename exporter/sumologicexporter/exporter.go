@@ -122,8 +122,8 @@ func (se *sumologicexporter) GetMetadata(attributes pdata.AttributeMap) string {
 	attrs := se.filterMetadata(attributes, false)
 	metadata := make([]string, 0, len(attrs))
 
-	for k := range attrs {
-		metadata = append(metadata, fmt.Sprintf("%s=%s", k, attrs[k]))
+	for k, v := range attrs {
+		metadata = append(metadata, fmt.Sprintf("%s=%s", k, v))
 	}
 	sort.Strings(metadata)
 
