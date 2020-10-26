@@ -162,7 +162,7 @@ func (se *sumologicexporter) pushLogsData(ctx context.Context, ld pdata.Logs) (d
 				log := library.Logs().At(k)
 				currentMetadata = se.GetMetadata(log.Attributes())
 
-				// If metadate differs from currently buffered, flush the buffer
+				// If metadata differs from currently buffered, flush the buffer
 				if currentMetadata != previousMetadata && previousMetadata != "" {
 					se.sendAndPushErrors(&buffer, previousMetadata, &droppedTimeSeries, &errs)
 				}
