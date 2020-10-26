@@ -138,7 +138,8 @@ func (se *sumologicexporter) GetMetadata(attributes pdata.AttributeMap) string {
 	return buf.String()
 }
 
-// This function tries to send data and modify pass values
+// This function tries to send data and eventually appends error in case of failure
+// It modifies buffer, droppedTimeSeries and errs
 func (se *sumologicexporter) sendAndPushErrors(buffer *[]pdata.LogRecord, fields string, droppedTimeSeries *int, errs *[]error) {
 	err := se.sendLogs(*buffer, fields)
 	if err != nil {
@@ -148,7 +149,7 @@ func (se *sumologicexporter) sendAndPushErrors(buffer *[]pdata.LogRecord, fields
 	*buffer = (*buffer)[:0]
 }
 
-// pushLogsData groups data with common metadata uses Send to send data to sumologic
+// pushLogsData groups data with common metadata uses sendAndPushErrors to send data to sumologic
 func (se *sumologicexporter) pushLogsData(ctx context.Context, ld pdata.Logs) (droppedTimeSeries int, err error) {
 	maxBufferSize := 100
 	buffer := make([]pdata.LogRecord, 0, maxBufferSize)
