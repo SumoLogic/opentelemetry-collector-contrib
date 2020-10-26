@@ -120,22 +120,14 @@ func (se *sumologicexporter) filterMetadata(attributes pdata.AttributeMap, filte
 // GetMetadata builds string which represents metadata in alphabetical order
 func (se *sumologicexporter) GetMetadata(attributes pdata.AttributeMap) string {
 	attrs := se.filterMetadata(attributes, false)
-	keys := make([]string, 0, len(attrs))
-	buf := strings.Builder{}
+	metadata := make([]string, 0, len(attrs))
 
 	for k := range attrs {
-		keys = append(keys, k)
+		metadata = append(metadata, fmt.Sprintf("%s=%s", k, attrs[k]))
 	}
-	sort.Strings(keys)
+	sort.Strings(metadata)
 
-	for _, k := range keys {
-		if buf.Len() > 0 {
-			buf.WriteString(", ")
-		}
-		buf.WriteString(fmt.Sprintf("%s=%s", k, attrs[k]))
-	}
-
-	return buf.String()
+	return strings.Join(metadata, ", ")
 }
 
 // This function tries to send data and eventually appends error in case of failure
