@@ -170,7 +170,9 @@ func TestSendSplit(t *testing.T) {
 func TestSendJson(t *testing.T) {
 	test := getExporter(t, []func(req *http.Request){func(req *http.Request) {
 		body := extractBody(req)
-		assert.Equal(t, body, "{\"key1\":\"value1\",\"key2\":\"value2\",\"log\":\"Example log\"}\n{\"key1\":\"value1\",\"key2\":\"value2\",\"log\":\"Another example log\"}")
+		expected := `{"key1":"value1","key2":"value2","log":"Example log"}
+{"key1":"value1","key2":"value2","log":"Another example log"}`
+		assert.Equal(t, body, expected)
 		assert.Equal(t, req.Header.Get("X-Sumo-Fields"), "")
 		assert.Equal(t, req.Header.Get("X-Sumo-Client"), "otelcol")
 		assert.Equal(t, req.Header.Get("Content-Type"), "application/x-www-form-urlencoded")
@@ -198,11 +200,11 @@ func TestSendJsonSplit(t *testing.T) {
 	test := getExporter(t, []func(req *http.Request){
 		func(req *http.Request) {
 			body := extractBody(req)
-			assert.Equal(t, body, "{\"key1\":\"value1\",\"key2\":\"value2\",\"log\":\"Example log\"}")
+			assert.Equal(t, body, `{"key1":"value1","key2":"value2","log":"Example log"}`)
 		},
 		func(req *http.Request) {
 			body := extractBody(req)
-			assert.Equal(t, body, "{\"key1\":\"value1\",\"key2\":\"value2\",\"log\":\"Another example log\"}")
+			assert.Equal(t, body, `{"key1":"value1","key2":"value2","log":"Another example log"}`)
 		},
 	})
 	defer func() { test.srv.Close() }()
