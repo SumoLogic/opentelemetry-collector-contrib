@@ -106,9 +106,10 @@ func TestFilterOutMetadata(t *testing.T) {
 	assert.Equal(t, data, expected)
 }
 
-func extractBody(req *http.Request) string {
+func extractBody(t *testing.T, req *http.Request) string {
 	buf := new(strings.Builder)
-	io.Copy(buf, req.Body)
+	_, err := io.Copy(buf, req.Body)
+	assert.NoError(t, err)
 	return buf.String()
 }
 
@@ -123,7 +124,7 @@ func exampleLog() []pdata.LogRecord {
 
 func TestSend(t *testing.T) {
 	test := getExporter(t, []func(req *http.Request){func(req *http.Request) {
-		body := extractBody(req)
+		body := extractBody(t, req)
 		assert.Equal(t, body, "Example log\nAnother example log")
 		assert.Equal(t, req.Header.Get("X-Sumo-Fields"), "")
 		assert.Equal(t, req.Header.Get("X-Sumo-Client"), "otelcol")
@@ -146,11 +147,11 @@ func TestSend(t *testing.T) {
 func TestSendSplit(t *testing.T) {
 	test := getExporter(t, []func(req *http.Request){
 		func(req *http.Request) {
-			body := extractBody(req)
+			body := extractBody(t, req)
 			assert.Equal(t, body, "Example log")
 		},
 		func(req *http.Request) {
-			body := extractBody(req)
+			body := extractBody(t, req)
 			assert.Equal(t, body, "Another example log")
 		},
 	})
@@ -171,7 +172,7 @@ func TestSendSplit(t *testing.T) {
 
 func TestSendJson(t *testing.T) {
 	test := getExporter(t, []func(req *http.Request){func(req *http.Request) {
-		body := extractBody(req)
+		body := extractBody(t, req)
 		expected := `{"key1":"value1","key2":"value2","log":"Example log"}
 {"key1":"value1","key2":"value2","log":"Another example log"}`
 		assert.Equal(t, body, expected)
@@ -201,11 +202,11 @@ func TestSendJson(t *testing.T) {
 func TestSendJsonSplit(t *testing.T) {
 	test := getExporter(t, []func(req *http.Request){
 		func(req *http.Request) {
-			body := extractBody(req)
+			body := extractBody(t, req)
 			assert.Equal(t, body, `{"key1":"value1","key2":"value2","log":"Example log"}`)
 		},
 		func(req *http.Request) {
-			body := extractBody(req)
+			body := extractBody(t, req)
 			assert.Equal(t, body, `{"key1":"value1","key2":"value2","log":"Another example log"}`)
 		},
 	})
