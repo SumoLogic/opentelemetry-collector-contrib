@@ -164,7 +164,7 @@ func TestSendSplit(t *testing.T) {
 	buffer[1].Body().SetStringVal("Another example log")
 
 	err := test.se.sendLogs(buffer, test.se.GetMetadata(buffer[0].Attributes()))
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 }
 
 func TestSendJson(t *testing.T) {
