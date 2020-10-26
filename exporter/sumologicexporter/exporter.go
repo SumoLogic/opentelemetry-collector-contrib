@@ -242,9 +242,14 @@ func (se *sumologicexporter) sendLogsJSONFormat(buffer []pdata.LogRecord, fields
 	for j := 0; j < len(buffer); j++ {
 		data := se.filterMetadata(buffer[j].Attributes(), true)
 		data[logKey] = buffer[j].Body().StringVal()
-		nextLine, _ := json.Marshal(data)
+		nextLine, err := json.Marshal(data)
 
-		err := se.appendAndSend(bytes.NewBuffer(nextLine).String(), LogsPipeline, &body, fields)
+		if err != nil {
+			errs = append(errs, err)
+			continue
+		}
+
+		err = se.appendAndSend(bytes.NewBuffer(nextLine).String(), LogsPipeline, &body, fields)
 		if err != nil {
 			errs = append(errs, err)
 		}
@@ -274,7 +279,12 @@ func (se *sumologicexporter) sendLogs(buffer []pdata.LogRecord, fields string) e
 // Send sends data to sumologic
 func (se *sumologicexporter) send(pipeline string, body string, fields string) error {
 	// Add headers
-	req, _ := http.NewRequest("POST", se.config.URL, strings.NewReader(body))
+	req, err := http.NewRequest("POST", se.config.URL, strings.NewReader(body))
+
+	if err != nil {
+		return err
+	}
+
 	req.Header.Add("X-Sumo-Client", se.config.Client)
 
 	if len(se.config.SourceHost) > 0 {
@@ -298,11 +308,10 @@ func (se *sumologicexporter) send(pipeline string, body string, fields string) e
 		return errors.New("Unexpected pipeline")
 	}
 
-	_, err := se.client.Do(req)
+	_, err = se.client.Do(req)
 
-	// In case of error, push logs back to the channel
+	// ToDo: Add retries mechanism
 	if err != nil {
-		fmt.Printf("Error during sending data to sumo: %q\n", err)
 		return err
 	}
 	return nil
