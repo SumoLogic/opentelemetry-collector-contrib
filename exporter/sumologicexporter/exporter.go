@@ -271,7 +271,7 @@ func (se *sumologicexporter) sendLogs(buffer []pdata.LogRecord, fields string) e
 // Send sends data to sumologic
 func (se *sumologicexporter) send(pipeline string, body string, fields string) error {
 	// Add headers
-	req, err := http.NewRequest("POST", se.config.URL, strings.NewReader(body))
+	req, err := http.NewRequest(http.MethodPost, se.config.URL, strings.NewReader(body))
 
 	if err != nil {
 		return err
