@@ -38,15 +38,13 @@ const (
 type sumologicexporter struct {
 	config          *Config
 	metadataRegexes []*regexp.Regexp
+	client          *http.Client
 }
 
 func newLogsExporter(
 	cfg *Config,
 ) (component.LogsExporter, error) {
-	se := &sumologicexporter{
-		config: cfg,
-	}
-	err := se.refreshMetadataRegexes()
+	se, err := initExporter(cfg)
 
 	if err != nil {
 		return nil, err
@@ -61,6 +59,22 @@ func newLogsExporter(
 		exporterhelper.WithRetry(cfg.RetrySettings),
 		exporterhelper.WithQueue(cfg.QueueSettings),
 	)
+}
+
+func initExporter(cfg *Config) (*sumologicexporter, error) {
+	se := &sumologicexporter{
+		config: cfg,
+		client: &http.Client{
+			Timeout: cfg.TimeoutSettings.Timeout,
+		},
+	}
+	err := se.refreshMetadataRegexes()
+
+	if err != nil {
+		return nil, err
+	}
+
+	return se, nil
 }
 
 func (se *sumologicexporter) refreshMetadataRegexes() error {
@@ -248,10 +262,6 @@ func (se *sumologicexporter) sendLogs(buffer []pdata.LogRecord, fields string) e
 
 // Send sends data to sumologic
 func (se *sumologicexporter) send(pipeline string, body string, fields string) error {
-	client := &http.Client{
-		Timeout: se.config.TimeoutSettings.Timeout,
-	}
-
 	// Add headers
 	req, _ := http.NewRequest("POST", se.config.URL, strings.NewReader(body))
 	req.Header.Add("X-Sumo-Client", se.config.Client)
@@ -277,7 +287,7 @@ func (se *sumologicexporter) send(pipeline string, body string, fields string) e
 		return errors.New("Unexpected pipeline")
 	}
 
-	_, err := client.Do(req)
+	_, err := se.client.Do(req)
 
 	// In case of error, push logs back to the channel
 	if err != nil {

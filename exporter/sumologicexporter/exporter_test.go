@@ -52,18 +52,20 @@ func getExporter(t *testing.T, cb []func(req *http.Request)) *test {
 		LogFormat:          "text",
 		Client:             "otelcol",
 		MaxRequestBodySize: 20_971_520,
+		TimeoutSettings:    CreateDefaultTimeoutSettings(),
 	}
 	factory := NewFactory()
 	exp, err := factory.CreateLogsExporter(context.Background(), component.ExporterCreateParams{Logger: zap.NewNop()}, cfg)
 
 	assert.NoError(t, err)
 
+	se, err := initExporter(cfg)
+	assert.NoError(t, err)
+
 	return &test{
 		exp: exp,
 		srv: testServer,
-		se: &sumologicexporter{
-			config: cfg,
-		},
+		se:  se,
 	}
 }
 
