@@ -213,48 +213,62 @@ func (se *sumologicexporter) appendAndSend(line string, pipeline string, body *s
 	return err
 }
 
-func (se *sumologicexporter) sendLogs(buffer []pdata.LogRecord, fields string) error {
+func (se *sumologicexporter) sendLogsTextFormat(buffer []pdata.LogRecord, fields string) error {
 	body := strings.Builder{}
 	var errs []error
 
-	if se.config.LogFormat == TextFormat {
-		for j := 0; j < len(buffer); j++ {
-			err := se.appendAndSend(buffer[j].Body().StringVal(), LogsPipeline, &body, fields)
-			if err != nil {
-				errs = append(errs, err)
-			}
-		}
-
-		err := se.send(LogsPipeline, body.String(), fields)
+	for j := 0; j < len(buffer); j++ {
+		err := se.appendAndSend(buffer[j].Body().StringVal(), LogsPipeline, &body, fields)
 		if err != nil {
 			errs = append(errs, err)
 		}
+	}
 
-	} else if se.config.LogFormat == JSONFormat {
-		for j := 0; j < len(buffer); j++ {
-			data := se.filterMetadata(buffer[j].Attributes(), true)
-			data[logKey] = buffer[j].Body().StringVal()
-			nextLine, _ := json.Marshal(data)
-
-			err := se.appendAndSend(bytes.NewBuffer(nextLine).String(), LogsPipeline, &body, fields)
-			if err != nil {
-				errs = append(errs, err)
-			}
-		}
-
-		err := se.send(LogsPipeline, body.String(), fields)
-		if err != nil {
-			errs = append(errs, err)
-		}
-	} else {
-		errs = append(errs, errors.New("Unexpected log format"))
+	err := se.send(LogsPipeline, body.String(), fields)
+	if err != nil {
+		errs = append(errs, err)
 	}
 
 	if len(errs) > 0 {
 		return componenterror.CombineErrors(errs)
 	}
-
 	return nil
+}
+
+func (se *sumologicexporter) sendLogsJSONFormat(buffer []pdata.LogRecord, fields string) error {
+	body := strings.Builder{}
+	var errs []error
+
+	for j := 0; j < len(buffer); j++ {
+		data := se.filterMetadata(buffer[j].Attributes(), true)
+		data[logKey] = buffer[j].Body().StringVal()
+		nextLine, _ := json.Marshal(data)
+
+		err := se.appendAndSend(bytes.NewBuffer(nextLine).String(), LogsPipeline, &body, fields)
+		if err != nil {
+			errs = append(errs, err)
+		}
+	}
+
+	err := se.send(LogsPipeline, body.String(), fields)
+	if err != nil {
+		errs = append(errs, err)
+	}
+
+	if len(errs) > 0 {
+		return componenterror.CombineErrors(errs)
+	}
+	return nil
+}
+
+func (se *sumologicexporter) sendLogs(buffer []pdata.LogRecord, fields string) error {
+	if se.config.LogFormat == TextFormat {
+		return se.sendLogsTextFormat(buffer, fields)
+	} else if se.config.LogFormat == JSONFormat {
+		return se.sendLogsJSONFormat(buffer, fields)
+	} else {
+		return errors.New("Unexpected log format")
+	}
 }
 
 // Send sends data to sumologic
