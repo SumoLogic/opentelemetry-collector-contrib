@@ -13,14 +13,6 @@ type filtering struct {
 	regexes []*regexp.Regexp
 }
 
-type filterMetadata interface {
-	filter()
-}
-
-type filterOutMetadata interface {
-	filterOut()
-}
-
 // FieldsType represents concatenated metadata
 type FieldsType string
 
