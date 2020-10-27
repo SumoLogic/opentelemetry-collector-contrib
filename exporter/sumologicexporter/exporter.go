@@ -65,7 +65,7 @@ func initExporter(cfg *Config) (*sumologicexporter, error) {
 	return se, nil
 }
 
-// pushLogsData groups data with common metadata uses sendAndPushErrors to send data to sumologic
+// pushLogsData groups data with common metadata and send them together to Sumo Logic
 func (se *sumologicexporter) pushLogsData(ctx context.Context, ld pdata.Logs) (droppedTimeSeries int, err error) {
 	var (
 		currentMetadata  FieldsType
@@ -95,25 +95,40 @@ func (se *sumologicexporter) pushLogsData(ctx context.Context, ld pdata.Logs) (d
 
 				// If metadata differs from currently buffered, flush the buffer
 				if currentMetadata != previousMetadata && previousMetadata != "" {
-					sdr.sendAndPushErrors(previousMetadata, &droppedTimeSeries, &errors)
+					err := sdr.sendLogs(previousMetadata)
+					if err != nil {
+						droppedTimeSeries += sdr.count()
+						errors = append(errors, err)
+					}
+					sdr.cleanBuffer()
 				}
 
 				// assign metadata
 				previousMetadata = currentMetadata
 
 				// add log to the buffer
-				sdr.buffer = append(sdr.buffer, log)
+				sdr.appendLog(log)
 
 				// Flush buffer to avoid overlow
-				if len(sdr.buffer) == maxBufferSize {
-					sdr.sendAndPushErrors(previousMetadata, &droppedTimeSeries, &errors)
+				if sdr.count() == maxBufferSize {
+					err := sdr.sendLogs(previousMetadata)
+					if err != nil {
+						droppedTimeSeries += sdr.count()
+						errors = append(errors, err)
+					}
+					sdr.cleanBuffer()
 				}
 			}
 		}
 	}
 
 	// Flush pending logs
-	sdr.sendAndPushErrors(previousMetadata, &droppedTimeSeries, &errors)
+	err = sdr.sendLogs(previousMetadata)
+	if err != nil {
+		droppedTimeSeries += sdr.count()
+		errors = append(errors, err)
+	}
+	sdr.cleanBuffer()
 
 	return droppedTimeSeries, componenterror.CombineErrors(errors)
 }

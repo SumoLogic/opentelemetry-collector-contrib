@@ -81,19 +81,6 @@ func (s *sender) send(pipeline PipelineType, body string, fields FieldsType) err
 	return nil
 }
 
-// This function tries to send data and eventually appends error in case of failure
-// It modifies buffer, droppedTimeSeries and errs
-func (s *sender) sendAndPushErrors(previousMetadata FieldsType, droppedTimeSeries *int, errs *[]error) {
-
-	err := s.sendLogs(previousMetadata)
-	if err != nil {
-		*droppedTimeSeries += len(s.buffer)
-		*errs = append(*errs, err)
-	}
-
-	s.buffer = (s.buffer)[:0]
-}
-
 func (s *sender) sendLogs(fields FieldsType) error {
 	switch s.config.LogFormat {
 	case TextFormat:
@@ -178,4 +165,19 @@ func (s *sender) appendAndSend(line string, pipeline PipelineType, body *strings
 
 	body.WriteString(line)
 	return err
+}
+
+// clean buffer zeroes buffer
+func (s *sender) cleanBuffer() {
+	s.buffer = (s.buffer)[:0]
+}
+
+// append adds log to the buffer
+func (s *sender) appendLog(log pdata.LogRecord) {
+	s.buffer = append(s.buffer, log)
+}
+
+// count returns number of logs in buffer
+func (s *sender) count() int {
+	return len(s.buffer)
 }
