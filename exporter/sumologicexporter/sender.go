@@ -151,20 +151,33 @@ func (s *sender) sendLogsJSONFormat(fields FieldsType) error {
 
 // appendAndSend appends line to the body and eventually sends data to avoid exceeding the request limit
 func (s *sender) appendAndSend(line string, pipeline PipelineType, body *strings.Builder, fields FieldsType) error {
-	var err error
+	var errors []error
 
 	if body.Len() > 0 && body.Len()+len(line) > s.config.MaxRequestBodySize {
-		err = s.send(LogsPipeline, strings.NewReader(body.String()), fields)
+		err := s.send(LogsPipeline, strings.NewReader(body.String()), fields)
+		if err != nil {
+			errors = append(errors, err)
+		}
 		body.Reset()
 	}
 
 	if body.Len() > 0 {
 		// Do not add newline if the body is empty
-		body.WriteString("\n")
+		_, err := body.WriteString("\n")
+		if err != nil {
+			errors = append(errors, err)
+		}
 	}
 
-	body.WriteString(line)
-	return err
+	_, err := body.WriteString(line)
+	if err != nil {
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return componenterror.CombineErrors(errors)
+	}
+	return nil
 }
 
 // clean buffer zeroes buffer
