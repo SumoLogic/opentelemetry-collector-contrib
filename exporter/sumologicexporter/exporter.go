@@ -17,7 +17,6 @@ package sumologicexporter
 import (
 	"context"
 	"net/http"
-	"regexp"
 
 	"go.opentelemetry.io/collector/component/componenterror"
 	"go.opentelemetry.io/collector/exporter/exporterhelper"
@@ -32,9 +31,8 @@ const (
 )
 
 type sumologicexporter struct {
-	config          *Config
-	metadataRegexes []*regexp.Regexp
-	client          *http.Client
+	config *Config
+	client *http.Client
 }
 
 func newLogsExporter(
@@ -64,56 +62,7 @@ func initExporter(cfg *Config) (*sumologicexporter, error) {
 		},
 	}
 
-	err := se.refreshMetadataRegexes()
-	if err != nil {
-		return nil, err
-	}
-
 	return se, nil
-}
-
-func (se *sumologicexporter) refreshMetadataRegexes() error {
-	cfg := se.config
-	metadataRegexes := make([]*regexp.Regexp, len(cfg.MetadataFields))
-	for i := 0; i < len(cfg.MetadataFields); i++ {
-
-		regex, err := regexp.Compile(cfg.MetadataFields[i])
-		if err != nil {
-			return err
-		}
-
-		metadataRegexes[i] = regex
-	}
-
-	se.metadataRegexes = metadataRegexes
-	return nil
-}
-
-// filterMetadata returns map of attributes which are (or are not, it depends on filterOut argument) metadata
-// for filterOut equals false -> return all keys which match at least one regular exporession
-// for filterOut equals true -> return all keys which do not match any regular expression
-func (se *sumologicexporter) filterMetadata(attributes pdata.AttributeMap, filterOut bool) map[string]string {
-	returnValue := make(map[string]string)
-	attributes.ForEach(func(k string, v pdata.AttributeValue) {
-		switch filterOut {
-		case true:
-			for _, regex := range se.metadataRegexes {
-				if regex.MatchString(k) {
-					return
-				}
-			}
-			returnValue[k] = v.StringVal()
-		case false:
-			for _, regex := range se.metadataRegexes {
-				if regex.MatchString(k) {
-					returnValue[k] = v.StringVal()
-					return
-				}
-			}
-		}
-	})
-
-	return returnValue
 }
 
 // pushLogsData groups data with common metadata uses sendAndPushErrors to send data to sumologic

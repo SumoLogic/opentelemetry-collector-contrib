@@ -106,11 +106,13 @@ func (s *sender) sendLogs(fields string) error {
 }
 
 func (s *sender) sendLogsTextFormat(fields string) error {
-	body := strings.Builder{}
-	var errs []error
+	var (
+		body strings.Builder
+		errs []error
+	)
 
-	for j := 0; j < len(s.buffer); j++ {
-		err := s.appendAndSend(s.buffer[j].Body().StringVal(), LogsPipeline, &body, fields)
+	for _, record := range s.buffer {
+		err := s.appendAndSend(record.Body().StringVal(), LogsPipeline, &body, fields)
 		if err != nil {
 			errs = append(errs, err)
 		}
@@ -128,12 +130,14 @@ func (s *sender) sendLogsTextFormat(fields string) error {
 }
 
 func (s *sender) sendLogsJSONFormat(fields string) error {
-	body := strings.Builder{}
-	var errs []error
+	var (
+		body strings.Builder
+		errs []error
+	)
 
-	for j := 0; j < len(s.buffer); j++ {
-		data := s.filter.filterOut(s.buffer[j].Attributes())
-		data[logKey] = s.buffer[j].Body().StringVal()
+	for _, record := range s.buffer {
+		data := s.filter.filterOut(record.Attributes())
+		data[logKey] = record.Body().StringVal()
 
 		nextLine, err := json.Marshal(data)
 		if err != nil {
