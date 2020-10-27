@@ -41,9 +41,9 @@ func newSender(cfg *Config, cl *http.Client, f *filtering) *sender {
 }
 
 // Send sends data to sumologic
-func (s *sender) send(pipeline PipelineType, body string, fields FieldsType) error {
+func (s *sender) send(pipeline PipelineType, body *strings.Reader, fields FieldsType) error {
 	// Add headers
-	req, err := http.NewRequest(http.MethodPost, s.config.URL, strings.NewReader(body))
+	req, err := http.NewRequest(http.MethodPost, s.config.URL, body)
 	if err != nil {
 		return err
 	}
@@ -105,7 +105,7 @@ func (s *sender) sendLogsTextFormat(fields FieldsType) error {
 		}
 	}
 
-	err := s.send(LogsPipeline, body.String(), fields)
+	err := s.send(LogsPipeline, strings.NewReader(body.String()), fields)
 	if err != nil {
 		errs = append(errs, err)
 	}
@@ -138,7 +138,7 @@ func (s *sender) sendLogsJSONFormat(fields FieldsType) error {
 		}
 	}
 
-	err := s.send(LogsPipeline, body.String(), fields)
+	err := s.send(LogsPipeline, strings.NewReader(body.String()), fields)
 	if err != nil {
 		errs = append(errs, err)
 	}
@@ -154,7 +154,7 @@ func (s *sender) appendAndSend(line string, pipeline PipelineType, body *strings
 	var err error
 
 	if body.Len() > 0 && body.Len()+len(line) > s.config.MaxRequestBodySize {
-		err = s.send(LogsPipeline, body.String(), fields)
+		err = s.send(LogsPipeline, strings.NewReader(body.String()), fields)
 		body.Reset()
 	}
 
