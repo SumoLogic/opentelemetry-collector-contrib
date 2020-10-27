@@ -41,7 +41,7 @@ func newSender(cfg *Config, cl *http.Client, f *filtering) *sender {
 }
 
 // Send sends data to sumologic
-func (s *sender) send(pipeline string, body string, fields string) error {
+func (s *sender) send(pipeline PipelineType, body string, fields FieldsType) error {
 	// Add headers
 	req, err := http.NewRequest(http.MethodPost, s.config.URL, strings.NewReader(body))
 	if err != nil {
@@ -65,7 +65,7 @@ func (s *sender) send(pipeline string, body string, fields string) error {
 	switch pipeline {
 	case LogsPipeline:
 		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-		req.Header.Add("X-Sumo-Fields", fields)
+		req.Header.Add("X-Sumo-Fields", string(fields))
 	case MetricsPipeline:
 		// ToDo: Implement metrics pipeline
 		return errors.New("Current sender version doesn't support metrics")
@@ -83,7 +83,7 @@ func (s *sender) send(pipeline string, body string, fields string) error {
 
 // This function tries to send data and eventually appends error in case of failure
 // It modifies buffer, droppedTimeSeries and errs
-func (s *sender) sendAndPushErrors(previousMetadata string, droppedTimeSeries *int, errs *[]error) {
+func (s *sender) sendAndPushErrors(previousMetadata FieldsType, droppedTimeSeries *int, errs *[]error) {
 
 	err := s.sendLogs(previousMetadata)
 	if err != nil {
@@ -94,7 +94,7 @@ func (s *sender) sendAndPushErrors(previousMetadata string, droppedTimeSeries *i
 	s.buffer = (s.buffer)[:0]
 }
 
-func (s *sender) sendLogs(fields string) error {
+func (s *sender) sendLogs(fields FieldsType) error {
 	switch s.config.LogFormat {
 	case TextFormat:
 		return s.sendLogsTextFormat(fields)
@@ -105,7 +105,7 @@ func (s *sender) sendLogs(fields string) error {
 	}
 }
 
-func (s *sender) sendLogsTextFormat(fields string) error {
+func (s *sender) sendLogsTextFormat(fields FieldsType) error {
 	var (
 		body strings.Builder
 		errs []error
@@ -129,7 +129,7 @@ func (s *sender) sendLogsTextFormat(fields string) error {
 	return nil
 }
 
-func (s *sender) sendLogsJSONFormat(fields string) error {
+func (s *sender) sendLogsJSONFormat(fields FieldsType) error {
 	var (
 		body strings.Builder
 		errs []error
@@ -163,7 +163,7 @@ func (s *sender) sendLogsJSONFormat(fields string) error {
 }
 
 // appendAndSend appends line to the body and eventually sends data to avoid exceeding the request limit
-func (s *sender) appendAndSend(line string, pipeline string, body *strings.Builder, fields string) error {
+func (s *sender) appendAndSend(line string, pipeline PipelineType, body *strings.Builder, fields FieldsType) error {
 	var err error
 
 	if body.Len() > 0 && body.Len()+len(line) > s.config.MaxRequestBodySize {

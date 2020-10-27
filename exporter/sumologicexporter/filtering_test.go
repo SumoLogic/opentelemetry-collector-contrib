@@ -20,7 +20,7 @@ func TestGetMetadata(t *testing.T) {
 	assert.NoError(t, err)
 
 	metadata := f.GetMetadata(attributes)
-	expected := "key1=value1, key2=value2, key3=value3"
+	var expected FieldsType = "key1=value1, key2=value2, key3=value3"
 	assert.Equal(t, expected, metadata)
 }
 

@@ -21,6 +21,9 @@ type filterOutMetadata interface {
 	filterOut()
 }
 
+// FieldsType represents concatenated metadata
+type FieldsType string
+
 func newFiltering(fields []string) (*filtering, error) {
 	var metadataRegexes []*regexp.Regexp
 
@@ -67,7 +70,7 @@ func (f *filtering) filterOut(attributes pdata.AttributeMap) map[string]string {
 }
 
 // GetMetadata builds string which represents metadata in alphabetical order
-func (f *filtering) GetMetadata(attributes pdata.AttributeMap) string {
+func (f *filtering) GetMetadata(attributes pdata.AttributeMap) FieldsType {
 	attrs := f.filter(attributes)
 	metadata := make([]string, 0, len(attrs))
 
@@ -76,5 +79,5 @@ func (f *filtering) GetMetadata(attributes pdata.AttributeMap) string {
 	}
 	sort.Strings(metadata)
 
-	return strings.Join(metadata, ", ")
+	return FieldsType(strings.Join(metadata, ", "))
 }

@@ -42,11 +42,11 @@ type Config struct {
 	// Format to post logs into Sumo. (default json)
 	//   * text - Logs will appear in Sumo Logic in text format.
 	//   * json - Logs will appear in Sumo Logic in json format.
-	LogFormat string `mapstructure:"log_format"`
+	LogFormat LogFormatType `mapstructure:"log_format"`
 
 	// Metrics related configuration
 	// The format of metrics you will be sending, either graphite or carbon2 or prometheus (Default is carbon2)
-	MetricFormat string `mapstructure:"metric_format"`
+	MetricFormat MetricFormatType `mapstructure:"metric_format"`
 
 	// List of regexes for attributes which should be send as metadata
 	MetadataFields []string `mapstructure:"metadata_attributes"`
@@ -76,25 +76,34 @@ func CreateDefaultTimeoutSettings() exporterhelper.TimeoutSettings {
 	}
 }
 
+// LogFormatType represents log_format
+type LogFormatType string
+
+// MetricFormatType represents metric_format
+type MetricFormatType string
+
+// PipelineType represents type of the pipeline
+type PipelineType string
+
 const (
 	// TextFormat represents log_format: text
-	TextFormat string = "text"
+	TextFormat LogFormatType = "text"
 	// JSONFormat represents log_format: json
-	JSONFormat string = "json"
+	JSONFormat LogFormatType = "json"
 	// GraphiteFormat represents metric_format: text
-	GraphiteFormat string = "graphite"
+	GraphiteFormat MetricFormatType = "graphite"
 	// Carbon2Format represents metric_format: json
-	Carbon2Format string = "carbon2"
+	Carbon2Format MetricFormatType = "carbon2"
 	// PrometheusFormat represents metric_format: json
-	PrometheusFormat string = "prometheus"
+	PrometheusFormat MetricFormatType = "prometheus"
 	// GZIPCompression represents compress_encoding: gzip
 	GZIPCompression string = "gzip"
 	// DeflateCompression represents compress_encoding: deflate
 	DeflateCompression string = "deflate"
 	// MetricsPipeline represents metrics pipeline
-	MetricsPipeline string = "metrics"
+	MetricsPipeline PipelineType = "metrics"
 	// LogsPipeline represents metrics pipeline
-	LogsPipeline string = "logs"
+	LogsPipeline PipelineType = "logs"
 	// defaultTimeout
 	defaultTimeout time.Duration = 55 * time.Second
 	// DefaultCompress defines default Compress
@@ -104,9 +113,9 @@ const (
 	// DefaultMaxRequestBodySize defines default MaxRequestBodySize in bytes
 	DefaultMaxRequestBodySize int = 20_971_520
 	// DefaultLogFormat defines default LogFormat
-	DefaultLogFormat string = JSONFormat
+	DefaultLogFormat LogFormatType = JSONFormat
 	// DefaultMetricFormat defines default MetricFormat
-	DefaultMetricFormat string = Carbon2Format
+	DefaultMetricFormat MetricFormatType = Carbon2Format
 	// DefaultSourceCategory defines default SourceCategory
 	DefaultSourceCategory string = ""
 	// DefaultSourceName defines default SourceName

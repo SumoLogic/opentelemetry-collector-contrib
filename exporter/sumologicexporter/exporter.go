@@ -68,8 +68,8 @@ func initExporter(cfg *Config) (*sumologicexporter, error) {
 // pushLogsData groups data with common metadata uses sendAndPushErrors to send data to sumologic
 func (se *sumologicexporter) pushLogsData(ctx context.Context, ld pdata.Logs) (droppedTimeSeries int, err error) {
 	var (
-		currentMetadata  string
-		previousMetadata string
+		currentMetadata  FieldsType
+		previousMetadata FieldsType
 		errors           []error
 	)
 
