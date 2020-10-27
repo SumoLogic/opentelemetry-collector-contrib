@@ -16,8 +16,10 @@ package sumologicexporter
 
 import (
 	"context"
+	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -69,6 +71,22 @@ func prepareSenderTest(t *testing.T, cb []func(req *http.Request)) *senderTest {
 			f,
 		),
 	}
+}
+
+func extractBody(t *testing.T, req *http.Request) string {
+	buf := new(strings.Builder)
+	_, err := io.Copy(buf, req.Body)
+	assert.NoError(t, err)
+	return buf.String()
+}
+
+func exampleLog() []pdata.LogRecord {
+	buffer := make([]pdata.LogRecord, 1)
+	buffer[0] = pdata.NewLogRecord()
+	buffer[0].InitEmpty()
+	buffer[0].Body().SetStringVal("Example log")
+
+	return buffer
 }
 
 func TestSend(t *testing.T) {
