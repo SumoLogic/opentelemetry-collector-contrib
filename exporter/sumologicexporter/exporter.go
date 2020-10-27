@@ -15,15 +15,9 @@
 package sumologicexporter
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
-	"errors"
-	"fmt"
 	"net/http"
 	"regexp"
-	"sort"
-	"strings"
 
 	"go.opentelemetry.io/collector/component/componenterror"
 	"go.opentelemetry.io/collector/exporter/exporterhelper"
@@ -41,14 +35,6 @@ type sumologicexporter struct {
 	config          *Config
 	metadataRegexes []*regexp.Regexp
 	client          *http.Client
-}
-
-type sender struct {
-	buffer            []pdata.LogRecord
-	previousMetadata  string
-	currentMetadata   string
-	errs              []error
-	droppedTimeSeries int
 }
 
 func newLogsExporter(
@@ -130,37 +116,20 @@ func (se *sumologicexporter) filterMetadata(attributes pdata.AttributeMap, filte
 	return returnValue
 }
 
-// GetMetadata builds string which represents metadata in alphabetical order
-func (se *sumologicexporter) GetMetadata(attributes pdata.AttributeMap) string {
-	attrs := se.filterMetadata(attributes, false)
-	metadata := make([]string, 0, len(attrs))
-
-	for k, v := range attrs {
-		metadata = append(metadata, fmt.Sprintf("%s=%s", k, v))
-	}
-	sort.Strings(metadata)
-
-	return strings.Join(metadata, ", ")
-}
-
-// This function tries to send data and eventually appends error in case of failure
-// It modifies buffer, droppedTimeSeries and errs
-func (se *sumologicexporter) sendAndPushErrors(sdr *sender) {
-
-	err := se.sendLogs(sdr.buffer, sdr.previousMetadata)
-	if err != nil {
-		sdr.droppedTimeSeries += len(sdr.buffer)
-		sdr.errs = append(sdr.errs, err)
-	}
-
-	sdr.buffer = (sdr.buffer)[:0]
-}
-
 // pushLogsData groups data with common metadata uses sendAndPushErrors to send data to sumologic
 func (se *sumologicexporter) pushLogsData(ctx context.Context, ld pdata.Logs) (droppedTimeSeries int, err error) {
-	sdr := &sender{
-		buffer: make([]pdata.LogRecord, 0, maxBufferSize),
+	var (
+		currentMetadata  string
+		previousMetadata string
+		errors           []error
+	)
+
+	filter, err := newFiltering(se.config.MetadataFields)
+	if err != nil {
+		return 0, err
 	}
+
+	sdr := newSender(se.config, se.client, filter)
 
 	// Iterate over ResourceLogs
 	for i := 0; i < ld.ResourceLogs().Len(); i++ {
@@ -173,152 +142,29 @@ func (se *sumologicexporter) pushLogsData(ctx context.Context, ld pdata.Logs) (d
 			// iterate over Logs
 			for k := 0; k < library.Logs().Len(); k++ {
 				log := library.Logs().At(k)
-				sdr.currentMetadata = se.GetMetadata(log.Attributes())
+				currentMetadata = sdr.filter.GetMetadata(log.Attributes())
 
 				// If metadata differs from currently buffered, flush the buffer
-				if sdr.currentMetadata != sdr.previousMetadata && sdr.previousMetadata != "" {
-					se.sendAndPushErrors(sdr)
+				if currentMetadata != previousMetadata && previousMetadata != "" {
+					sdr.sendAndPushErrors(previousMetadata, &droppedTimeSeries, &errors)
 				}
 
 				// assign metadata
-				sdr.previousMetadata = sdr.currentMetadata
+				previousMetadata = currentMetadata
 
 				// add log to the buffer
 				sdr.buffer = append(sdr.buffer, log)
 
 				// Flush buffer to avoid overlow
 				if len(sdr.buffer) == maxBufferSize {
-					se.sendAndPushErrors(sdr)
+					sdr.sendAndPushErrors(previousMetadata, &droppedTimeSeries, &errors)
 				}
 			}
 		}
 	}
 
 	// Flush pending logs
-	se.sendAndPushErrors(sdr)
+	sdr.sendAndPushErrors(previousMetadata, &droppedTimeSeries, &errors)
 
-	return sdr.droppedTimeSeries, componenterror.CombineErrors(sdr.errs)
-}
-
-// appendAndSend appends line to the body and eventually sends data to avoid exceeding the request limit
-func (se *sumologicexporter) appendAndSend(line string, pipeline string, body *strings.Builder, fields string) error {
-	var err error
-
-	if body.Len() > 0 && body.Len()+len(line) > se.config.MaxRequestBodySize {
-		err = se.send(LogsPipeline, body.String(), fields)
-		body.Reset()
-	}
-
-	if body.Len() > 0 {
-		// Do not add newline if the body is empty
-		body.WriteString("\n")
-	}
-
-	body.WriteString(line)
-	return err
-}
-
-func (se *sumologicexporter) sendLogsTextFormat(buffer []pdata.LogRecord, fields string) error {
-	body := strings.Builder{}
-	var errs []error
-
-	for j := 0; j < len(buffer); j++ {
-		err := se.appendAndSend(buffer[j].Body().StringVal(), LogsPipeline, &body, fields)
-		if err != nil {
-			errs = append(errs, err)
-		}
-	}
-
-	err := se.send(LogsPipeline, body.String(), fields)
-	if err != nil {
-		errs = append(errs, err)
-	}
-
-	if len(errs) > 0 {
-		return componenterror.CombineErrors(errs)
-	}
-	return nil
-}
-
-func (se *sumologicexporter) sendLogsJSONFormat(buffer []pdata.LogRecord, fields string) error {
-	body := strings.Builder{}
-	var errs []error
-
-	for j := 0; j < len(buffer); j++ {
-		data := se.filterMetadata(buffer[j].Attributes(), true)
-		data[logKey] = buffer[j].Body().StringVal()
-
-		nextLine, err := json.Marshal(data)
-		if err != nil {
-			errs = append(errs, err)
-			continue
-		}
-
-		err = se.appendAndSend(bytes.NewBuffer(nextLine).String(), LogsPipeline, &body, fields)
-		if err != nil {
-			errs = append(errs, err)
-		}
-	}
-
-	err := se.send(LogsPipeline, body.String(), fields)
-	if err != nil {
-		errs = append(errs, err)
-	}
-
-	if len(errs) > 0 {
-		return componenterror.CombineErrors(errs)
-	}
-	return nil
-}
-
-func (se *sumologicexporter) sendLogs(buffer []pdata.LogRecord, fields string) error {
-	switch se.config.LogFormat {
-	case TextFormat:
-		return se.sendLogsTextFormat(buffer, fields)
-	case JSONFormat:
-		return se.sendLogsJSONFormat(buffer, fields)
-	default:
-		return errors.New("Unexpected log format")
-	}
-}
-
-// Send sends data to sumologic
-func (se *sumologicexporter) send(pipeline string, body string, fields string) error {
-	// Add headers
-	req, err := http.NewRequest(http.MethodPost, se.config.URL, strings.NewReader(body))
-	if err != nil {
-		return err
-	}
-
-	req.Header.Add("X-Sumo-Client", se.config.Client)
-
-	if len(se.config.SourceHost) > 0 {
-		req.Header.Add("X-Sumo-Host", se.config.SourceHost)
-	}
-
-	if len(se.config.SourceName) > 0 {
-		req.Header.Add("X-Sumo-Name", se.config.SourceName)
-	}
-
-	if len(se.config.SourceCategory) > 0 {
-		req.Header.Add("X-Sumo-Category", se.config.SourceCategory)
-	}
-
-	switch pipeline {
-	case LogsPipeline:
-		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-		req.Header.Add("X-Sumo-Fields", fields)
-	case MetricsPipeline:
-		// ToDo: Implement metrics pipeline
-		return errors.New("Current sender version doesn't support metrics")
-	default:
-		return errors.New("Unexpected pipeline")
-	}
-
-	_, err = se.client.Do(req)
-	// ToDo: Add retries mechanism
-	if err != nil {
-		return err
-	}
-	return nil
+	return droppedTimeSeries, componenterror.CombineErrors(errors)
 }

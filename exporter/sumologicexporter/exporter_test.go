@@ -33,6 +33,7 @@ type test struct {
 	srv *httptest.Server
 	exp component.LogsExporter
 	se  *sumologicexporter
+	s   *sender
 }
 
 func getExporter(t *testing.T, cb []func(req *http.Request)) *test {
@@ -62,10 +63,14 @@ func getExporter(t *testing.T, cb []func(req *http.Request)) *test {
 	se, err := initExporter(cfg)
 	assert.NoError(t, err)
 
+	f, err := newFiltering([]string{})
+	assert.NoError(t, err)
+
 	return &test{
 		exp: exp,
 		srv: testServer,
 		se:  se,
+		s:   newSender(se.config, se.client, f),
 	}
 }
 
@@ -77,11 +82,11 @@ func TestGetMetadata(t *testing.T) {
 	attributes.InsertString("additional_key2", "value2")
 	attributes.InsertString("additional_key3", "value3")
 
-	test := getExporter(t, []func(req *http.Request){func(req *http.Request) {}})
-	test.se.config.MetadataFields = []string{"^key[12]", "^key3"}
-	test.se.refreshMetadataRegexes()
+	regexes :=  []string{"^key[12]", "^key3"}
+	f, err := newFiltering(regexes)
+	assert.NoError(t, err)
 
-	metadata := test.se.GetMetadata(attributes)
+	metadata := f.GetMetadata(attributes)
 	expected := "key1=value1, key2=value2, key3=value3"
 	assert.Equal(t, expected, metadata)
 }
@@ -126,7 +131,7 @@ func TestSend(t *testing.T) {
 	test := getExporter(t, []func(req *http.Request){func(req *http.Request) {
 		body := extractBody(t, req)
 		assert.Equal(t, body, "Example log\nAnother example log")
-		assert.Equal(t, req.Header.Get("X-Sumo-Fields"), "")
+		assert.Equal(t, req.Header.Get("X-Sumo-Fields"), "test_metadata")
 		assert.Equal(t, req.Header.Get("X-Sumo-Client"), "otelcol")
 		assert.Equal(t, req.Header.Get("Content-Type"), "application/x-www-form-urlencoded")
 	}})
@@ -139,8 +144,9 @@ func TestSend(t *testing.T) {
 	buffer[1] = pdata.NewLogRecord()
 	buffer[1].InitEmpty()
 	buffer[1].Body().SetStringVal("Another example log")
+	test.s.buffer = buffer
 
-	err := test.se.sendLogs(buffer, test.se.GetMetadata(buffer[0].Attributes()))
+	err := test.s.sendLogs("test_metadata")
 	assert.NoError(t, err)
 }
 
@@ -165,8 +171,9 @@ func TestSendSplit(t *testing.T) {
 	buffer[1] = pdata.NewLogRecord()
 	buffer[1].InitEmpty()
 	buffer[1].Body().SetStringVal("Another example log")
+	test.s.buffer = buffer
 
-	err := test.se.sendLogs(buffer, test.se.GetMetadata(buffer[0].Attributes()))
+	err := test.s.sendLogs("test_metadata")
 	assert.NoError(t, err)
 }
 
@@ -176,7 +183,7 @@ func TestSendJson(t *testing.T) {
 		expected := `{"key1":"value1","key2":"value2","log":"Example log"}
 {"key1":"value1","key2":"value2","log":"Another example log"}`
 		assert.Equal(t, body, expected)
-		assert.Equal(t, req.Header.Get("X-Sumo-Fields"), "")
+		assert.Equal(t, req.Header.Get("X-Sumo-Fields"), "test_metadata")
 		assert.Equal(t, req.Header.Get("X-Sumo-Client"), "otelcol")
 		assert.Equal(t, req.Header.Get("Content-Type"), "application/x-www-form-urlencoded")
 	}})
@@ -194,8 +201,9 @@ func TestSendJson(t *testing.T) {
 	buffer[1].Body().SetStringVal("Another example log")
 	buffer[1].Attributes().InsertString("key1", "value1")
 	buffer[1].Attributes().InsertString("key2", "value2")
+	test.s.buffer = buffer
 
-	err := test.se.sendLogs(buffer, test.se.GetMetadata(buffer[0].Attributes()))
+	err := test.s.sendLogs("test_metadata")
 	assert.NoError(t, err)
 }
 
@@ -225,8 +233,9 @@ func TestSendJsonSplit(t *testing.T) {
 	buffer[1].Body().SetStringVal("Another example log")
 	buffer[1].Attributes().InsertString("key1", "value1")
 	buffer[1].Attributes().InsertString("key2", "value2")
+	test.s.buffer = buffer
 
-	err := test.se.sendLogs(buffer, test.se.GetMetadata(buffer[0].Attributes()))
+	err := test.s.sendLogs("test_metadata")
 	assert.Nil(t, err)
 }
 
@@ -240,7 +249,7 @@ func TestSendUnexpectedFormat(t *testing.T) {
 	buffer[0].InitEmpty()
 	buffer[0].Body().SetStringVal("Example log")
 
-	err := test.se.sendLogs(buffer, test.se.GetMetadata(buffer[0].Attributes()))
+	err := test.s.sendLogs("test_metadata")
 	assert.Error(t, err)
 }
 
@@ -251,9 +260,9 @@ func TestOverrideSourceName(t *testing.T) {
 	defer func() { test.srv.Close() }()
 
 	test.se.config.SourceName = "Test source name"
-	log := exampleLog()
+	test.s.buffer = exampleLog()
 
-	err := test.se.sendLogs(log, test.se.GetMetadata(log[0].Attributes()))
+	err := test.s.sendLogs("test_metadata")
 	assert.Nil(t, err)
 }
 
@@ -264,9 +273,9 @@ func TestOverrideSourceCategory(t *testing.T) {
 	defer func() { test.srv.Close() }()
 
 	test.se.config.SourceCategory = "Test source category"
-	log := exampleLog()
+	test.s.buffer = exampleLog()
 
-	err := test.se.sendLogs(log, test.se.GetMetadata(log[0].Attributes()))
+	err := test.s.sendLogs("test_metadata")
 	assert.Nil(t, err)
 }
 
@@ -277,8 +286,8 @@ func TestOverrideSourceHost(t *testing.T) {
 	defer func() { test.srv.Close() }()
 
 	test.se.config.SourceHost = "Test source host"
-	log := exampleLog()
+	test.s.buffer = exampleLog()
 
-	err := test.se.sendLogs(log, test.se.GetMetadata(log[0].Attributes()))
+	err := test.s.sendLogs("test_metadata")
 	assert.Nil(t, err)
 }
