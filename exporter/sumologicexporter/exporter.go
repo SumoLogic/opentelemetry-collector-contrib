@@ -95,9 +95,9 @@ func (se *sumologicexporter) pushLogsData(ctx context.Context, ld pdata.Logs) (d
 
 				// If metadata differs from currently buffered, flush the buffer
 				if currentMetadata != previousMetadata && previousMetadata != "" {
-					err := sdr.sendLogs(previousMetadata)
+					dropped, err := sdr.sendLogs(previousMetadata)
 					if err != nil {
-						droppedTimeSeries += sdr.count()
+						droppedTimeSeries += dropped
 						errors = append(errors, err)
 					}
 					sdr.cleanBuffer()
@@ -117,9 +117,9 @@ func (se *sumologicexporter) pushLogsData(ctx context.Context, ld pdata.Logs) (d
 	}
 
 	// Flush pending logs
-	err = sdr.sendLogs(previousMetadata)
+	dropped, err := sdr.sendLogs(previousMetadata)
 	if err != nil {
-		droppedTimeSeries += sdr.count()
+		droppedTimeSeries += dropped
 		errors = append(errors, err)
 	}
 	sdr.cleanBuffer()

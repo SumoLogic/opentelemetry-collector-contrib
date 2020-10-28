@@ -108,7 +108,7 @@ func TestSend(t *testing.T) {
 	buffer[1].Body().SetStringVal("Another example log")
 	test.s.buffer = buffer
 
-	err := test.s.sendLogs("test_metadata")
+	_, err := test.s.sendLogs("test_metadata")
 	assert.NoError(t, err)
 }
 
@@ -135,7 +135,7 @@ func TestSendSplit(t *testing.T) {
 	buffer[1].Body().SetStringVal("Another example log")
 	test.s.buffer = buffer
 
-	err := test.s.sendLogs("test_metadata")
+	_, err := test.s.sendLogs("test_metadata")
 	assert.NoError(t, err)
 }
 
@@ -165,7 +165,7 @@ func TestSendJson(t *testing.T) {
 	buffer[1].Attributes().InsertString("key2", "value2")
 	test.s.buffer = buffer
 
-	err := test.s.sendLogs("test_metadata")
+	_, err := test.s.sendLogs("test_metadata")
 	assert.NoError(t, err)
 }
 
@@ -197,7 +197,7 @@ func TestSendJsonSplit(t *testing.T) {
 	buffer[1].Attributes().InsertString("key2", "value2")
 	test.s.buffer = buffer
 
-	err := test.s.sendLogs("test_metadata")
+	_, err := test.s.sendLogs("test_metadata")
 	assert.Nil(t, err)
 }
 
@@ -211,7 +211,7 @@ func TestSendUnexpectedFormat(t *testing.T) {
 	buffer[0].InitEmpty()
 	buffer[0].Body().SetStringVal("Example log")
 
-	err := test.s.sendLogs("test_metadata")
+	_, err := test.s.sendLogs("test_metadata")
 	assert.Error(t, err)
 }
 
@@ -224,7 +224,7 @@ func TestOverrideSourceName(t *testing.T) {
 	test.s.config.SourceName = "Test source name"
 	test.s.buffer = exampleLog()
 
-	err := test.s.sendLogs("test_metadata")
+	_, err := test.s.sendLogs("test_metadata")
 	assert.NoError(t, err)
 }
 
@@ -237,7 +237,7 @@ func TestOverrideSourceCategory(t *testing.T) {
 	test.s.config.SourceCategory = "Test source category"
 	test.s.buffer = exampleLog()
 
-	err := test.s.sendLogs("test_metadata")
+	_, err := test.s.sendLogs("test_metadata")
 	assert.NoError(t, err)
 }
 
@@ -250,6 +250,6 @@ func TestOverrideSourceHost(t *testing.T) {
 	test.s.config.SourceHost = "Test source host"
 	test.s.buffer = exampleLog()
 
-	err := test.s.sendLogs("test_metadata")
+	_, err := test.s.sendLogs("test_metadata")
 	assert.Nil(t, err)
 }

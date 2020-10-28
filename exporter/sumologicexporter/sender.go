@@ -81,45 +81,67 @@ func (s *sender) send(pipeline PipelineType, body *strings.Reader, fields Fields
 	return nil
 }
 
-func (s *sender) sendLogs(fields FieldsType) error {
+func (s *sender) sendLogs(fields FieldsType) (int, error) {
 	switch s.config.LogFormat {
 	case TextFormat:
 		return s.sendLogsTextFormat(fields)
 	case JSONFormat:
 		return s.sendLogsJSONFormat(fields)
 	default:
-		return errors.New("Unexpected log format")
+		return s.count(), errors.New("Unexpected log format")
 	}
 }
 
-func (s *sender) sendLogsTextFormat(fields FieldsType) error {
+func (s *sender) sendLogsTextFormat(fields FieldsType) (int, error) {
 	var (
-		body strings.Builder
-		errs []error
+		body              strings.Builder
+		errs              []error
+		droppedTimeSeries int
+		currentTimeSeries int
 	)
 
 	for _, record := range s.buffer {
-		err := s.appendAndSend(record.Body().StringVal(), LogsPipeline, &body, fields)
+		sent, appended, err := s.appendAndSend(record.Body().StringVal(), LogsPipeline, &body, fields)
 		if err != nil {
 			errs = append(errs, err)
+			if sent {
+				droppedTimeSeries += currentTimeSeries
+			}
+
+			if !appended {
+				droppedTimeSeries++
+			}
+		}
+
+		// If data was sent, cleanup the currentTimeSeries counter
+		if sent {
+			currentTimeSeries = 0
+		}
+
+		// If log has been appended to body, increment the currentTimeSeries
+		if appended {
+			currentTimeSeries++
 		}
 	}
 
 	err := s.send(LogsPipeline, strings.NewReader(body.String()), fields)
 	if err != nil {
 		errs = append(errs, err)
+		droppedTimeSeries += currentTimeSeries
 	}
 
 	if len(errs) > 0 {
-		return componenterror.CombineErrors(errs)
+		return droppedTimeSeries, componenterror.CombineErrors(errs)
 	}
-	return nil
+	return droppedTimeSeries, nil
 }
 
-func (s *sender) sendLogsJSONFormat(fields FieldsType) error {
+func (s *sender) sendLogsJSONFormat(fields FieldsType) (int, error) {
 	var (
-		body strings.Builder
-		errs []error
+		body              strings.Builder
+		errs              []error
+		droppedTimeSeries int
+		currentTimeSeries int
 	)
 
 	for _, record := range s.buffer {
@@ -128,33 +150,57 @@ func (s *sender) sendLogsJSONFormat(fields FieldsType) error {
 
 		nextLine, err := json.Marshal(data)
 		if err != nil {
+			droppedTimeSeries++
 			errs = append(errs, err)
 			continue
 		}
 
-		err = s.appendAndSend(bytes.NewBuffer(nextLine).String(), LogsPipeline, &body, fields)
+		sent, appended, err := s.appendAndSend(bytes.NewBuffer(nextLine).String(), LogsPipeline, &body, fields)
 		if err != nil {
 			errs = append(errs, err)
+			if sent {
+				droppedTimeSeries += currentTimeSeries
+			}
+
+			if !appended {
+				droppedTimeSeries++
+			}
+		}
+
+		// If data was sent, cleanup the currentTimeSeries counter
+		if sent {
+			currentTimeSeries = 0
+		}
+
+		// If log has been appended to body, increment the currentTimeSeries
+		if appended {
+			currentTimeSeries++
 		}
 	}
 
 	err := s.send(LogsPipeline, strings.NewReader(body.String()), fields)
 	if err != nil {
 		errs = append(errs, err)
+		droppedTimeSeries += currentTimeSeries
 	}
 
 	if len(errs) > 0 {
-		return componenterror.CombineErrors(errs)
+		return droppedTimeSeries, componenterror.CombineErrors(errs)
 	}
-	return nil
+	return droppedTimeSeries, nil
 }
 
 // appendAndSend appends line to the body and eventually sends data to avoid exceeding the request limit
-func (s *sender) appendAndSend(line string, pipeline PipelineType, body *strings.Builder, fields FieldsType) error {
+func (s *sender) appendAndSend(line string, pipeline PipelineType, body *strings.Builder, fields FieldsType) (bool, bool, error) {
 	var errors []error
+	// sent gives information if the data was sent or not
+	sent := false
+	// appended keeps state of appending new log line to the body
+	appended := true
 
 	if body.Len() > 0 && body.Len()+len(line) > s.config.MaxRequestBodySize {
 		err := s.send(LogsPipeline, strings.NewReader(body.String()), fields)
+		sent = true
 		if err != nil {
 			errors = append(errors, err)
 		}
@@ -166,18 +212,20 @@ func (s *sender) appendAndSend(line string, pipeline PipelineType, body *strings
 		_, err := body.WriteString("\n")
 		if err != nil {
 			errors = append(errors, err)
+			appended = false
 		}
 	}
 
 	_, err := body.WriteString(line)
-	if err != nil {
+	if err != nil && appended {
 		errors = append(errors, err)
+		appended = false
 	}
 
 	if len(errors) > 0 {
-		return componenterror.CombineErrors(errors)
+		return sent, appended, componenterror.CombineErrors(errors)
 	}
-	return nil
+	return sent, appended, nil
 }
 
 // cleanBuffer zeroes buffer
@@ -190,9 +238,9 @@ func (s *sender) appendLog(log pdata.LogRecord, metadata FieldsType) (int, error
 	s.buffer = append(s.buffer, log)
 
 	if s.count() == maxBufferSize {
-		err := s.sendLogs(metadata)
+		dropped, err := s.sendLogs(metadata)
 		s.cleanBuffer()
-		return maxBufferSize, err
+		return dropped, err
 	}
 
 	return 0, nil
