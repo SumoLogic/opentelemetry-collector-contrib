@@ -16,11 +16,14 @@ package sumologicexporter
 
 import (
 	"context"
+	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"go.opentelemetry.io/collector/component/componenterror"
 
 	"github.com/stretchr/testify/require"
 
@@ -89,6 +92,22 @@ func exampleLog() []pdata.LogRecord {
 	return buffer
 }
 
+func exampleTwoLogs() []pdata.LogRecord {
+	buffer := make([]pdata.LogRecord, 2)
+	buffer[0] = pdata.NewLogRecord()
+	buffer[0].InitEmpty()
+	buffer[0].Body().SetStringVal("Example log")
+	buffer[0].Attributes().InsertString("key1", "value1")
+	buffer[0].Attributes().InsertString("key2", "value2")
+	buffer[1] = pdata.NewLogRecord()
+	buffer[1].InitEmpty()
+	buffer[1].Body().SetStringVal("Another example log")
+	buffer[1].Attributes().InsertString("key1", "value1")
+	buffer[1].Attributes().InsertString("key2", "value2")
+
+	return buffer
+}
+
 func TestSend(t *testing.T) {
 	test := prepareSenderTest(t, []func(res http.ResponseWriter, req *http.Request){
 		func(res http.ResponseWriter, req *http.Request) {
@@ -103,14 +122,7 @@ func TestSend(t *testing.T) {
 	})
 	defer func() { test.srv.Close() }()
 
-	buffer := make([]pdata.LogRecord, 2)
-	buffer[0] = pdata.NewLogRecord()
-	buffer[0].InitEmpty()
-	buffer[0].Body().SetStringVal("Example log")
-	buffer[1] = pdata.NewLogRecord()
-	buffer[1].InitEmpty()
-	buffer[1].Body().SetStringVal("Another example log")
-	test.s.buffer = buffer
+	test.s.buffer = exampleTwoLogs()
 
 	_, err := test.s.sendLogs("test_metadata")
 	assert.NoError(t, err)
@@ -133,18 +145,62 @@ func TestSendSplit(t *testing.T) {
 	})
 	defer func() { test.srv.Close() }()
 	test.s.config.MaxRequestBodySize = 10
-
-	buffer := make([]pdata.LogRecord, 2)
-	buffer[0] = pdata.NewLogRecord()
-	buffer[0].InitEmpty()
-	buffer[0].Body().SetStringVal("Example log")
-	buffer[1] = pdata.NewLogRecord()
-	buffer[1].InitEmpty()
-	buffer[1].Body().SetStringVal("Another example log")
-	test.s.buffer = buffer
+	test.s.buffer = exampleTwoLogs()
 
 	_, err := test.s.sendLogs("test_metadata")
 	assert.NoError(t, err)
+}
+func TestSendSplitFailedOne(t *testing.T) {
+	test := prepareSenderTest(t, []func(res http.ResponseWriter, req *http.Request){
+		func(res http.ResponseWriter, req *http.Request) {
+			res.WriteHeader(500)
+			res.Write([]byte(""))
+			body := extractBody(t, req)
+			assert.Equal(t, body, "Example log")
+		},
+		func(res http.ResponseWriter, req *http.Request) {
+			res.WriteHeader(200)
+			res.Write([]byte(""))
+			body := extractBody(t, req)
+			assert.Equal(t, body, "Another example log")
+		},
+	})
+	defer func() { test.srv.Close() }()
+	test.s.config.MaxRequestBodySize = 10
+	test.s.buffer = exampleTwoLogs()
+
+	dropped, err := test.s.sendLogsTextFormat("test_metadata")
+	assert.Equal(t, err, componenterror.CombineErrors([]error{
+		errors.New("Error during sending data: 500 Internal Server Error"),
+	}))
+	assert.Equal(t, dropped, 1)
+}
+
+func TestSendSplitFailedAll(t *testing.T) {
+	test := prepareSenderTest(t, []func(res http.ResponseWriter, req *http.Request){
+		func(res http.ResponseWriter, req *http.Request) {
+			res.WriteHeader(500)
+			res.Write([]byte(""))
+			body := extractBody(t, req)
+			assert.Equal(t, body, "Example log")
+		},
+		func(res http.ResponseWriter, req *http.Request) {
+			res.WriteHeader(404)
+			res.Write([]byte(""))
+			body := extractBody(t, req)
+			assert.Equal(t, body, "Another example log")
+		},
+	})
+	defer func() { test.srv.Close() }()
+	test.s.config.MaxRequestBodySize = 10
+	test.s.buffer = exampleTwoLogs()
+
+	dropped, err := test.s.sendLogsTextFormat("test_metadata")
+	assert.Equal(t, err, componenterror.CombineErrors([]error{
+		errors.New("Error during sending data: 500 Internal Server Error"),
+		errors.New("Error during sending data: 404 Not Found"),
+	}))
+	assert.Equal(t, dropped, 2)
 }
 
 func TestSendJson(t *testing.T) {
@@ -163,19 +219,7 @@ func TestSendJson(t *testing.T) {
 	})
 	defer func() { test.srv.Close() }()
 	test.s.config.LogFormat = JSONFormat
-
-	buffer := make([]pdata.LogRecord, 2)
-	buffer[0] = pdata.NewLogRecord()
-	buffer[0].InitEmpty()
-	buffer[0].Body().SetStringVal("Example log")
-	buffer[0].Attributes().InsertString("key1", "value1")
-	buffer[0].Attributes().InsertString("key2", "value2")
-	buffer[1] = pdata.NewLogRecord()
-	buffer[1].InitEmpty()
-	buffer[1].Body().SetStringVal("Another example log")
-	buffer[1].Attributes().InsertString("key1", "value1")
-	buffer[1].Attributes().InsertString("key2", "value2")
-	test.s.buffer = buffer
+	test.s.buffer = exampleTwoLogs()
 
 	_, err := test.s.sendLogs("test_metadata")
 	assert.NoError(t, err)
@@ -199,22 +243,64 @@ func TestSendJsonSplit(t *testing.T) {
 	defer func() { test.srv.Close() }()
 	test.s.config.LogFormat = JSONFormat
 	test.s.config.MaxRequestBodySize = 10
-
-	buffer := make([]pdata.LogRecord, 2)
-	buffer[0] = pdata.NewLogRecord()
-	buffer[0].InitEmpty()
-	buffer[0].Body().SetStringVal("Example log")
-	buffer[0].Attributes().InsertString("key1", "value1")
-	buffer[0].Attributes().InsertString("key2", "value2")
-	buffer[1] = pdata.NewLogRecord()
-	buffer[1].InitEmpty()
-	buffer[1].Body().SetStringVal("Another example log")
-	buffer[1].Attributes().InsertString("key1", "value1")
-	buffer[1].Attributes().InsertString("key2", "value2")
-	test.s.buffer = buffer
+	test.s.buffer = exampleTwoLogs()
 
 	_, err := test.s.sendLogs("test_metadata")
 	assert.Nil(t, err)
+}
+
+func TestSendJsonSplitFailedOne(t *testing.T) {
+	test := prepareSenderTest(t, []func(res http.ResponseWriter, req *http.Request){
+		func(res http.ResponseWriter, req *http.Request) {
+			res.WriteHeader(500)
+			res.Write([]byte(""))
+			body := extractBody(t, req)
+			assert.Equal(t, body, `{"key1":"value1","key2":"value2","log":"Example log"}`)
+		},
+		func(res http.ResponseWriter, req *http.Request) {
+			res.WriteHeader(200)
+			res.Write([]byte(""))
+			body := extractBody(t, req)
+			assert.Equal(t, body, `{"key1":"value1","key2":"value2","log":"Another example log"}`)
+		},
+	})
+	defer func() { test.srv.Close() }()
+	test.s.config.LogFormat = JSONFormat
+	test.s.config.MaxRequestBodySize = 10
+	test.s.buffer = exampleTwoLogs()
+
+	dropped, err := test.s.sendLogsJSONFormat("test_metadata")
+	assert.Equal(t, err, componenterror.CombineErrors([]error{
+		errors.New("Error during sending data: 500 Internal Server Error"),
+	}))
+	assert.Equal(t, dropped, 1)
+}
+func TestSendJsonSplitFailedAll(t *testing.T) {
+	test := prepareSenderTest(t, []func(res http.ResponseWriter, req *http.Request){
+		func(res http.ResponseWriter, req *http.Request) {
+			res.WriteHeader(500)
+			res.Write([]byte(""))
+			body := extractBody(t, req)
+			assert.Equal(t, body, `{"key1":"value1","key2":"value2","log":"Example log"}`)
+		},
+		func(res http.ResponseWriter, req *http.Request) {
+			res.WriteHeader(404)
+			res.Write([]byte(""))
+			body := extractBody(t, req)
+			assert.Equal(t, body, `{"key1":"value1","key2":"value2","log":"Another example log"}`)
+		},
+	})
+	defer func() { test.srv.Close() }()
+	test.s.config.LogFormat = JSONFormat
+	test.s.config.MaxRequestBodySize = 10
+	test.s.buffer = exampleTwoLogs()
+
+	dropped, err := test.s.sendLogsJSONFormat("test_metadata")
+	assert.Equal(t, err, componenterror.CombineErrors([]error{
+		errors.New("Error during sending data: 500 Internal Server Error"),
+		errors.New("Error during sending data: 404 Not Found"),
+	}))
+	assert.Equal(t, dropped, 2)
 }
 
 func TestSendUnexpectedFormat(t *testing.T) {
@@ -226,11 +312,7 @@ func TestSendUnexpectedFormat(t *testing.T) {
 	})
 	defer func() { test.srv.Close() }()
 	test.s.config.LogFormat = "dummy"
-
-	buffer := make([]pdata.LogRecord, 1)
-	buffer[0] = pdata.NewLogRecord()
-	buffer[0].InitEmpty()
-	buffer[0].Body().SetStringVal("Example log")
+	test.s.buffer = exampleTwoLogs()
 
 	_, err := test.s.sendLogs("test_metadata")
 	assert.Error(t, err)

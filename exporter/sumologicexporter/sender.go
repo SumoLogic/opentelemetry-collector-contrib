@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -73,7 +74,11 @@ func (s *sender) send(pipeline PipelineType, body *strings.Reader, fields Fields
 		return errors.New("Unexpected pipeline")
 	}
 
-	_, err = s.client.Do(req)
+	resp, err := s.client.Do(req)
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 400 {
+		return fmt.Errorf("Error during sending data: %s", resp.Status)
+	}
 	// ToDo: Add retries mechanism
 	if err != nil {
 		return err
