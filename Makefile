@@ -45,7 +45,8 @@ integration-tests-with-cover:
 # Long-running e2e tests
 .PHONY: stability-tests
 stability-tests: otelcontribcol
-	$(MAKE) -C testbed run-stability-tests
+	@echo Stability tests are disabled until we have a stable performance environment.
+	@echo To enable the tests replace this echo by $(MAKE) -C testbed run-stability-tests
 
 .PHONY: gotidy
 gotidy:
@@ -74,6 +75,16 @@ add-tag:
 	@set -e; for dir in $(ALL_MODULES); do \
 	  (echo Adding tag "$${dir:2}/$${TAG}" && \
 	 	git tag -a "$${dir:2}/$${TAG}" -s -m "Version ${dir:2}/${TAG}" ); \
+	done
+
+.PHONY: push-tag
+push-tag:
+	@[ "${TAG}" ] || ( echo ">> env var TAG is not set"; exit 1 )
+	@echo "Pushing tag ${TAG}"
+	@git push upstream ${TAG}
+	@set -e; for dir in $(ALL_MODULES); do \
+	  (echo Pushing tag "$${dir:2}/$${TAG}" && \
+	 	git push upstream "$${dir:2}/$${TAG}"); \
 	done
 
 .PHONY: delete-tag

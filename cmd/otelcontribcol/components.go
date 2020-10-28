@@ -37,6 +37,7 @@ import (
 	"github.com/open-telemetry/opentelemetry-collector-contrib/extension/httpforwarder"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/extension/observer/hostobserver"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/extension/observer/k8sobserver"
+	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/groupbytraceprocessor"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/k8sprocessor"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/metricstransformprocessor"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/resourcedetectionprocessor"
@@ -68,9 +69,9 @@ func components() (component.Factories, error) {
 	}
 
 	extensions := []component.ExtensionFactory{
-		k8sobserver.NewFactory(),
 		hostobserver.NewFactory(),
 		httpforwarder.NewFactory(),
+		k8sobserver.NewFactory(),
 	}
 
 	for _, ext := range factories.Extensions {
@@ -83,22 +84,22 @@ func components() (component.Factories, error) {
 	}
 
 	receivers := []component.ReceiverFactory{
-		collectdreceiver.NewFactory(),
-		sapmreceiver.NewFactory(),
-		signalfxreceiver.NewFactory(),
+		awsecscontainermetricsreceiver.NewFactory(),
+		awsxrayreceiver.NewFactory(),
 		carbonreceiver.NewFactory(),
-		wavefrontreceiver.NewFactory(),
-		redisreceiver.NewFactory(),
-		kubeletstatsreceiver.NewFactory(),
-		simpleprometheusreceiver.NewFactory(),
+		collectdreceiver.NewFactory(),
+		dockerstatsreceiver.NewFactory(),
 		k8sclusterreceiver.NewFactory(),
+		kubeletstatsreceiver.NewFactory(),
 		prometheusexecreceiver.NewFactory(),
 		receivercreator.NewFactory(),
-		statsdreceiver.NewFactory(),
-		awsxrayreceiver.NewFactory(),
+		redisreceiver.NewFactory(),
+		sapmreceiver.NewFactory(),
+		signalfxreceiver.NewFactory(),
+		simpleprometheusreceiver.NewFactory(),
 		splunkhecreceiver.NewFactory(),
-		dockerstatsreceiver.NewFactory(),
-		awsecscontainermetricsreceiver.NewFactory(),
+		statsdreceiver.NewFactory(),
+		wavefrontreceiver.NewFactory(),
 	}
 	for _, rcv := range factories.Receivers {
 		receivers = append(receivers, rcv)
@@ -109,21 +110,21 @@ func components() (component.Factories, error) {
 	}
 
 	exporters := []component.ExporterFactory{
-		stackdriverexporter.NewFactory(),
-		azuremonitorexporter.NewFactory(),
-		signalfxexporter.NewFactory(),
-		sapmexporter.NewFactory(),
-		kinesisexporter.NewFactory(),
-		awsxrayexporter.NewFactory(),
-		carbonexporter.NewFactory(),
-		honeycombexporter.NewFactory(),
-		jaegerthrifthttpexporter.NewFactory(),
-		newrelicexporter.NewFactory(),
-		splunkhecexporter.NewFactory(),
-		elasticexporter.NewFactory(),
 		alibabacloudlogserviceexporter.NewFactory(),
 		awsemfexporter.NewFactory(),
+		awsxrayexporter.NewFactory(),
+		azuremonitorexporter.NewFactory(),
+		carbonexporter.NewFactory(),
+		elasticexporter.NewFactory(),
+		honeycombexporter.NewFactory(),
+		jaegerthrifthttpexporter.NewFactory(),
+		kinesisexporter.NewFactory(),
+		newrelicexporter.NewFactory(),
+		sapmexporter.NewFactory(),
 		sentryexporter.NewFactory(),
+		signalfxexporter.NewFactory(),
+		splunkhecexporter.NewFactory(),
+		stackdriverexporter.NewFactory(),
 	}
 	for _, exp := range factories.Exporters {
 		exporters = append(exporters, exp)
@@ -135,9 +136,10 @@ func components() (component.Factories, error) {
 
 	processors := []component.ProcessorFactory{
 		sourceprocessor.NewFactory(),
+		groupbytraceprocessor.NewFactory(),
 		k8sprocessor.NewFactory(),
-		resourcedetectionprocessor.NewFactory(),
 		metricstransformprocessor.NewFactory(),
+		resourcedetectionprocessor.NewFactory(),
 		routingprocessor.NewFactory(),
 	}
 	for _, pr := range factories.Processors {
