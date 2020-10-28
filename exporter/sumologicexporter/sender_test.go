@@ -225,7 +225,7 @@ func TestOverrideSourceName(t *testing.T) {
 	test.s.buffer = exampleLog()
 
 	err := test.s.sendLogs("test_metadata")
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 }
 
 func TestOverrideSourceCategory(t *testing.T) {
