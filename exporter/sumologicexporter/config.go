@@ -49,7 +49,7 @@ type Config struct {
 	MetricFormat MetricFormatType `mapstructure:"metric_format"`
 
 	// List of regexes for attributes which should be send as metadata
-	MetadataFields []string `mapstructure:"metadata_attributes"`
+	MetadataAttributes []string `mapstructure:"metadata_attributes"`
 
 	// Sumo specific options
 	// Desired source category.

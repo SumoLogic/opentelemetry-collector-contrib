@@ -73,7 +73,7 @@ func (se *sumologicexporter) pushLogsData(ctx context.Context, ld pdata.Logs) (d
 		errors           []error
 	)
 
-	filter, err := newFiltering(se.config.MetadataFields)
+	filter, err := newFiltering(se.config.MetadataAttributes)
 	if err != nil {
 		return 0, err
 	}
