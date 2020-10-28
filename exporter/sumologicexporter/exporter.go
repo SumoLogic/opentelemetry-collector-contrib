@@ -107,16 +107,10 @@ func (se *sumologicexporter) pushLogsData(ctx context.Context, ld pdata.Logs) (d
 				previousMetadata = currentMetadata
 
 				// add log to the buffer
-				sdr.appendLog(log)
-
-				// Flush buffer to avoid overlow
-				if sdr.count() == maxBufferSize {
-					err := sdr.sendLogs(previousMetadata)
-					if err != nil {
-						droppedTimeSeries += sdr.count()
-						errors = append(errors, err)
-					}
-					sdr.cleanBuffer()
+				dropped, err := sdr.appendLog(log, previousMetadata)
+				if err != nil {
+					droppedTimeSeries += dropped
+					errors = append(errors, err)
 				}
 			}
 		}

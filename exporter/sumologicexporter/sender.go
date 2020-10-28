@@ -186,8 +186,16 @@ func (s *sender) cleanBuffer() {
 }
 
 // append adds log to the buffer
-func (s *sender) appendLog(log pdata.LogRecord) {
+func (s *sender) appendLog(log pdata.LogRecord, metadata FieldsType) (int, error) {
 	s.buffer = append(s.buffer, log)
+
+	if s.count() == maxBufferSize {
+		err := s.sendLogs(metadata)
+		s.cleanBuffer()
+		return maxBufferSize, err
+	}
+
+	return 0, nil
 }
 
 // count returns number of logs in buffer
