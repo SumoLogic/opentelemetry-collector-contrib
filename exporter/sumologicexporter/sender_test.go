@@ -15,6 +15,7 @@
 package sumologicexporter
 
 import (
+	"github.com/stretchr/testify/require"
 	"context"
 	"io"
 	"net/http"
@@ -55,10 +56,10 @@ func prepareSenderTest(t *testing.T, cb []func(req *http.Request)) *senderTest {
 	}
 	factory := NewFactory()
 	exp, err := factory.CreateLogsExporter(context.Background(), component.ExporterCreateParams{Logger: zap.NewNop()}, cfg)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	f, err := newFiltering([]string{})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	return &senderTest{
 		exp: exp,
@@ -76,7 +77,7 @@ func prepareSenderTest(t *testing.T, cb []func(req *http.Request)) *senderTest {
 func extractBody(t *testing.T, req *http.Request) string {
 	buf := new(strings.Builder)
 	_, err := io.Copy(buf, req.Body)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	return buf.String()
 }
 
