@@ -180,7 +180,7 @@ func (s *sender) appendAndSend(line string, pipeline PipelineType, body *strings
 	return nil
 }
 
-// clean buffer zeroes buffer
+// cleanBuffer zeroes buffer
 func (s *sender) cleanBuffer() {
 	s.buffer = (s.buffer)[:0]
 }
