@@ -17,15 +17,15 @@ type filtering struct {
 type FieldsType string
 
 func newFiltering(fields []string) (*filtering, error) {
-	var metadataRegexes []*regexp.Regexp
+	metadataRegexes := make([]*regexp.Regexp, len(fields))
 
-	for _, field := range fields {
+	for i, field := range fields {
 		regex, err := regexp.Compile(field)
 		if err != nil {
 			return nil, err
 		}
 
-		metadataRegexes = append(metadataRegexes, regex)
+		metadataRegexes[i] = regex
 	}
 
 	return &filtering{
