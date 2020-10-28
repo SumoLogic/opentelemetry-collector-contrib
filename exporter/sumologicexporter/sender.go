@@ -239,7 +239,7 @@ func (s *sender) cleanBuffer() {
 }
 
 // append adds log to the buffer
-func (s *sender) appendLog(log pdata.LogRecord, metadata FieldsType) (int, error) {
+func (s *sender) batch(log pdata.LogRecord, metadata FieldsType) (int, error) {
 	s.buffer = append(s.buffer, log)
 
 	if s.count() == maxBufferSize {

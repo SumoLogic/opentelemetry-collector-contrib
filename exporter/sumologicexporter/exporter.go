@@ -108,7 +108,7 @@ func (se *sumologicexporter) pushLogsData(ctx context.Context, ld pdata.Logs) (d
 				previousMetadata = currentMetadata
 
 				// add log to the buffer
-				dropped, err := sdr.appendLog(log, previousMetadata)
+				dropped, err := sdr.batch(log, previousMetadata)
 				if err != nil {
 					droppedTimeSeries += dropped
 					errors = append(errors, err)
