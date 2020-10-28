@@ -33,6 +33,7 @@ const (
 type sumologicexporter struct {
 	config *Config
 	client *http.Client
+	filter *filtering
 }
 
 func newLogsExporter(
@@ -55,11 +56,17 @@ func newLogsExporter(
 }
 
 func initExporter(cfg *Config) (*sumologicexporter, error) {
+	filter, err := newFiltering(cfg.MetadataAttributes)
+	if err != nil {
+		return nil, err
+	}
+
 	se := &sumologicexporter{
 		config: cfg,
 		client: &http.Client{
 			Timeout: cfg.TimeoutSettings.Timeout,
 		},
+		filter: filter,
 	}
 
 	return se, nil
@@ -71,14 +78,8 @@ func (se *sumologicexporter) pushLogsData(ctx context.Context, ld pdata.Logs) (d
 		currentMetadata  FieldsType
 		previousMetadata FieldsType
 		errors           []error
+		sdr              *sender = newSender(se.config, se.client, se.filter)
 	)
-
-	filter, err := newFiltering(se.config.MetadataAttributes)
-	if err != nil {
-		return 0, err
-	}
-
-	sdr := newSender(se.config, se.client, filter)
 
 	// Iterate over ResourceLogs
 	for i := 0; i < ld.ResourceLogs().Len(); i++ {
