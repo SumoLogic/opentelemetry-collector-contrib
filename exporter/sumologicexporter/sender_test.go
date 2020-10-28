@@ -15,13 +15,14 @@
 package sumologicexporter
 
 import (
-	"github.com/stretchr/testify/require"
 	"context"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 
 	"github.com/stretchr/testify/assert"
 	"go.opentelemetry.io/collector/component"
@@ -35,14 +36,12 @@ type senderTest struct {
 	s   *sender
 }
 
-func prepareSenderTest(t *testing.T, cb []func(req *http.Request)) *senderTest {
+func prepareSenderTest(t *testing.T, cb []func(res http.ResponseWriter, req *http.Request)) *senderTest {
 	reqCounter := 0
 	// generate a test server so we can capture and inspect the request
 	testServer := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
-		res.WriteHeader(200)
-		res.Write([]byte(""))
 		if len(cb) > 0 && assert.Greater(t, len(cb), reqCounter) {
-			cb[reqCounter](req)
+			cb[reqCounter](res, req)
 			reqCounter++
 		}
 	}))
@@ -91,13 +90,17 @@ func exampleLog() []pdata.LogRecord {
 }
 
 func TestSend(t *testing.T) {
-	test := prepareSenderTest(t, []func(req *http.Request){func(req *http.Request) {
-		body := extractBody(t, req)
-		assert.Equal(t, body, "Example log\nAnother example log")
-		assert.Equal(t, req.Header.Get("X-Sumo-Fields"), "test_metadata")
-		assert.Equal(t, req.Header.Get("X-Sumo-Client"), "otelcol")
-		assert.Equal(t, req.Header.Get("Content-Type"), "application/x-www-form-urlencoded")
-	}})
+	test := prepareSenderTest(t, []func(res http.ResponseWriter, req *http.Request){
+		func(res http.ResponseWriter, req *http.Request) {
+			res.WriteHeader(200)
+			res.Write([]byte(""))
+			body := extractBody(t, req)
+			assert.Equal(t, body, "Example log\nAnother example log")
+			assert.Equal(t, req.Header.Get("X-Sumo-Fields"), "test_metadata")
+			assert.Equal(t, req.Header.Get("X-Sumo-Client"), "otelcol")
+			assert.Equal(t, req.Header.Get("Content-Type"), "application/x-www-form-urlencoded")
+		},
+	})
 	defer func() { test.srv.Close() }()
 
 	buffer := make([]pdata.LogRecord, 2)
@@ -114,12 +117,16 @@ func TestSend(t *testing.T) {
 }
 
 func TestSendSplit(t *testing.T) {
-	test := prepareSenderTest(t, []func(req *http.Request){
-		func(req *http.Request) {
+	test := prepareSenderTest(t, []func(res http.ResponseWriter, req *http.Request){
+		func(res http.ResponseWriter, req *http.Request) {
+			res.WriteHeader(200)
+			res.Write([]byte(""))
 			body := extractBody(t, req)
 			assert.Equal(t, body, "Example log")
 		},
-		func(req *http.Request) {
+		func(res http.ResponseWriter, req *http.Request) {
+			res.WriteHeader(200)
+			res.Write([]byte(""))
 			body := extractBody(t, req)
 			assert.Equal(t, body, "Another example log")
 		},
@@ -141,15 +148,19 @@ func TestSendSplit(t *testing.T) {
 }
 
 func TestSendJson(t *testing.T) {
-	test := prepareSenderTest(t, []func(req *http.Request){func(req *http.Request) {
-		body := extractBody(t, req)
-		expected := `{"key1":"value1","key2":"value2","log":"Example log"}
+	test := prepareSenderTest(t, []func(res http.ResponseWriter, req *http.Request){
+		func(res http.ResponseWriter, req *http.Request) {
+			res.WriteHeader(200)
+			res.Write([]byte(""))
+			body := extractBody(t, req)
+			expected := `{"key1":"value1","key2":"value2","log":"Example log"}
 {"key1":"value1","key2":"value2","log":"Another example log"}`
-		assert.Equal(t, body, expected)
-		assert.Equal(t, req.Header.Get("X-Sumo-Fields"), "test_metadata")
-		assert.Equal(t, req.Header.Get("X-Sumo-Client"), "otelcol")
-		assert.Equal(t, req.Header.Get("Content-Type"), "application/x-www-form-urlencoded")
-	}})
+			assert.Equal(t, body, expected)
+			assert.Equal(t, req.Header.Get("X-Sumo-Fields"), "test_metadata")
+			assert.Equal(t, req.Header.Get("X-Sumo-Client"), "otelcol")
+			assert.Equal(t, req.Header.Get("Content-Type"), "application/x-www-form-urlencoded")
+		},
+	})
 	defer func() { test.srv.Close() }()
 	test.s.config.LogFormat = JSONFormat
 
@@ -171,12 +182,16 @@ func TestSendJson(t *testing.T) {
 }
 
 func TestSendJsonSplit(t *testing.T) {
-	test := prepareSenderTest(t, []func(req *http.Request){
-		func(req *http.Request) {
+	test := prepareSenderTest(t, []func(res http.ResponseWriter, req *http.Request){
+		func(res http.ResponseWriter, req *http.Request) {
+			res.WriteHeader(200)
+			res.Write([]byte(""))
 			body := extractBody(t, req)
 			assert.Equal(t, body, `{"key1":"value1","key2":"value2","log":"Example log"}`)
 		},
-		func(req *http.Request) {
+		func(res http.ResponseWriter, req *http.Request) {
+			res.WriteHeader(200)
+			res.Write([]byte(""))
 			body := extractBody(t, req)
 			assert.Equal(t, body, `{"key1":"value1","key2":"value2","log":"Another example log"}`)
 		},
@@ -203,7 +218,12 @@ func TestSendJsonSplit(t *testing.T) {
 }
 
 func TestSendUnexpectedFormat(t *testing.T) {
-	test := prepareSenderTest(t, []func(req *http.Request){func(req *http.Request) {}})
+	test := prepareSenderTest(t, []func(res http.ResponseWriter, req *http.Request){
+		func(res http.ResponseWriter, req *http.Request) {
+			res.WriteHeader(200)
+			res.Write([]byte(""))
+		},
+	})
 	defer func() { test.srv.Close() }()
 	test.s.config.LogFormat = "dummy"
 
@@ -217,9 +237,13 @@ func TestSendUnexpectedFormat(t *testing.T) {
 }
 
 func TestOverrideSourceName(t *testing.T) {
-	test := prepareSenderTest(t, []func(req *http.Request){func(req *http.Request) {
-		assert.Equal(t, req.Header.Get("X-Sumo-Name"), "Test source name")
-	}})
+	test := prepareSenderTest(t, []func(res http.ResponseWriter, req *http.Request){
+		func(res http.ResponseWriter, req *http.Request) {
+			res.WriteHeader(200)
+			res.Write([]byte(""))
+			assert.Equal(t, req.Header.Get("X-Sumo-Name"), "Test source name")
+		},
+	})
 	defer func() { test.srv.Close() }()
 
 	test.s.config.SourceName = "Test source name"
@@ -230,9 +254,13 @@ func TestOverrideSourceName(t *testing.T) {
 }
 
 func TestOverrideSourceCategory(t *testing.T) {
-	test := prepareSenderTest(t, []func(req *http.Request){func(req *http.Request) {
-		assert.Equal(t, req.Header.Get("X-Sumo-Category"), "Test source category")
-	}})
+	test := prepareSenderTest(t, []func(res http.ResponseWriter, req *http.Request){
+		func(res http.ResponseWriter, req *http.Request) {
+			res.WriteHeader(200)
+			res.Write([]byte(""))
+			assert.Equal(t, req.Header.Get("X-Sumo-Category"), "Test source category")
+		},
+	})
 	defer func() { test.srv.Close() }()
 
 	test.s.config.SourceCategory = "Test source category"
@@ -243,9 +271,13 @@ func TestOverrideSourceCategory(t *testing.T) {
 }
 
 func TestOverrideSourceHost(t *testing.T) {
-	test := prepareSenderTest(t, []func(req *http.Request){func(req *http.Request) {
-		assert.Equal(t, req.Header.Get("X-Sumo-Host"), "Test source host")
-	}})
+	test := prepareSenderTest(t, []func(res http.ResponseWriter, req *http.Request){
+		func(res http.ResponseWriter, req *http.Request) {
+			res.WriteHeader(200)
+			res.Write([]byte(""))
+			assert.Equal(t, req.Header.Get("X-Sumo-Host"), "Test source host")
+		},
+	})
 	defer func() { test.srv.Close() }()
 
 	test.s.config.SourceHost = "Test source host"
