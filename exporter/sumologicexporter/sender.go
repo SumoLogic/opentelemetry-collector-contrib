@@ -75,13 +75,12 @@ func (s *sender) send(pipeline PipelineType, body *strings.Reader, fields Fields
 	}
 
 	resp, err := s.client.Do(req)
-
-	if resp.StatusCode < 200 || resp.StatusCode >= 400 {
-		return fmt.Errorf("Error during sending data: %s", resp.Status)
-	}
 	// ToDo: Add retries mechanism
 	if err != nil {
 		return err
+	}
+	if resp.StatusCode < 200 || resp.StatusCode >= 400 {
+		return fmt.Errorf("Error during sending data: %s", resp.Status)
 	}
 	return nil
 }
