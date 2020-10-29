@@ -238,7 +238,7 @@ func (s *sender) cleanBuffer() {
 	s.buffer = (s.buffer)[:0]
 }
 
-// append adds log to the buffer
+// batch adds log to the buffer and flush them if buffer is full to avoid overflow
 func (s *sender) batch(log pdata.LogRecord, metadata FieldsType) (int, error) {
 	s.buffer = append(s.buffer, log)
 
