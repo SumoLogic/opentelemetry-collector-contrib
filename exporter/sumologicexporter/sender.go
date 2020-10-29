@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 
@@ -42,7 +43,7 @@ func newSender(cfg *Config, cl *http.Client, f *filtering) *sender {
 }
 
 // Send sends data to sumologic
-func (s *sender) send(pipeline PipelineType, body *strings.Reader, fields FieldsType) error {
+func (s *sender) send(pipeline PipelineType, body io.Reader, fields FieldsType) error {
 	// Add headers
 	req, err := http.NewRequest(http.MethodPost, s.config.URL, body)
 	if err != nil {
