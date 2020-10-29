@@ -196,12 +196,17 @@ func (s *sender) sendLogsJSONFormat(fields FieldsType) (int, error) {
 }
 
 // appendAndSend appends line to the body and eventually sends data to avoid exceeding the request limit
-func (s *sender) appendAndSend(line string, pipeline PipelineType, body *strings.Builder, fields FieldsType) (bool, bool, error) {
+func (s *sender) appendAndSend(
+	line string,
+	pipeline PipelineType,
+	body *strings.Builder,
+	fields FieldsType,
+) (sent bool, appended bool, _ error) {
 	var errors []error
 	// sent gives information if the data was sent or not
-	sent := false
+	sent = false
 	// appended keeps state of appending new log line to the body
-	appended := true
+	appended = true
 
 	if body.Len() > 0 && body.Len()+len(line) > s.config.MaxRequestBodySize {
 		err := s.send(LogsPipeline, strings.NewReader(body.String()), fields)
