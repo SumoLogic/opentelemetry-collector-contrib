@@ -86,6 +86,7 @@ func (s *sender) send(pipeline PipelineType, body io.Reader, fields FieldsType) 
 	return nil
 }
 
+// sendLogs sends logs in right format basing on the s.config.LogFormat
 func (s *sender) sendLogs(fields FieldsType) (int, error) {
 	switch s.config.LogFormat {
 	case TextFormat:
