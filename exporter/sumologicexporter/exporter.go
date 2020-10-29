@@ -123,7 +123,6 @@ func (se *sumologicexporter) pushLogsData(ctx context.Context, ld pdata.Logs) (d
 		droppedTimeSeries += dropped
 		errors = append(errors, err)
 	}
-	sdr.cleanBuffer()
 
 	return droppedTimeSeries, componenterror.CombineErrors(errors)
 }
