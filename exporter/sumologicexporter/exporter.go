@@ -18,11 +18,10 @@ import (
 	"context"
 	"net/http"
 
-	"go.opentelemetry.io/collector/component/componenterror"
-	"go.opentelemetry.io/collector/exporter/exporterhelper"
-
 	"go.opentelemetry.io/collector/component"
+	"go.opentelemetry.io/collector/component/componenterror"
 	"go.opentelemetry.io/collector/consumer/pdata"
+	"go.opentelemetry.io/collector/exporter/exporterhelper"
 )
 
 const (
