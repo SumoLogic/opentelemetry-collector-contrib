@@ -111,7 +111,7 @@ const (
 	// DefaultCompressEncoding defines default CompressEncoding
 	DefaultCompressEncoding string = "gzip"
 	// DefaultMaxRequestBodySize defines default MaxRequestBodySize in bytes
-	DefaultMaxRequestBodySize int = 20_971_520
+	DefaultMaxRequestBodySize int = 20 * 1024 * 1024
 	// DefaultLogFormat defines default LogFormat
 	DefaultLogFormat LogFormatType = JSONFormat
 	// DefaultMetricFormat defines default MetricFormat
