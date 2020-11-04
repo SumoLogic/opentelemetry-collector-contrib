@@ -51,8 +51,9 @@ func (f *filtering) convertAttributeToString(value pdata.AttributeValue) string 
 		return ""
 	case pdata.AttributeValueNULL:
 		return ""
+	default:
+		return ""
 	}
-	return ""
 }
 
 // filter returns map of strings which matches at least one of the filtering regexes
