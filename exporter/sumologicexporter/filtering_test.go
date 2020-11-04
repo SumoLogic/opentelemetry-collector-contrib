@@ -89,7 +89,7 @@ func TestConvertBoolAttributeToString(t *testing.T) {
 
 	regexes := []string{}
 	f, err := newFiltering(regexes)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	value, _ := attributes.Get("key")
 	data := f.convertAttributeToString(value)
