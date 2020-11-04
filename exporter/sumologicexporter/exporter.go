@@ -37,6 +37,7 @@ type sumologicexporter struct {
 
 func newLogsExporter(
 	cfg *Config,
+	params component.ExporterCreateParams,
 ) (component.LogsExporter, error) {
 	se, err := initExporter(cfg)
 	if err != nil {
@@ -45,6 +46,7 @@ func newLogsExporter(
 
 	return exporterhelper.NewLogsExporter(
 		cfg,
+		params.Logger,
 		se.pushLogsData,
 		// Disable exporterhelper Timeout, since we are using a custom mechanism
 		// within exporter itself
