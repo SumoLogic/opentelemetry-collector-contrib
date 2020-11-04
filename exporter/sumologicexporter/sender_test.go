@@ -23,14 +23,13 @@ import (
 	"strings"
 	"testing"
 
-	"go.opentelemetry.io/collector/component/componenterror"
-
-	"github.com/stretchr/testify/require"
-
 	"github.com/stretchr/testify/assert"
-	"go.opentelemetry.io/collector/component"
-	"go.opentelemetry.io/collector/consumer/pdata"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
+
+	"go.opentelemetry.io/collector/component"
+	"go.opentelemetry.io/collector/component/componenterror"
+	"go.opentelemetry.io/collector/consumer/pdata"
 )
 
 type senderTest struct {

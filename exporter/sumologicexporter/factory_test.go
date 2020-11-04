@@ -18,11 +18,11 @@ import (
 	"testing"
 	"time"
 
-	"go.opentelemetry.io/collector/exporter/exporterhelper"
-
 	"github.com/stretchr/testify/assert"
+
 	"go.opentelemetry.io/collector/config/configcheck"
 	"go.opentelemetry.io/collector/config/configmodels"
+	"go.opentelemetry.io/collector/exporter/exporterhelper"
 )
 
 func TestType(t *testing.T) {
