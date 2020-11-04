@@ -20,6 +20,7 @@ import (
 
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/component/componenterror"
+	"go.opentelemetry.io/collector/consumer/consumererror"
 	"go.opentelemetry.io/collector/consumer/pdata"
 	"go.opentelemetry.io/collector/exporter/exporterhelper"
 )
@@ -80,6 +81,7 @@ func (se *sumologicexporter) pushLogsData(ctx context.Context, ld pdata.Logs) (d
 		previousMetadata FieldsType
 		errors           []error
 		sdr              *sender = newSender(se.config, se.client, se.filter)
+		droppedRecords   []pdata.LogRecord
 	)
 
 	// Iterate over ResourceLogs
@@ -99,7 +101,7 @@ func (se *sumologicexporter) pushLogsData(ctx context.Context, ld pdata.Logs) (d
 				if currentMetadata != previousMetadata && previousMetadata != "" {
 					dropped, err := sdr.sendLogs(previousMetadata)
 					if err != nil {
-						droppedTimeSeries += dropped
+						droppedRecords = append(droppedRecords, dropped...)
 						errors = append(errors, err)
 					}
 					sdr.cleanBuffer()
@@ -111,7 +113,7 @@ func (se *sumologicexporter) pushLogsData(ctx context.Context, ld pdata.Logs) (d
 				// add log to the buffer
 				dropped, err := sdr.batch(log, previousMetadata)
 				if err != nil {
-					droppedTimeSeries += dropped
+					droppedRecords = append(droppedRecords, dropped...)
 					errors = append(errors, err)
 				}
 			}
@@ -121,9 +123,17 @@ func (se *sumologicexporter) pushLogsData(ctx context.Context, ld pdata.Logs) (d
 	// Flush pending logs
 	dropped, err := sdr.sendLogs(previousMetadata)
 	if err != nil {
-		droppedTimeSeries += dropped
+		droppedRecords = append(droppedRecords, dropped...)
 		errors = append(errors, err)
 	}
 
-	return droppedTimeSeries, componenterror.CombineErrors(errors)
+	// Move all dropped records to Logs
+	droppedLogs := pdata.NewLogs()
+	droppedLogs.ResourceLogs().Resize(1)
+	droppedLogs.ResourceLogs().At(0).InstrumentationLibraryLogs().Resize(1)
+	for _, record := range droppedRecords {
+		droppedLogs.ResourceLogs().At(0).InstrumentationLibraryLogs().At(0).Logs().Append(record)
+	}
+
+	return len(droppedRecords), consumererror.PartialLogsError(componenterror.CombineErrors(errors), droppedLogs)
 }
