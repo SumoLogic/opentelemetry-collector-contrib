@@ -121,7 +121,7 @@ func (s *sender) sendLogsTextFormat(fields FieldsType) ([]pdata.LogRecord, error
 
 		// If data was sent, cleanup the currentTimeSeries counter
 		if sent {
-			currentRecords = currentRecords[:]
+			currentRecords = currentRecords[:0]
 		}
 
 		// If log has been appended to body, increment the currentTimeSeries
@@ -175,7 +175,7 @@ func (s *sender) sendLogsJSONFormat(fields FieldsType) ([]pdata.LogRecord, error
 
 		// If data was sent, cleanup the currentTimeSeries counter
 		if sent {
-			currentRecords = currentRecords[:]
+			currentRecords = currentRecords[:0]
 		}
 
 		// If log has been appended to body, increment the currentTimeSeries

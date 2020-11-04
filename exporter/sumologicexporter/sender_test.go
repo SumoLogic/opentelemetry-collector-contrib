@@ -172,7 +172,7 @@ func TestSendSplitFailedOne(t *testing.T) {
 	assert.Equal(t, err, componenterror.CombineErrors([]error{
 		errors.New("Error during sending data: 500 Internal Server Error"),
 	}))
-	assert.Equal(t, dropped, 1)
+	assert.Equal(t, dropped, test.s.buffer[0:1])
 }
 
 func TestSendSplitFailedAll(t *testing.T) {
@@ -199,7 +199,7 @@ func TestSendSplitFailedAll(t *testing.T) {
 		errors.New("Error during sending data: 500 Internal Server Error"),
 		errors.New("Error during sending data: 404 Not Found"),
 	}))
-	assert.Equal(t, dropped, 2)
+	assert.Equal(t, dropped, test.s.buffer[0:2])
 }
 
 func TestSendJson(t *testing.T) {
@@ -272,7 +272,7 @@ func TestSendJsonSplitFailedOne(t *testing.T) {
 	assert.Equal(t, err, componenterror.CombineErrors([]error{
 		errors.New("Error during sending data: 500 Internal Server Error"),
 	}))
-	assert.Equal(t, dropped, 1)
+	assert.Equal(t, dropped, test.s.buffer[0:1])
 }
 func TestSendJsonSplitFailedAll(t *testing.T) {
 	test := prepareSenderTest(t, []func(res http.ResponseWriter, req *http.Request){
@@ -299,7 +299,7 @@ func TestSendJsonSplitFailedAll(t *testing.T) {
 		errors.New("Error during sending data: 500 Internal Server Error"),
 		errors.New("Error during sending data: 404 Not Found"),
 	}))
-	assert.Equal(t, dropped, 2)
+	assert.Equal(t, dropped, test.s.buffer[0:2])
 }
 
 func TestSendUnexpectedFormat(t *testing.T) {
