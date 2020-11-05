@@ -127,13 +127,17 @@ func (se *sumologicexporter) pushLogsData(ctx context.Context, ld pdata.Logs) (d
 		errors = append(errors, err)
 	}
 
-	// Move all dropped records to Logs
-	droppedLogs := pdata.NewLogs()
-	droppedLogs.ResourceLogs().Resize(1)
-	droppedLogs.ResourceLogs().At(0).InstrumentationLibraryLogs().Resize(1)
-	for _, record := range droppedRecords {
-		droppedLogs.ResourceLogs().At(0).InstrumentationLibraryLogs().At(0).Logs().Append(record)
+	if len(droppedRecords) > 0 {
+		// Move all dropped records to Logs
+		droppedLogs := pdata.NewLogs()
+		droppedLogs.ResourceLogs().Resize(1)
+		droppedLogs.ResourceLogs().At(0).InstrumentationLibraryLogs().Resize(1)
+		for _, record := range droppedRecords {
+			droppedLogs.ResourceLogs().At(0).InstrumentationLibraryLogs().At(0).Logs().Append(record)
+		}
+
+		return len(droppedRecords), consumererror.PartialLogsError(componenterror.CombineErrors(errors), droppedLogs)
 	}
 
-	return len(droppedRecords), consumererror.PartialLogsError(componenterror.CombineErrors(errors), droppedLogs)
+	return 0, nil
 }
