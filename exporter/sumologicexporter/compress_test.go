@@ -15,6 +15,7 @@
 package sumologicexporter
 
 import (
+	"compress/flate"
 	"compress/gzip"
 	"io"
 	"strings"
@@ -40,6 +41,25 @@ func decodeGzip(t *testing.T, data io.Reader) string {
 
 	buf := new(strings.Builder)
 	_, err = io.Copy(buf, r)
+	require.NoError(t, err)
+
+	return buf.String()
+}
+func TestCompressDeflate(t *testing.T) {
+	const message = "This is an example log"
+	body := strings.NewReader(message)
+
+	data, err := compressDeflate(body)
+	require.NoError(t, err)
+
+	assert.Equal(t, decodeDeflate(t, data), message)
+}
+
+func decodeDeflate(t *testing.T, data io.Reader) string {
+	r := flate.NewReader(data)
+
+	buf := new(strings.Builder)
+	_, err := io.Copy(buf, r)
 	require.NoError(t, err)
 
 	return buf.String()

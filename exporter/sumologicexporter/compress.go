@@ -16,6 +16,7 @@ package sumologicexporter
 
 import (
 	"bytes"
+	"compress/flate"
 	"compress/gzip"
 	"io"
 )
@@ -28,6 +29,27 @@ func compressGZIP(data io.Reader) (io.Reader, error) {
 
 	zw := gzip.NewWriter(&buf)
 	_, err := zw.Write(dataBytes.Bytes())
+	if err != nil {
+		return nil, err
+	}
+	if err = zw.Close(); err != nil {
+		return nil, err
+	}
+
+	return bytes.NewReader(buf.Bytes()), nil
+}
+
+func compressDeflate(data io.Reader) (io.Reader, error) {
+	var buf bytes.Buffer
+	var dataBytes bytes.Buffer
+
+	dataBytes.ReadFrom(data)
+
+	zw, err := flate.NewWriter(&buf, flate.BestCompression)
+	if err != nil {
+		return nil, err
+	}
+	_, err = zw.Write(dataBytes.Bytes())
 	if err != nil {
 		return nil, err
 	}

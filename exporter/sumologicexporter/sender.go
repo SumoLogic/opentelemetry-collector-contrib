@@ -69,6 +69,17 @@ func (s *sender) send(pipeline PipelineType, body io.Reader, fields Fields) erro
 
 			req.Header.Set("Content-Encoding", "gzip")
 		case DeflateCompression:
+			compressedData, err := compressDeflate(body)
+			if err != nil {
+				return err
+			}
+
+			req, err = http.NewRequest(http.MethodPost, s.config.URL, compressedData)
+			if err != nil {
+				return err
+			}
+
+			req.Header.Set("Content-Encoding", "deflate")
 		default:
 			return errors.New("unexpected compression encoding")
 		}

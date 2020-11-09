@@ -394,3 +394,23 @@ func TestSendCompressGzip(t *testing.T) {
 	err := test.s.send(LogsPipeline, reader, "some_metadata")
 	require.NoError(t, err)
 }
+
+func TestSendCompressDeflate(t *testing.T) {
+	test := prepareSenderTest(t, []func(res http.ResponseWriter, req *http.Request){
+		func(res http.ResponseWriter, req *http.Request) {
+			res.WriteHeader(200)
+			res.Write([]byte(""))
+			body := decodeDeflate(t, req.Body)
+			assert.Equal(t, req.Header.Get("Content-Encoding"), "deflate")
+			assert.Equal(t, body, "Some example log")
+		},
+	})
+	defer func() { test.srv.Close() }()
+
+	test.s.config.Compress = true
+	test.s.config.CompressEncoding = "deflate"
+	reader := strings.NewReader("Some example log")
+
+	err := test.s.send(LogsPipeline, reader, "some_metadata")
+	require.NoError(t, err)
+}
