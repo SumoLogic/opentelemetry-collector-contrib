@@ -50,14 +50,17 @@ func newSender(cfg *Config, cl *http.Client, f filter) *sender {
 
 // Send sends data to sumologic
 func (s *sender) send(pipeline PipelineType, body io.Reader, fields Fields) error {
-	var req *http.Request
-	var err error
+	var (
+		req            *http.Request
+		err            error
+		compressedData io.Reader
+	)
 
 	switch s.config.Compress {
 	case true:
 		switch s.config.CompressEncoding {
 		case GZIPCompression:
-			compressedData, err := compressGZIP(body)
+			compressedData, err = compressGZIP(body)
 			if err != nil {
 				return err
 			}
@@ -69,7 +72,7 @@ func (s *sender) send(pipeline PipelineType, body io.Reader, fields Fields) erro
 
 			req.Header.Set("Content-Encoding", "gzip")
 		case DeflateCompression:
-			compressedData, err := compressDeflate(body)
+			compressedData, err = compressDeflate(body)
 			if err != nil {
 				return err
 			}
