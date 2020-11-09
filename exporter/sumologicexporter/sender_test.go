@@ -374,3 +374,23 @@ func TestBuffer(t *testing.T) {
 	assert.Equal(t, test.s.count(), 2)
 	assert.Equal(t, test.s.buffer, logs)
 }
+
+func TestSendCompressGzip(t *testing.T) {
+	test := prepareSenderTest(t, []func(res http.ResponseWriter, req *http.Request){
+		func(res http.ResponseWriter, req *http.Request) {
+			res.WriteHeader(200)
+			res.Write([]byte(""))
+			body := decodeGzip(t, req.Body)
+			assert.Equal(t, req.Header.Get("Content-Encoding"), "gzip")
+			assert.Equal(t, body, "Some example log")
+		},
+	})
+	defer func() { test.srv.Close() }()
+
+	test.s.config.Compress = true
+	test.s.config.CompressEncoding = "gzip"
+	reader := strings.NewReader("Some example log")
+
+	err := test.s.send(LogsPipeline, reader, "some_metadata")
+	require.NoError(t, err)
+}

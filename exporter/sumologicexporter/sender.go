@@ -50,12 +50,36 @@ func newSender(cfg *Config, cl *http.Client, f filter) *sender {
 
 // Send sends data to sumologic
 func (s *sender) send(pipeline PipelineType, body io.Reader, fields Fields) error {
-	// Add headers
-	req, err := http.NewRequest(http.MethodPost, s.config.URL, body)
-	if err != nil {
-		return err
+	var req *http.Request
+	var err error
+
+	switch s.config.Compress {
+	case true:
+		switch s.config.CompressEncoding {
+		case GZIPCompression:
+			compressedData, err := compressGZIP(body)
+			if err != nil {
+				return err
+			}
+
+			req, err = http.NewRequest(http.MethodPost, s.config.URL, compressedData)
+			if err != nil {
+				return err
+			}
+
+			req.Header.Set("Content-Encoding", "gzip")
+		case DeflateCompression:
+		default:
+			return errors.New("unexpected compression encoding")
+		}
+	case false:
+		req, err = http.NewRequest(http.MethodPost, s.config.URL, body)
+		if err != nil {
+			return err
+		}
 	}
 
+	// Add headers
 	req.Header.Add("X-Sumo-Client", s.config.Client)
 
 	if len(s.config.SourceHost) > 0 {
