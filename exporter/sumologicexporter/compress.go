@@ -17,11 +17,13 @@ package sumologicexporter
 import (
 	"bytes"
 	"compress/flate"
-	"compress/gzip"
 	"io"
+
+	gzip "github.com/klauspost/pgzip"
 )
 
-// compressGZIP returns gzip compressed data
+// compressGZIP takes a reader with uncompressed data and returns
+// a reader with the same data compressed using gzip algorithm
 func compressGZIP(data io.Reader) (io.Reader, error) {
 	var (
 		buf       bytes.Buffer
@@ -46,7 +48,8 @@ func compressGZIP(data io.Reader) (io.Reader, error) {
 	return bytes.NewReader(buf.Bytes()), nil
 }
 
-// compressGZIP returns deflate compressed data
+// compressDeflate takes a reader with uncompressed data and returns
+// a reader with the same data compressed using deflate algorithm
 func compressDeflate(data io.Reader) (io.Reader, error) {
 	var (
 		buf       bytes.Buffer
