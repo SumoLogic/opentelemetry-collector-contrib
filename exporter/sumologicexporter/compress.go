@@ -21,14 +21,21 @@ import (
 	"io"
 )
 
+// compressGZIP returns gzip compressed data
 func compressGZIP(data io.Reader) (io.Reader, error) {
-	var buf bytes.Buffer
-	var dataBytes bytes.Buffer
+	var (
+		buf       bytes.Buffer
+		dataBytes bytes.Buffer
+		err       error
+	)
 
-	dataBytes.ReadFrom(data)
+	_, err = dataBytes.ReadFrom(data)
+	if err != nil {
+		return nil, err
+	}
 
 	zw := gzip.NewWriter(&buf)
-	_, err := zw.Write(dataBytes.Bytes())
+	_, err = zw.Write(dataBytes.Bytes())
 	if err != nil {
 		return nil, err
 	}
@@ -39,11 +46,18 @@ func compressGZIP(data io.Reader) (io.Reader, error) {
 	return bytes.NewReader(buf.Bytes()), nil
 }
 
+// compressGZIP returns deflate compressed data
 func compressDeflate(data io.Reader) (io.Reader, error) {
-	var buf bytes.Buffer
-	var dataBytes bytes.Buffer
+	var (
+		buf       bytes.Buffer
+		dataBytes bytes.Buffer
+		err       error
+	)
 
-	dataBytes.ReadFrom(data)
+	_, err = dataBytes.ReadFrom(data)
+	if err != nil {
+		return nil, err
+	}
 
 	zw, err := flate.NewWriter(&buf, flate.BestCompression)
 	if err != nil {
