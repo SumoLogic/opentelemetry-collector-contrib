@@ -18,41 +18,57 @@ import (
 	"bytes"
 	"compress/flate"
 	"io"
+	"io/ioutil"
 
 	gzip "github.com/klauspost/pgzip"
 )
 
-// compressGZIP takes a reader with uncompressed data and returns
-// a reader with the same data compressed using gzip algorithm
-func compressGZIP(data io.Reader) (io.Reader, error) {
-	var (
-		buf       bytes.Buffer
-		dataBytes bytes.Buffer
-		err       error
-	)
-
-	_, err = dataBytes.ReadFrom(data)
-	if err != nil {
-		return nil, err
-	}
-
-	zw := gzip.NewWriter(&buf)
-	_, err = zw.Write(dataBytes.Bytes())
-	if err != nil {
-		return nil, err
-	}
-	if err = zw.Close(); err != nil {
-		return nil, err
-	}
-
-	return bytes.NewReader(buf.Bytes()), nil
+type compressor struct {
+	format CompressEncodingType
+	writer encoder
+	buf    bytes.Buffer
 }
 
-// compressDeflate takes a reader with uncompressed data and returns
-// a reader with the same data compressed using deflate algorithm
-func compressDeflate(data io.Reader) (io.Reader, error) {
+type encoder interface {
+	io.WriteCloser
+	Reset(dst io.Writer)
+}
+
+// newCompressor takes encoding format and returns compressor struct and error eventually
+func newCompressor(format CompressEncodingType) (compressor, error) {
 	var (
-		buf       bytes.Buffer
+		c compressor = compressor{
+			format: format,
+		}
+		writer encoder
+		err    error
+	)
+
+	switch format {
+	case GZIPCompression:
+		writer = gzip.NewWriter(ioutil.Discard)
+	case DeflateCompression:
+		writer, err = flate.NewWriter(ioutil.Discard, flate.BestCompression)
+		if err != nil {
+			return compressor{}, err
+		}
+	default:
+		writer = nil
+	}
+
+	c.writer = writer
+
+	return c, nil
+}
+
+// compress takes a reader with uncompressed data and returns
+// a reader with the same data compressed using c.writer
+func (c *compressor) compress(data io.Reader) (io.Reader, error) {
+	if c.writer == nil {
+		return data, nil
+	}
+
+	var (
 		dataBytes bytes.Buffer
 		err       error
 	)
@@ -62,17 +78,19 @@ func compressDeflate(data io.Reader) (io.Reader, error) {
 		return nil, err
 	}
 
-	zw, err := flate.NewWriter(&buf, flate.BestCompression)
+	// Reset c.buf to start with empty message
+	c.buf.Reset()
+	c.writer.Reset(&c.buf)
+
+	_, err = c.writer.Write(dataBytes.Bytes())
 	if err != nil {
-		return nil, err
-	}
-	_, err = zw.Write(dataBytes.Bytes())
-	if err != nil {
-		return nil, err
-	}
-	if err = zw.Close(); err != nil {
 		return nil, err
 	}
 
-	return bytes.NewReader(buf.Bytes()), nil
+	err = c.writer.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	return bytes.NewReader(c.buf.Bytes()), nil
 }

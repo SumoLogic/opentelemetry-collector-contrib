@@ -26,13 +26,37 @@ import (
 )
 
 func TestCompressGzip(t *testing.T) {
+	c, err := newCompressor(GZIPCompression)
+	require.NoError(t, err)
+
 	const message = "This is an example log"
 	body := strings.NewReader(message)
 
-	data, err := compressGZIP(body)
+	data, err := c.compress(body)
 	require.NoError(t, err)
 
 	assert.Equal(t, decodeGzip(t, data), message)
+}
+
+func TestCompressTwice(t *testing.T) {
+	c, err := newCompressor(GZIPCompression)
+	require.NoError(t, err)
+
+	const (
+		message       = "This is an example log"
+		secondMessage = "This is an another example log"
+	)
+
+	body := strings.NewReader(message)
+
+	data, err := c.compress(body)
+	require.NoError(t, err)
+	assert.Equal(t, decodeGzip(t, data), message)
+
+	body = strings.NewReader(secondMessage)
+	data, err = c.compress(body)
+	require.NoError(t, err)
+	assert.Equal(t, decodeGzip(t, data), secondMessage)
 }
 
 func decodeGzip(t *testing.T, data io.Reader) string {
@@ -45,11 +69,15 @@ func decodeGzip(t *testing.T, data io.Reader) string {
 
 	return buf.String()
 }
+
 func TestCompressDeflate(t *testing.T) {
+	c, err := newCompressor(DeflateCompression)
+	require.NoError(t, err)
+
 	const message = "This is an example log"
 	body := strings.NewReader(message)
 
-	data, err := compressDeflate(body)
+	data, err := c.compress(body)
 	require.NoError(t, err)
 
 	assert.Equal(t, decodeDeflate(t, data), message)

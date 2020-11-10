@@ -103,6 +103,8 @@ const (
 	GZIPCompression CompressEncodingType = "gzip"
 	// DeflateCompression represents compress_encoding: deflate
 	DeflateCompression CompressEncodingType = "deflate"
+	// NoCompression represents no compression (text)
+	NoCompression CompressEncodingType = "text"
 	// MetricsPipeline represents metrics pipeline
 	MetricsPipeline PipelineType = "metrics"
 	// LogsPipeline represents metrics pipeline
