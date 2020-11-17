@@ -63,7 +63,7 @@ func TestInitExporterInvalidCompressEncoding(t *testing.T) {
 	assert.EqualError(t, err, "unexpected compression encoding: test_format")
 }
 
-func TestAllSuccess(t *testing.T) {
+func TestAllLogsSuccess(t *testing.T) {
 	test := prepareSenderTest(t, []func(res http.ResponseWriter, req *http.Request){
 		func(res http.ResponseWriter, req *http.Request) {
 			res.WriteHeader(200)
@@ -86,7 +86,7 @@ func TestAllSuccess(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestAllFailed(t *testing.T) {
+func TestAllLogsFailed(t *testing.T) {
 	test := prepareSenderTest(t, []func(res http.ResponseWriter, req *http.Request){
 		func(res http.ResponseWriter, req *http.Request) {
 			res.WriteHeader(500)
@@ -110,7 +110,7 @@ func TestAllFailed(t *testing.T) {
 	assert.Equal(t, dropped, 2)
 }
 
-func TestPartiallyFailed(t *testing.T) {
+func TestLogsPartiallyFailed(t *testing.T) {
 	test := prepareSenderTest(t, []func(res http.ResponseWriter, req *http.Request){
 		func(res http.ResponseWriter, req *http.Request) {
 			res.WriteHeader(500)
@@ -141,6 +141,80 @@ func TestPartiallyFailed(t *testing.T) {
 	}
 
 	dropped, err := test.exp.pushLogsData(context.Background(), logs)
+	assert.EqualError(t, err, "error during sending data: 500 Internal Server Error")
+	assert.Equal(t, dropped, 1)
+}
+
+func metricPairToMetrics(mp []metricPair) pdata.Metrics {
+	metrics := pdata.NewMetrics()
+	metrics.ResourceMetrics().Resize(len(mp))
+	for num, record := range mp {
+		metrics.ResourceMetrics().At(num).Resource().InitEmpty()
+		record.attributes.CopyTo(metrics.ResourceMetrics().At(num).Resource().Attributes())
+		metrics.ResourceMetrics().At(num).InstrumentationLibraryMetrics().Resize(1)
+		metrics.ResourceMetrics().At(num).InstrumentationLibraryMetrics().At(0).Metrics().Append(record.metric)
+	}
+
+	return metrics
+}
+
+func TestAllMetricsSuccess(t *testing.T) {
+	test := prepareSenderTest(t, []func(res http.ResponseWriter, req *http.Request){
+		func(res http.ResponseWriter, req *http.Request) {
+			body := extractBody(t, req)
+			assert.Equal(t, body, `test=test_value test2=second_value metric=test.metric.data unit=bytes  14500 1605534165
+another_test=test_value metric=test.metric.data2 unit=s  123 1605534144
+another_test=test_value metric=test.metric.data2 unit=s  124 1605534145`)
+			assert.Equal(t, req.Header.Get("Content-Type"), "application/vnd.sumologic.carbon2")
+		},
+	})
+	defer func() { test.srv.Close() }()
+	metrics := metricPairToMetrics(exampleTwoIntMetrics())
+
+	_, err := test.exp.pushMetricsData(context.Background(), metrics)
+	assert.NoError(t, err)
+}
+
+func TestAllMetricsFailed(t *testing.T) {
+	test := prepareSenderTest(t, []func(res http.ResponseWriter, req *http.Request){
+		func(res http.ResponseWriter, req *http.Request) {
+			res.WriteHeader(500)
+			body := extractBody(t, req)
+			assert.Equal(t, body, `test=test_value test2=second_value metric=test.metric.data unit=bytes  14500 1605534165
+another_test=test_value metric=test.metric.data2 unit=s  123 1605534144
+another_test=test_value metric=test.metric.data2 unit=s  124 1605534145`)
+			assert.Equal(t, req.Header.Get("Content-Type"), "application/vnd.sumologic.carbon2")
+		},
+	})
+	defer func() { test.srv.Close() }()
+	metrics := metricPairToMetrics(exampleTwoIntMetrics())
+
+	dropped, err := test.exp.pushMetricsData(context.Background(), metrics)
+	assert.EqualError(t, err, "error during sending data: 500 Internal Server Error")
+	assert.Equal(t, dropped, 2)
+}
+
+func TestMetricsPartiallyFailed(t *testing.T) {
+	test := prepareSenderTest(t, []func(res http.ResponseWriter, req *http.Request){
+		func(res http.ResponseWriter, req *http.Request) {
+			res.WriteHeader(500)
+			body := extractBody(t, req)
+			assert.Equal(t, body, "test=test_value test2=second_value metric=test.metric.data unit=bytes  14500 1605534165")
+			assert.Equal(t, req.Header.Get("Content-Type"), "application/vnd.sumologic.carbon2")
+		},
+		func(res http.ResponseWriter, req *http.Request) {
+			res.WriteHeader(200)
+			body := extractBody(t, req)
+			assert.Equal(t, body, `another_test=test_value metric=test.metric.data2 unit=s  123 1605534144
+another_test=test_value metric=test.metric.data2 unit=s  124 1605534145`)
+			assert.Equal(t, req.Header.Get("Content-Type"), "application/vnd.sumologic.carbon2")
+		},
+	})
+	defer func() { test.srv.Close() }()
+	test.exp.config.MaxRequestBodySize = 1
+	metrics := metricPairToMetrics(exampleTwoIntMetrics())
+
+	dropped, err := test.exp.pushMetricsData(context.Background(), metrics)
 	assert.EqualError(t, err, "error during sending data: 500 Internal Server Error")
 	assert.Equal(t, dropped, 1)
 }
