@@ -27,6 +27,12 @@ import (
 	"go.opentelemetry.io/collector/consumer/pdata"
 )
 
+// metricPair represents information required to send one metric to the Sumo Logic
+type metricPair struct {
+	attributes pdata.AttributeMap
+	metric     pdata.Metric
+}
+
 type sender struct {
 	buffer []pdata.LogRecord
 	config *Config
