@@ -34,10 +34,11 @@ type metricPair struct {
 }
 
 type sender struct {
-	buffer []pdata.LogRecord
-	config *Config
-	client *http.Client
-	filter filter
+	buffer       []pdata.LogRecord
+	metricBuffer []metricPair
+	config       *Config
+	client       *http.Client
+	filter       filter
 }
 
 const (
@@ -81,8 +82,13 @@ func (s *sender) send(pipeline PipelineType, body io.Reader, fields Fields) erro
 		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 		req.Header.Add("X-Sumo-Fields", string(fields))
 	case MetricsPipeline:
-		// ToDo: Implement metrics pipeline
-		return errors.New("current sender version doesn't support metrics")
+		switch s.config.MetricFormat {
+		case Carbon2Format:
+			req.Header.Add("Content-Type", "application/vnd.sumologic.carbon2")
+		default:
+			// ToDo: Implement metrics pipeline
+			return errors.New("current sender version doesn't support metrics")
+		}
 	default:
 		return errors.New("unexpected pipeline")
 	}
@@ -224,7 +230,7 @@ func (s *sender) appendAndSend(
 	appended = true
 
 	if body.Len() > 0 && body.Len()+len(line) > s.config.MaxRequestBodySize {
-		err := s.send(LogsPipeline, strings.NewReader(body.String()), fields)
+		err := s.send(pipeline, strings.NewReader(body.String()), fields)
 		sent = true
 		if err != nil {
 			errors = append(errors, err)
@@ -275,4 +281,126 @@ func (s *sender) batch(log pdata.LogRecord, metadata Fields) ([]pdata.LogRecord,
 // count returns number of logs in buffer
 func (s *sender) count() int {
 	return len(s.buffer)
+}
+
+// count returns number of metrics in buffer
+func (s *sender) countMetrics() int {
+	return len(s.metricBuffer)
+}
+
+// sendMetrics sends metrics in right format basing on the s.config.MetricFormat
+func (s *sender) sendMetrics() ([]metricPair, error) {
+	switch s.config.MetricFormat {
+	case Carbon2Format:
+		return s.sendMetricsCarbon2Format()
+	default:
+		return nil, errors.New("unexpected metric format")
+	}
+}
+
+// batchMetric adds metric to the metrics buffer and flush them if buffer is full to avoid overflow
+// returns list of metric records which were not sent successfully
+func (s *sender) batchMetric(metric metricPair) ([]metricPair, error) {
+	s.metricBuffer = append(s.metricBuffer, metric)
+
+	if s.countMetrics() == maxBufferSize {
+		dropped, err := s.sendMetrics()
+		s.cleanBuffer()
+		return dropped, err
+	}
+
+	return nil, nil
+}
+
+func (s *sender) sendMetricsCarbon2Format() ([]metricPair, error) {
+	var (
+		body strings.Builder
+		errs []error
+		// droppedRecords tracks all dropped records
+		droppedRecords []metricPair
+		// currentRecords tracks records which are being actually processed
+		currentRecords []metricPair
+		nextLines      []string
+	)
+
+	for _, record := range s.metricBuffer {
+		switch record.metric.DataType() {
+		case pdata.MetricDataTypeIntGauge:
+			for i := 0; i < record.metric.IntGauge().DataPoints().Len(); i++ {
+				dataPoint := record.metric.IntGauge().DataPoints().At(i)
+				nextLines = append(nextLines,
+					fmt.Sprintf("%s  %d %d",
+						s.filter.Carbon2TagString(record),
+						dataPoint.Value(),
+						dataPoint.Timestamp()/1e9))
+			}
+		case pdata.MetricDataTypeIntSum:
+			for i := 0; i < record.metric.IntSum().DataPoints().Len(); i++ {
+				dataPoint := record.metric.IntSum().DataPoints().At(i)
+				nextLines = append(nextLines,
+					fmt.Sprintf("%s  %d %d",
+						s.filter.Carbon2TagString(record),
+						dataPoint.Value(),
+						dataPoint.Timestamp()/1e9))
+			}
+		case pdata.MetricDataTypeDoubleGauge:
+			for i := 0; i < record.metric.DoubleGauge().DataPoints().Len(); i++ {
+				dataPoint := record.metric.DoubleGauge().DataPoints().At(i)
+				nextLines = append(nextLines,
+					fmt.Sprintf("%s  %g %d",
+						s.filter.Carbon2TagString(record),
+						dataPoint.Value(),
+						dataPoint.Timestamp()/1e9))
+			}
+		case pdata.MetricDataTypeDoubleSum:
+			for i := 0; i < record.metric.DoubleSum().DataPoints().Len(); i++ {
+				dataPoint := record.metric.DoubleSum().DataPoints().At(i)
+				nextLines = append(nextLines,
+					fmt.Sprintf("%s  %g %d",
+						s.filter.Carbon2TagString(record),
+						dataPoint.Value(),
+						dataPoint.Timestamp()/1e9))
+			}
+		// Skip histogram metrics
+		case pdata.MetricDataTypeDoubleHistogram:
+		case pdata.MetricDataTypeIntHistogram:
+		default:
+			// Nothing to do here
+		}
+
+		sent, appended, err := s.appendAndSend(strings.Join(nextLines, "\n"), MetricsPipeline, &body, "")
+		if err != nil {
+			errs = append(errs, err)
+			if sent {
+				droppedRecords = append(droppedRecords, currentRecords...)
+			}
+
+			if !appended {
+				droppedRecords = append(droppedRecords, record)
+			}
+		}
+
+		nextLines = nextLines[:0]
+
+		// If data was sent, cleanup the currentRecords
+		if sent {
+			currentRecords = currentRecords[:0]
+		}
+
+		// If log has been appended to body, add it to the currentRecords
+		if appended {
+			currentRecords = append(currentRecords, record)
+		}
+	}
+
+	err := s.send(MetricsPipeline, strings.NewReader(body.String()), "")
+	if err != nil {
+		errs = append(errs, err)
+		droppedRecords = append(droppedRecords, currentRecords...)
+	}
+
+	if len(errs) > 0 {
+		return droppedRecords, componenterror.CombineErrors(errs)
+	}
+	return droppedRecords, nil
 }
