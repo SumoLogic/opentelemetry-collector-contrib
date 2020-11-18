@@ -218,7 +218,7 @@ workflows:
             branches:
               ignore: /.*/
             tags:
-              only: /^v[0-9]+\.[0-9]+\.[0-9]+.*/
+              only: /.*/
       - spawn-stability-tests-job:
           requires:
             - lint
@@ -243,7 +243,7 @@ workflows:
             - cross-compile
           filters:
             tags:
-              only: /^v[0-9]+\.[0-9]+\.[0-9]+.*/
+              only: /.*/
       - build-package:
           name: rpm-package
           package_type: rpm
@@ -251,7 +251,7 @@ workflows:
             - cross-compile
           filters:
             tags:
-              only: /^v[0-9]+\.[0-9]+\.[0-9]+.*/
+              only: /.*/
 
 
 jobs:
