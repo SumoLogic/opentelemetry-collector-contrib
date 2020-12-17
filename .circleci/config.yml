@@ -110,24 +110,32 @@ commands:
         type: string
       tag:
         type: string
-    environment:
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_PUBLIC_ECR_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_PUBLIC_ECR_SECRET_ACCESS_KEY }}
-      REGISTRY: public.ecr.aws/sumologic
-      TAG_URL: ${REGISTRY}/<< parameters.repo >>:<< parameters.tag >>
-      LATEST_URL: ${REGISTRY}/<< parameters.repo >>:latest
     steps:
       - run:
           name: Build image
+          environment:
+            REGISTRY: public.ecr.aws/sumologic
+            TAG_URL: ${REGISTRY}/<< parameters.repo >>:<< parameters.tag >>
+            LATEST_URL: ${REGISTRY}/<< parameters.repo >>:latest
           command: |
             make docker-otelcontribcol
             docker tag otelcontribcol:latest ${TAG_URL}
             docker tag otelcontribcol:latest ${LATEST_URL}
       - run:
           name: Login to AWS ECR
-        command: aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${REGISTRY}
+          environment:
+            AWS_ACCESS_KEY_ID: ${{ secrets.AWS_PUBLIC_ECR_ACCESS_KEY_ID }}
+            AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_PUBLIC_ECR_SECRET_ACCESS_KEY }}
+            REGISTRY: public.ecr.aws/sumologic
+          command: |
+            aws ecr get-login-password --region us-east-1 
+            | docker login --username AWS --password-stdin ${REGISTRY}
       - run:
           name: Push image
+          environment:
+            REGISTRY: public.ecr.aws/sumologic
+            TAG_URL: ${REGISTRY}/<< parameters.repo >>:<< parameters.tag >>
+            LATEST_URL: ${REGISTRY}/<< parameters.repo >>:latest
           command: |
             docker push ${TAG_URL}
             docker push ${LATEST_URL}
