@@ -119,6 +119,9 @@ commands:
             LATEST_URL: ${REGISTRY}/<< parameters.repo >>:latest
           command: |
             make docker-otelcontribcol
+            echo $REGISTRY
+            echo $TAG_URL
+            echo $LATEST_URL
             docker tag otelcontribcol:latest ${TAG_URL}
             docker tag otelcontribcol:latest ${LATEST_URL}
       - run:
