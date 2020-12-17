@@ -110,7 +110,7 @@ commands:
         type: string
       tag:
         type: string
-    env:
+    environment:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_PUBLIC_ECR_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_PUBLIC_ECR_SECRET_ACCESS_KEY }}
       REGISTRY: public.ecr.aws/sumologic
@@ -125,9 +125,7 @@ commands:
             docker tag otelcontribcol:latest ${LATEST_URL}
       - run:
           name: Login to AWS ECR
-        command: |
-          aws ecr get-login-password --region us-east-1
-          | docker login --username AWS --password-stdin ${REGISTRY}
+        command: aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${REGISTRY}
       - run:
           name: Push image
           command: |
