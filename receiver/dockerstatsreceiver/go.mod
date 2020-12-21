@@ -7,10 +7,10 @@ require (
 	github.com/docker/docker v17.12.0-ce-rc1.0.20200706150819-a40b877fbb9e+incompatible
 	github.com/gobwas/glob v0.2.3
 	github.com/golang/protobuf v1.4.3
-	github.com/open-telemetry/opentelemetry-collector-contrib/internal/common v0.0.0-00010101000000-000000000000
-	github.com/open-telemetry/opentelemetry-collector-contrib/receiver/redisreceiver v0.0.0-00010101000000-000000000000
+	github.com/open-telemetry/opentelemetry-collector-contrib/internal/common v0.0.0-00010101000000-000000000000 // indirect
+	github.com/open-telemetry/opentelemetry-collector-contrib/receiver/redisreceiver v0.0.0-00010101000000-000000000000 // indirect
 	github.com/stretchr/testify v1.6.1
-	go.opentelemetry.io/collector v0.16.0
+	go.opentelemetry.io/collector v0.17.0
 	go.uber.org/zap v1.16.0
 )
 
