@@ -145,8 +145,6 @@ github.com/Songmu/retry v0.1.0/go.mod h1:7sXIW7eseB9fq0FUvigRcQMVLR9tuHI0Scok+rk
 github.com/StackExchange/wmi v0.0.0-20180116203802-5d049714c4a6/go.mod h1:3eOhrUMpNV+6aFIbp5/iudMxNCF27Vw2OZgy4xEx0Fg=
 github.com/StackExchange/wmi v0.0.0-20190523213315-cbe66965904d h1:G0m3OIz70MZUWq3EgK3CesDbo8upS2Vm9/P3FtgI+Jk=
 github.com/StackExchange/wmi v0.0.0-20190523213315-cbe66965904d/go.mod h1:3eOhrUMpNV+6aFIbp5/iudMxNCF27Vw2OZgy4xEx0Fg=
-github.com/SumoLogic/opentelemetry-collector v0.16.0-sumo h1:uK+fq9Sr48FgfhI7a9VLu6Oq8F0XnznrGtuxeOVMIt0=
-github.com/SumoLogic/opentelemetry-collector v0.16.0-sumo/go.mod h1:xNZjorr8GTcoi4AZ2iFYHGmx+xgE1Ue/oJI+pxKkdjA=
 github.com/SumoLogic/opentelemetry-collector v0.16.2-sumo h1:zGlk0qGOEXGND6Fv01oP5BUk/7qO2Cqo+q8d6kT1XE4=
 github.com/SumoLogic/opentelemetry-collector v0.16.2-sumo/go.mod h1:xNZjorr8GTcoi4AZ2iFYHGmx+xgE1Ue/oJI+pxKkdjA=
 github.com/VividCortex/gohistogram v1.0.0 h1:6+hBz+qvs0JOrrNhhmR7lFxo5sINxBCGXrdtl/UvroE=
@@ -1357,6 +1355,8 @@ github.com/stretchr/testify v1.4.0/go.mod h1:j7eGeouHqKxXV5pUuKE4zz7dFj8WfuZ+81P
 github.com/stretchr/testify v1.5.1/go.mod h1:5W2xD1RspED5o8YsWQXVCued0rvSQ+mT+I5cxcmMvtA=
 github.com/stretchr/testify v1.6.1 h1:hDPOHmpOpP40lSULcqw7IrRb/u7w6RpDC9399XyoNd0=
 github.com/stretchr/testify v1.6.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
+github.com/stretchr/testify v1.7.0 h1:nwc3DEeHmmLAfoZucVR881uASk0Mfjw8xYJ99tb5CcY=
+github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/subosito/gotenv v1.2.0 h1:Slr1R9HxAlEKefgq5jn9U+DnETlIUa6HfgEzj0g5d7s=
 github.com/subosito/gotenv v1.2.0/go.mod h1:N0PQaV/YGNqwC0u51sEeR/aUtSLEXKX9iv69rRypqCw=
 github.com/syndtr/goleveldb v1.0.0 h1:fBdIW9lB4Iz0n9khmH8w27SJ3QEJ7+IgjPEwGSZiFdE=
@@ -1472,8 +1472,6 @@ go.opencensus.io v0.22.3/go.mod h1:yxeiOL68Rb0Xd1ddK5vPZ/oVn4vY4Ynel7k9FzqtOIw=
 go.opencensus.io v0.22.4/go.mod h1:yxeiOL68Rb0Xd1ddK5vPZ/oVn4vY4Ynel7k9FzqtOIw=
 go.opencensus.io v0.22.5 h1:dntmOdLpSpHlVqbW5Eay97DelsZHe+55D+xC6i0dDS0=
 go.opencensus.io v0.22.5/go.mod h1:5pWMHQbX5EPX2/62yrJeAkowc+lfs/XD7Uxpq3pI6kk=
-go.opentelemetry.io/collector v0.16.0 h1:x5WAHVmm4DvaBgN7uiwnt0buj1ae/dyIvxNGLgtlbrg=
-go.opentelemetry.io/collector v0.16.0/go.mod h1:xNZjorr8GTcoi4AZ2iFYHGmx+xgE1Ue/oJI+pxKkdjA=
 go.opentelemetry.io/collector/cmd/issuegenerator v0.0.0-20201201185019-f4f68db25d1f h1:cDCMSBMedssw8jhzwRK4avl3SEaFsvytbzPjzaBQPQ8=
 go.opentelemetry.io/collector/cmd/issuegenerator v0.0.0-20201201185019-f4f68db25d1f/go.mod h1:XHD/HQbAwVt/9xOUVnT8ZffHO9Rj5a8Z2WVwwTNRlQ8=
 go.opentelemetry.io/collector/cmd/mdatagen v0.0.0-20201201185019-f4f68db25d1f h1:AGvS8pDwzqU/FihUCk1xZvCwMrdvL5/Q6jHC9Ri+RQQ=
