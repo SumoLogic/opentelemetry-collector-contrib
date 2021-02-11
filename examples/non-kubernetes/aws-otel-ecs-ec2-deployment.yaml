@@ -2,7 +2,7 @@ AWSTemplateFormatVersion: 2010-09-09
 Parameters:
   ClusterName:
     Type: String
-    Description: Enter the name of your ECS cluster from which you want to collect metrics
+    Description: Enter the name of your ECS cluster from which you want to collect telemetry data
   CreateIAMRoles:
     Type: String
     Default: 'False'
@@ -40,7 +40,7 @@ Resources:
   ECSTaskDefinition:
     Type: 'AWS::ECS::TaskDefinition'
     Properties:
-      Family: sumologic-aws-otel-collector
+      Family: sumologic-aws-otel-collector-ec2
       TaskRoleArn: !If
         - CreateRoles
         - !GetAtt
@@ -82,12 +82,12 @@ Resources:
               value: !Ref SumoHttpTracesURL
             - name: AOT_CONFIG_CONTENT
               value: !Ref SumoAWSOTelColConfig
-          image: 'amazon/aws-otel-collector:latest'
+          image: amazon/aws-otel-collector:latest
           name: sumologic-aws-otel-collector
-      Memory: '2048'
       RequiresCompatibilities:
         - EC2
-      Cpu: '1024'
+      Cpu: 1024
+      Memory: 2048
   ECSReplicaService:
     Type: 'AWS::ECS::Service'
     Properties:
