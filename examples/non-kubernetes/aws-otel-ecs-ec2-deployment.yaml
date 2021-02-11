@@ -1,0 +1,152 @@
+AWSTemplateFormatVersion: 2010-09-09
+Parameters:
+  ClusterName:
+    Type: String
+    Description: Enter the name of your ECS cluster from which you want to collect metrics
+  CreateIAMRoles:
+    Type: String
+    Default: 'False'
+    AllowedValues:
+      - 'True'
+      - 'False'
+    Description: Whether to create default IAM roles
+    ConstraintDescription: must specify True or False.
+  TaskRoleArn:
+    Type: String
+    Default: Default
+    Description: Enter the role arn you want to use as the ecs task role
+  ExecutionRoleArn:
+    Type: String
+    Default: Default
+    Description: Enter the role arn you want to use as the ecs execution role
+  SumoHttpTracesURL:
+    Type: String
+    Description: Enther the Sumologic HTTP Traces Endpoint URL
+  SumoAWSOTelColConfig:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: sumologic-otel-col-config
+    Description: AWS SSM Parameter which contains OTel Collector config file
+Conditions:
+  CreateRoles: !Equals
+    - !Ref CreateIAMRoles
+    - 'True'
+  DefaultTaskRole: !Equals
+    - !Ref TaskRoleArn
+    - Default
+  DefaultExecutionRole: !Equals
+    - !Ref ExecutionRoleArn
+    - Default
+Resources:
+  ECSTaskDefinition:
+    Type: 'AWS::ECS::TaskDefinition'
+    Properties:
+      Family: sumologic-aws-otel-collector
+      TaskRoleArn: !If
+        - CreateRoles
+        - !GetAtt
+          - ECSTaskRole
+          - Arn
+        - !If
+          - DefaultTaskRole
+          - !Sub 'arn:aws:iam::${AWS::AccountId}:role/SumologicAWSOTelColRole'
+          - !Ref TaskRoleArn
+      ExecutionRoleArn: !If
+        - CreateRoles
+        - !GetAtt
+          - ECSExecutionRole
+          - Arn
+        - !If
+          - DefaultExecutionRole
+          - !Sub 'arn:aws:iam::${AWS::AccountId}:role/SumologicAWSOTelColExecutionRole'
+          - !Ref ExecutionRoleArn
+      ContainerDefinitions:
+        - logConfiguration:
+            logDriver: awslogs
+            options:
+              awslogs-create-group: 'True'
+              awslogs-group: /ecs/aws-otel-collector
+              awslogs-region: !Ref 'AWS::Region'
+              awslogs-stream-prefix: ecs
+          portMappings:
+            - hostPort: 2000
+              protocol: udp
+              containerPort: 2000
+            - hostPort: 4317
+              protocol: tcp
+              containerPort: 4317
+            - hostPort: 55681
+              protocol: tcp
+              containerPort: 55681
+          environment:
+            - name: SUMO_HTTP_TRACES_URL
+              value: !Ref SumoHttpTracesURL
+            - name: AOT_CONFIG_CONTENT
+              value: !Ref SumoAWSOTelColConfig
+          image: 'amazon/aws-otel-collector:latest'
+          name: sumologic-aws-otel-collector
+      Memory: '2048'
+      RequiresCompatibilities:
+        - EC2
+      Cpu: '1024'
+  ECSReplicaService:
+    Type: 'AWS::ECS::Service'
+    Properties:
+      TaskDefinition: !Ref ECSTaskDefinition
+      Cluster: !Ref ClusterName
+      LaunchType: EC2
+      SchedulingStrategy: REPLICA
+      DesiredCount: 1
+      ServiceName: sumologic-aws-otel-col-service
+  ECSTaskRole:
+    Type: 'AWS::IAM::Role'
+    Condition: CreateRoles
+    Properties:
+      Description: Allows ECS tasks to call AWS services on your behalf.
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: ''
+            Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: 'sts:AssumeRole'
+      Policies:
+        - PolicyName: SumologicAWSOTelCollectorPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'logs:PutLogEvents'
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                  - 'logs:DescribeLogStreams'
+                  - 'logs:DescribeLogGroups'
+                  - 'xray:PutTraceSegments'
+                  - 'xray:PutTelemetryRecords'
+                  - 'xray:GetSamplingRules'
+                  - 'xray:GetSamplingTargets'
+                  - 'xray:GetSamplingStatisticSummaries'
+                  - 'ssm:GetParameters'
+                Resource: '*'
+      RoleName: SumologicAWSOTelColRole
+  ECSExecutionRole:
+    Type: 'AWS::IAM::Role'
+    Condition: CreateRoles
+    Properties:
+      Description: >-
+        Allows ECS container agent makes calls to the Amazon ECS API on your
+        behalf.
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: ''
+            Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy'
+        - 'arn:aws:iam::aws:policy/CloudWatchLogsFullAccess'
+        - 'arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess'
+      RoleName: SumologicAWSOTelColExecutionRole
