@@ -1,31 +1,29 @@
 AWSTemplateFormatVersion: 2010-09-09
+Description: 'Template to install AWS OTel Collector on ECS in Fargate mode'
 Parameters:
+  IAMTaskRole:
+    Description: Task attached IAM role
+    Type: String
+    Default: SumologicAWSOTelColTaskRoleECSFargate
+    ConstraintDescription: must be an existing IAM role which will be attached to EC2 instance.
+  IAMExecutionRole:
+    Description: Task Execution attached IAM role
+    Type: String
+    Default: SumologicAWSOTelColExecutionRoleECSFargate
+    ConstraintDescription: must be an existing IAM role which will be attached to EC2 instance.
+  IAMPolicy:
+    Description: IAM Role attached IAM Policy
+    Type: String
+    Default: SumologicAWSOTelColPolicyECSFargate
+    ConstraintDescription: Must be an existing IAM Managed Policy which will be attached to IAM Role.
   ClusterName:
     Type: String
     Description: Enter the name of your ECS cluster from which you want to collect telemetry data
-  CreateIAMRoles:
-    Type: String
-    Default: 'False'
-    AllowedValues:
-      - 'True'
-      - 'False'
-    Description: Whether to create default IAM roles
-    ConstraintDescription: must specify True or False.
-  TaskRoleArn:
-    Type: String
-    Default: Default
-    Description: Enter the role arn you want to use as the ecs task role
-  ExecutionRoleArn:
-    Type: String
-    Default: Default
-    Description: Enter the role arn you want to use as the ecs execution role
   SecurityGroups:
     Type: CommaDelimitedList
-    Default: Default
     Description: The list of SecurityGroupIds in your Virtual Private Cloud (VPC)
   Subnets:
     Type: CommaDelimitedList
-    Default: Default
     Description: The list of Subnets in your Virtual Private Cloud (VPC)
   SumoHttpTracesURL:
     Type: String
@@ -34,39 +32,13 @@ Parameters:
     Type: AWS::SSM::Parameter::Value<String>
     Default: sumologic-otel-col-config
     Description: AWS SSM Parameter which contains OTel Collector config file
-Conditions:
-  CreateRoles: !Equals
-    - !Ref CreateIAMRoles
-    - 'True'
-  DefaultTaskRole: !Equals
-    - !Ref TaskRoleArn
-    - Default
-  DefaultExecutionRole: !Equals
-    - !Ref ExecutionRoleArn
-    - Default
 Resources:
   ECSTaskDefinition:
     Type: 'AWS::ECS::TaskDefinition'
     Properties:
       Family: sumologic-aws-otel-collector-fargate
-      TaskRoleArn: !If
-        - CreateRoles
-        - !GetAtt
-          - ECSTaskRole
-          - Arn
-        - !If
-          - DefaultTaskRole
-          - !Sub 'arn:aws:iam::${AWS::AccountId}:role/SumologicAWSOTelColRole'
-          - !Ref TaskRoleArn
-      ExecutionRoleArn: !If
-        - CreateRoles
-        - !GetAtt
-          - ECSExecutionRole
-          - Arn
-        - !If
-          - DefaultExecutionRole
-          - !Sub 'arn:aws:iam::${AWS::AccountId}:role/SumologicAWSOTelColExecutionRole'
-          - !Ref ExecutionRoleArn
+      TaskRoleArn: !Sub 'arn:aws:iam::${AWS::AccountId}:role/${IAMTaskRole}'
+      ExecutionRoleArn: !Sub 'arn:aws:iam::${AWS::AccountId}:role/${IAMExecutionRole}'
       NetworkMode: awsvpc
       ContainerDefinitions:
         - LogConfiguration:
@@ -97,6 +69,9 @@ Resources:
         - FARGATE
       Cpu: 1024
       Memory: 2048
+    DependsOn:
+      - ECSTaskRole
+      - ECSExecutionRole
   ECSReplicaService:
     Type: 'AWS::ECS::Service'
     Properties:
@@ -105,7 +80,7 @@ Resources:
       LaunchType: FARGATE
       SchedulingStrategy: REPLICA
       DesiredCount: 1
-      ServiceName: sumologic-aws-otel-col-service
+      ServiceName: sumologic-aws-otel-col-svc-ecs-fargate
       NetworkConfiguration:
         AwsvpcConfiguration:
           AssignPublicIp: ENABLED
@@ -113,19 +88,17 @@ Resources:
           Subnets: !Ref Subnets
   ECSTaskRole:
     Type: 'AWS::IAM::Role'
-    Condition: CreateRoles
     Properties:
       Description: Allows ECS tasks to call AWS services on your behalf.
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
-          - Sid: ''
-            Effect: Allow
+          - Effect: Allow
             Principal:
               Service: ecs-tasks.amazonaws.com
             Action: 'sts:AssumeRole'
       Policies:
-        - PolicyName: SumologicAWSOTelCollectorPolicy
+        - PolicyName: !Ref IAMPolicy
           PolicyDocument:
             Version: 2012-10-17
             Statement:
@@ -143,10 +116,9 @@ Resources:
                   - 'xray:GetSamplingStatisticSummaries'
                   - 'ssm:GetParameters'
                 Resource: '*'
-      RoleName: SumologicAWSOTelColRole
+      RoleName: !Ref IAMTaskRole
   ECSExecutionRole:
     Type: 'AWS::IAM::Role'
-    Condition: CreateRoles
     Properties:
       Description: >-
         Allows ECS container agent makes calls to the Amazon ECS API on your
@@ -163,4 +135,4 @@ Resources:
         - 'arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy'
         - 'arn:aws:iam::aws:policy/CloudWatchLogsFullAccess'
         - 'arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess'
-      RoleName: SumologicAWSOTelColExecutionRole
+      RoleName: !Ref IAMExecutionRole
