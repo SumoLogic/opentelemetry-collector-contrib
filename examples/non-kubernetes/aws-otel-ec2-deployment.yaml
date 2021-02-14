@@ -143,6 +143,9 @@ Resources:
         Ref: InstanceAMI
       SecurityGroups:
         - Ref: InstanceSecurityGroup
+      Tags:
+        - Key: Name
+          Value: sumologic-aws-otel-col-ec2
       UserData:
         # This script below is to install aws-otel-collector, restart aws-otel-collector and tell the result to cloudformation.
         Fn::Base64: !Sub
