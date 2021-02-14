@@ -44,10 +44,10 @@ which is described in more detail in [trace filtering documentation](https://hel
 Please refer to [relevant documentation](https://help.sumologic.com/Traces/Getting_Started_with_Transaction_Tracing/Set_up_traces_collection_for_other_environments)
 for more details.
 
-### AWS OTel Collector configuration for ECS deployments
-[non-kubernetes/aws-otel-ecs-config.yaml](non-kubernetes/aws-otel-ecs-config.yaml) contains
+### AWS OTel Collector configuration file
+[non-kubernetes/aws-otel-config.yaml](non-kubernetes/aws-otel-config.yaml) contains
 an AWS OpenTelemetry Collector distrubtion YAML file which includes configuration
-for OpenTelemetry Collector. Should be deployed on the AWS ECS environments.
+for OpenTelemetry Collector. Should be deployed on the AWS environments.
 
 ### AWS OTel Collector for ECS in EC2 mode template
 [non-kubernetes/aws-otel-ecs-ec2-deployment.yaml](non-kubernetes/aws-otel-ecs-ec2-deployment.yaml) contains
@@ -60,3 +60,8 @@ environment.
 an AWS OpenTelemetry Collector distribution YAML file which includes  
 CloudFormation template. It should be deployed on the AWS ECS Fargate  
 environment.
+
+### AWS OTel Collector for EC2 deployment template
+[non-kubernetes/aws-otel-ec2-deployment.yaml](non-kubernetes/aws-otel-ec2-deployment.yaml) contains
+an AWS OpenTelemetry Collector distribution YAML file which includes  
+CloudFormation template. It should be deployed on the AWS EC2.
