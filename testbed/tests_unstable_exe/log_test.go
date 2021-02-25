@@ -53,8 +53,8 @@ func TestLog10kDPS(t *testing.T) {
 			},
 		},
 		{
-			name:     "Stanza",
-			sender:   datasenders.NewStanzaFileLogWriter(),
+			name:     "filelog",
+			sender:   datasenders.NewFileLogWriter(),
 			receiver: testbed.NewOTLPDataReceiver(testbed.GetAvailablePort(t)),
 			resourceSpec: testbed.ResourceSpec{
 				ExpectedMaxCPU: 50,

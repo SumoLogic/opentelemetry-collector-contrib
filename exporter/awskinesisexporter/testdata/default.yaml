@@ -1,0 +1,15 @@
+receivers:
+  examplereceiver:
+
+exporters:
+  awskinesis:
+
+processors:
+  exampleprocessor:
+
+service:
+  pipelines:
+    traces:
+      receivers: [examplereceiver]
+      processors: [exampleprocessor]
+      exporters: [awskinesis]

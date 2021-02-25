@@ -1,11 +1,12 @@
 # SumoLogic / OpenTelemetry Collector Contrib
+
 This is a repository for OpenTelemetry Collector Contrib with additional Sumo Logic extensions. It is based
 on the [opentelemetry-collector-contrib](https://github.com/open-telemetry/opentelemetry-collector-contrib) and
 [SumoLogic flavor](https://github.com/SumoLogic/opentelemetry-collector) of 
 [core distribution of the Collector](https://github.com/open-telemetry/opentelemetry-collector).
 
-
 ## Docker Images
+
 Docker images for all releases are published at https://hub.docker.com/r/sumologic/opentelemetry-collector
 
 ### Building docker locally

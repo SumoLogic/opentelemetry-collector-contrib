@@ -16,9 +16,11 @@ package datadogexporter
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/DataDog/datadog-agent/pkg/trace/exportable/pb"
 	"go.opentelemetry.io/collector/consumer/pdata"
@@ -26,9 +28,11 @@ import (
 	tracetranslator "go.opentelemetry.io/collector/translator/trace"
 	"go.uber.org/zap"
 	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/ext"
+	"gopkg.in/zorkian/go-datadog-api.v2"
 
 	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/datadogexporter/config"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/datadogexporter/metadata"
+	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/datadogexporter/metrics"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/datadogexporter/utils"
 )
 
@@ -43,13 +47,17 @@ const (
 	webKind             string = "web"
 	customKind          string = "custom"
 	grpcPath            string = "grpc.path"
+	eventsTag           string = "events"
+	eventNameTag        string = "name"
+	eventAttrTag        string = "attributes"
+	eventTimeTag        string = "time"
 	// tagContainersTags specifies the name of the tag which holds key/value
 	// pairs representing information about the container (Docker, EC2, etc).
 	tagContainersTags = "_dd.tags.container"
 )
 
 // converts Traces into an array of datadog trace payloads grouped by env
-func convertToDatadogTd(td pdata.Traces, calculator *sublayerCalculator, cfg *config.Config) []*pb.TracePayload {
+func convertToDatadogTd(td pdata.Traces, calculator *sublayerCalculator, cfg *config.Config) ([]*pb.TracePayload, []datadog.Metric) {
 	// TODO:
 	// do we apply other global tags, like version+service, to every span or only root spans of a service
 	// should globalTags['service'] take precedence over a trace's resource.service.name? I don't believe so, need to confirm
@@ -58,6 +66,8 @@ func convertToDatadogTd(td pdata.Traces, calculator *sublayerCalculator, cfg *co
 
 	var traces []*pb.TracePayload
 
+	var runningMetrics []datadog.Metric
+	pushTime := time.Now().UTC().UnixNano()
 	for i := 0; i < resourceSpans.Len(); i++ {
 		rs := resourceSpans.At(i)
 		// TODO pass logger here once traces code stabilizes
@@ -69,9 +79,13 @@ func convertToDatadogTd(td pdata.Traces, calculator *sublayerCalculator, cfg *co
 
 		payload := resourceSpansToDatadogSpans(rs, calculator, hostname, cfg)
 		traces = append(traces, &payload)
+
+		ms := metrics.DefaultMetrics("traces", uint64(pushTime))
+		ms[0].Host = &hostname
+		runningMetrics = append(runningMetrics, ms...)
 	}
 
-	return traces
+	return traces, runningMetrics
 }
 
 func aggregateTracePayloadsByEnv(tracePayloads []*pb.TracePayload) []*pb.TracePayload {
@@ -122,7 +136,7 @@ func resourceSpansToDatadogSpans(rs pdata.ResourceSpans, calculator *sublayerCal
 	resourceServiceName, datadogTags := resourceToDatadogServiceNameAndAttributeMap(resource)
 
 	// specification states that the resource level deployment.environment should be used for passing env, so defer to that
-	// https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/resource/semantic_conventions/deployment_environment.md#deployment
+	// https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/resource/semantic_conventions/deployment_environment.md#deployment
 	if resourceEnv, ok := datadogTags[conventions.AttributeDeploymentEnvironment]; ok {
 		payload.Env = resourceEnv
 	}
@@ -206,6 +220,11 @@ func spanToDatadogSpan(s pdata.Span,
 	// get tracestate as just a general tag
 	if len(s.TraceState()) > 0 {
 		tags[tracetranslator.TagW3CTraceState] = string(s.TraceState())
+	}
+
+	// get events as just a general tag
+	if s.Events().Len() > 0 {
+		tags[eventsTag] = eventsToString(s.Events())
 	}
 
 	// get start/end time to calc duration
@@ -465,13 +484,19 @@ func getSpanErrorAndSetTags(s pdata.Span, tags map[string]string) int32 {
 	}
 
 	if isError == errorCode {
-		tags[ext.ErrorType] = "ERR_CODE_" + strconv.FormatInt(int64(status.Code()), 10)
+		extractErrorTagsFromEvents(s, tags)
+		// If we weren't able to pull an error type or message, go ahead and set
+		// these to the old defaults
+		if _, ok := tags[ext.ErrorType]; !ok {
+			tags[ext.ErrorType] = "ERR_CODE_" + strconv.FormatInt(int64(status.Code()), 10)
+		}
 
-		// try to add a message if possible
-		if status.Message() != "" {
-			tags[ext.ErrorMsg] = status.Message()
-		} else {
-			tags[ext.ErrorMsg] = "ERR_CODE_" + strconv.FormatInt(int64(status.Code()), 10)
+		if _, ok := tags[ext.ErrorMsg]; !ok {
+			if status.Message() != "" {
+				tags[ext.ErrorMsg] = status.Message()
+			} else {
+				tags[ext.ErrorMsg] = "ERR_CODE_" + strconv.FormatInt(int64(status.Code()), 10)
+			}
 		}
 	}
 
@@ -490,4 +515,61 @@ func getSpanErrorAndSetTags(s pdata.Span, tags map[string]string) int32 {
 	}
 
 	return isError
+}
+
+// Finds the last exception event in the span, and surfaces it to DataDog. DataDog spans only support a single
+// exception per span, but otel supports many exceptions as "Events" on a given span. The last exception was
+// chosen for now as most otel-instrumented libraries (http, pg, etc.) only capture a single exception (if any)
+// per span. If multiple exceptions are logged, it's my assumption that the last exception is most likely the
+// exception that escaped the scope of the span.
+//
+// TODO:
+//  Seems that the spec has an attribute that hasn't made it to the collector yet -- "exception.escaped".
+//  This seems optional (SHOULD vs. MUST be set), but it's likely that we want to bubble up the exception
+//  that escaped the scope of the span ("exception.escaped" == true) instead of the last exception event
+//  in the case that these events differ.
+//
+//  https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/exceptions.md#attributes
+func extractErrorTagsFromEvents(s pdata.Span, tags map[string]string) {
+	evts := s.Events()
+	for i := evts.Len() - 1; i >= 0; i-- {
+		evt := evts.At(i)
+		if evt.Name() == conventions.AttributeExceptionEventName {
+			attribs := evt.Attributes()
+			if errType, ok := attribs.Get(conventions.AttributeExceptionType); ok {
+				tags[ext.ErrorType] = errType.StringVal()
+			}
+			if errMsg, ok := attribs.Get(conventions.AttributeExceptionMessage); ok {
+				tags[ext.ErrorMsg] = errMsg.StringVal()
+			}
+			if errStack, ok := attribs.Get(conventions.AttributeExceptionStacktrace); ok {
+				tags[ext.ErrorStack] = errStack.StringVal()
+			}
+			return
+		}
+	}
+}
+
+// Convert Span Events to a string so that they can be appended to the span as a tag.
+// Span events are probably better served as Structured Logs sent to the logs API
+// with the trace id and span id added for log/trace correlation. However this would
+// mean a separate API intake endpoint and also Logs and Traces may not be enabled for
+// a user, so for now just surfacing this information as a string is better than not
+// including it at all. The tradeoff is that this increases the size of the span and the
+// span may have a tag that exceeds max size allowed in backend/ui/etc.
+//
+// TODO: Expose configuration option for collecting Span Events as Logs within Datadog
+// and add forwarding to Logs API intake.
+func eventsToString(evts pdata.SpanEventSlice) string {
+	eventArray := make([]map[string]interface{}, 0, evts.Len())
+	for i := 0; i < evts.Len(); i++ {
+		spanEvent := evts.At(i)
+		event := map[string]interface{}{}
+		event[eventNameTag] = spanEvent.Name()
+		event[eventTimeTag] = spanEvent.Timestamp()
+		event[eventAttrTag] = tracetranslator.AttributeMapToMap(spanEvent.Attributes())
+		eventArray = append(eventArray, event)
+	}
+	eventArrayBytes, _ := json.Marshal(&eventArray)
+	return string(eventArrayBytes)
 }
