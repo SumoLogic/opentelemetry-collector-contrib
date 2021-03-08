@@ -4,7 +4,7 @@ go 1.14
 
 require (
 	github.com/census-instrumentation/opencensus-proto v0.3.0
-	github.com/newrelic/newrelic-telemetry-sdk-go v0.5.1
+	github.com/newrelic/newrelic-telemetry-sdk-go v0.5.2
 	github.com/stretchr/testify v1.7.0
 	go.opentelemetry.io/collector v0.21.0
 	go.uber.org/zap v1.16.0
