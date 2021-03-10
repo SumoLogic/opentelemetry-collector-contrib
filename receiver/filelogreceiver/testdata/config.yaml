@@ -10,6 +10,9 @@ receivers:
           layout: '%Y-%m-%d'
         severity:
           parse_from: sev
+    converter:
+      flush_trigger_count: 100
+      flush_interval: 1s
 
 processors:
   nop:

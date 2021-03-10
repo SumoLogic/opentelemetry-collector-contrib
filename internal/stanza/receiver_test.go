@@ -21,6 +21,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/open-telemetry/opentelemetry-log-collection/entry"
 	"github.com/open-telemetry/opentelemetry-log-collection/pipeline"
@@ -41,7 +42,12 @@ func TestStart(t *testing.T) {
 
 	factory := NewFactory(TestReceiverType{})
 
-	logsReceiver, err := factory.CreateLogsReceiver(context.Background(), params, factory.CreateDefaultConfig(), &mockConsumer)
+	logsReceiver, err := factory.CreateLogsReceiver(
+		context.Background(),
+		params,
+		factory.CreateDefaultConfig(),
+		&mockConsumer,
+	)
 	require.NoError(t, err, "receiver should successfully build")
 
 	err = logsReceiver.Start(context.Background(), componenttest.NewNopHost())
@@ -49,8 +55,15 @@ func TestStart(t *testing.T) {
 
 	stanzaReceiver := logsReceiver.(*receiver)
 	stanzaReceiver.emitter.logChan <- entry.New()
+
+	// Eventually because of asynchronuous nature of the receiver.
+	require.Eventually(t,
+		func() bool {
+			return mockConsumer.Received() == 1
+		},
+		10*time.Second, 5*time.Millisecond, "one log entry expected",
+	)
 	logsReceiver.Shutdown(context.Background())
-	require.Equal(t, 1, mockConsumer.received, "one log entry expected")
 }
 
 func TestHandleStartError(t *testing.T) {
@@ -86,8 +99,15 @@ func TestHandleConsumeError(t *testing.T) {
 
 	stanzaReceiver := logsReceiver.(*receiver)
 	stanzaReceiver.emitter.logChan <- entry.New()
+
+	// Eventually because of asynchronuous nature of the receiver.
+	require.Eventually(t,
+		func() bool {
+			return mockConsumer.Rejected() == 1
+		},
+		10*time.Second, 5*time.Millisecond, "one log entry expected",
+	)
 	logsReceiver.Shutdown(context.Background())
-	require.Equal(t, 1, mockConsumer.rejected, "one log entry expected")
 }
 
 func BenchmarkReadLine(b *testing.B) {
@@ -124,11 +144,12 @@ func BenchmarkReadLine(b *testing.B) {
 		file.WriteString("testlog\n")
 	}
 
+	c := NewConverter()
 	// // Run the actual benchmark
 	b.ResetTimer()
 	require.NoError(b, pl.Start())
 	for i := 0; i < b.N; i++ {
-		Convert(<-emitter.logChan)
+		c.convert(<-emitter.logChan)
 	}
 }
 
@@ -182,10 +203,11 @@ func BenchmarkParseAndMap(b *testing.B) {
 		file.WriteString(fmt.Sprintf("10.33.121.119 - - [11/Aug/2020:00:00:00 -0400] \"GET /index.html HTTP/1.1\" 404 %d\n", i%1000))
 	}
 
+	c := NewConverter()
 	// // Run the actual benchmark
 	b.ResetTimer()
 	require.NoError(b, pl.Start())
 	for i := 0; i < b.N; i++ {
-		Convert(<-emitter.logChan)
+		c.convert(<-emitter.logChan)
 	}
 }

@@ -52,6 +52,10 @@ func createDefaultConfig() *FileLogConfig {
 				NameVal: typeStr,
 			},
 			Operators: stanza.OperatorConfigs{},
+			Converter: stanza.ConverterConfig{
+				FlushTriggerCount: stanza.DefaultFlushTriggerCount,
+				FlushInterval:     stanza.DefaultFlushInterval,
+			},
 		},
 		Input: stanza.InputConfig{},
 	}
