@@ -29,6 +29,10 @@ import (
 	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/splunk"
 )
 
+const (
+	translationRulesConfigKey = "translation_rules"
+)
+
 // Config defines configuration for SignalFx exporter.
 type Config struct {
 	configmodels.ExporterSettings  `mapstructure:",squash"` // squash ensures fields are correctly decoded in embedded struct.
@@ -64,10 +68,6 @@ type Config struct {
 
 	splunk.AccessTokenPassthroughConfig `mapstructure:",squash"`
 
-	// SendCompatibleMetrics specifies if metrics must be sent in a format backward-compatible with
-	// SignalFx naming conventions, "false" by default.
-	SendCompatibleMetrics bool `mapstructure:"send_compatible_metrics"`
-
 	// TranslationRules defines a set of rules how to translate metrics to a SignalFx compatible format
 	// Rules defined in translation/constants.go are used by default.
 	TranslationRules []translation.Rule `mapstructure:"translation_rules"`
@@ -88,8 +88,7 @@ type Config struct {
 
 	// ExcludeMetrics defines dpfilter.MetricFilters that will determine metrics to be
 	// excluded from sending to SignalFx backend. If translations enabled with
-	// SendCompatibleMetrics or TranslationRules options, the exclusion will be applied
-	// on translated metrics.
+	// TranslationRules options, the exclusion will be applie on translated metrics.
 	ExcludeMetrics []dpfilters.MetricFilter `mapstructure:"exclude_metrics"`
 
 	// IncludeMetrics defines dpfilter.MetricFilters to override exclusion any of metric.
@@ -99,6 +98,10 @@ type Config struct {
 
 	// Correlation configuration for syncing traces service and environment to metrics.
 	Correlation *correlation.Config `mapstructure:"correlation"`
+
+	// NonAlphanumericDimensionChars is a list of allowable characters, in addition to alphanumeric ones,
+	// to be used in a dimension key.
+	NonAlphanumericDimensionChars string `mapstructure:"nonalphanumeric_dimension_chars"`
 }
 
 func (cfg *Config) getOptionsFromConfig() (*exporterOptions, error) {
@@ -120,12 +123,9 @@ func (cfg *Config) getOptionsFromConfig() (*exporterOptions, error) {
 		cfg.Timeout = 5 * time.Second
 	}
 
-	var metricTranslator *translation.MetricTranslator
-	if cfg.SendCompatibleMetrics {
-		metricTranslator, err = translation.NewMetricTranslator(cfg.TranslationRules, cfg.DeltaTranslationTTL)
-		if err != nil {
-			return nil, fmt.Errorf("invalid \"translation_rules\": %v", err)
-		}
+	metricTranslator, err := translation.NewMetricTranslator(cfg.TranslationRules, cfg.DeltaTranslationTTL)
+	if err != nil {
+		return nil, fmt.Errorf("invalid \"%s\": %v", translationRulesConfigKey, err)
 	}
 
 	return &exporterOptions{

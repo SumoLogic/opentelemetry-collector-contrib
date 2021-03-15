@@ -16,7 +16,7 @@ package translation
 
 const (
 	// DefaultTranslationRulesYaml defines default translation rules that will be applied to metrics if
-	// config.SendCompatibleMetrics set to true and config.TranslationRules not specified explicitly.
+	// config.TranslationRules not specified explicitly.
 	// Keep it in YAML format to be able to easily copy and paste it in config if modifications needed.
 	DefaultTranslationRulesYaml = `
 translation_rules:
@@ -63,7 +63,6 @@ translation_rules:
 
 - action: rename_metrics
   mapping:
-
     # kubeletstats receiver metrics
     container.cpu.time: container_cpu_utilization
     container.filesystem.available: container_fs_available_bytes
@@ -241,13 +240,13 @@ translation_rules:
 - action: split_metric
   metric_name: k8s.pod.network.io
   dimension_key: direction
-  mapping: 
+  mapping:
     receive: pod_network_receive_bytes_total
     transmit: pod_network_transmit_bytes_total
 - action: split_metric
   metric_name: k8s.pod.network.errors
   dimension_key: direction
-  mapping: 
+  mapping:
     receive: pod_network_receive_errors_total
     transmit: pod_network_transmit_errors_total
 
@@ -404,18 +403,8 @@ translation_rules:
     used: memory.used
 
 
-# Translations to derive disk.utilization.
-- action: copy_metrics
-  mapping:
-    system.filesystem.usage: df_complex.used
-  dimension_key: state
-  dimension_values:
-    used: true
-- action: split_metric
-  metric_name: df_complex.used
-  dimension_key: state
-  mapping:
-    used: df_complex.used
+# Translations to derive filesystem metrics
+## disk.total, required to compute disk.utilization
 - action: copy_metrics
   mapping:
     system.filesystem.usage: disk.total
@@ -425,33 +414,8 @@ translation_rules:
   without_dimensions:
     - state
 
-## disk.utilization
-- action: calculate_new_metric
-  metric_name: disk.utilization
-  operand1_metric: df_complex.used
-  operand2_metric: disk.total
-  operator: /
-- action: multiply_float
-  scale_factors_float:
-    disk.utilization: 100
 
-
-# Translations to derive disk.summary_utilization.
-- action: copy_metrics
-  mapping:
-    df_complex.used: df_complex.used_total
-- action: aggregate_metric
-  metric_name: df_complex.used_total
-  aggregation_method: avg
-  without_dimensions:
-    - mode
-    - mountpoint
-- action: aggregate_metric
-  metric_name: df_complex.used_total
-  aggregation_method: sum
-  without_dimensions:
-  - device
-  - type
+## disk.summary_total, required to compute disk.summary_utilization
 - action: copy_metrics
   mapping:
     system.filesystem.usage: disk.summary_total
@@ -469,7 +433,53 @@ translation_rules:
     - device
     - type
 
+
+## other filesystem metrics
+- action: split_metric
+  metric_name: system.filesystem.usage
+  dimension_key: state
+  mapping:
+    free: df_complex.free
+    reserved: df_complex.reserved
+    used: df_complex.used
+- action: split_metric
+  metric_name: system.filesystem.inodes.usage
+  dimension_key: state
+  mapping:
+    free: df_inodes.free
+    used: df_inodes.used
+
+
+## disk.utilization
+- action: calculate_new_metric
+  metric_name: disk.utilization
+  operand1_metric: df_complex.used
+  operand2_metric: disk.total
+  operator: /
+- action: multiply_float
+  scale_factors_float:
+    disk.utilization: 100
+
+
 ## disk.summary_utilization
+- action: copy_metrics
+  mapping:
+    df_complex.used: df_complex.used_total
+
+- action: aggregate_metric
+  metric_name: df_complex.used_total
+  aggregation_method: avg
+  without_dimensions:
+    - mode
+    - mountpoint
+
+- action: aggregate_metric
+  metric_name: df_complex.used_total
+  aggregation_method: sum
+  without_dimensions:
+  - device
+  - type
+
 - action: calculate_new_metric
   metric_name: disk.summary_utilization
   operand1_metric: df_complex.used_total
@@ -479,16 +489,17 @@ translation_rules:
   scale_factors_float:
     disk.summary_utilization: 100
 
+
 # convert disk I/O metrics
 - action: copy_metrics
   mapping:
-    system.disk.ops: disk.ops
+    system.disk.operations: disk.ops
 - action: aggregate_metric
   metric_name: disk.ops
   aggregation_method: sum
   without_dimensions:
-   - direction
-   - device
+    - direction
+    - device
 - action: delta_metric
   mapping:
     disk.ops: disk_ops.total
@@ -496,39 +507,17 @@ translation_rules:
   metric_names:
     system.disk.merged: true
     system.disk.io: true
-    system.disk.ops: true
+    system.disk.operations: true
     system.disk.time: true
   mapping:
     device: disk
-- action: split_metric
-  metric_name: system.disk.merged
-  dimension_key: direction
-  mapping:
-    read: disk_merged.read
-    write: disk_merged.write
-- action: split_metric
-  metric_name: system.disk.io
-  dimension_key: direction
-  mapping:
-    read: disk_octets.read
-    write: disk_octets.write
-- action: split_metric
-  metric_name: system.disk.ops
-  dimension_key: direction
-  mapping:
-    read: disk_ops.read
-    write: disk_ops.write
-- action: split_metric
-  metric_name: system.disk.time
-  dimension_key: direction
-  mapping:
-    read: disk_time.read
-    write: disk_time.write
 - action: delta_metric
   mapping:
     system.disk.pending_operations: disk_ops.pending
 
-# convert network I/O metrics
+
+# Translations to derive Network I/O metrics.
+## network.total.
 - action: copy_metrics
   mapping:
     system.network.io: network.total
@@ -543,6 +532,18 @@ translation_rules:
   - direction
   - interface
 
+
+## other Network I/O metrics. Note that these translations depend on renaming dimension device to interface.
+- action: rename_dimension_keys
+  metric_names:
+    system.network.dropped: true
+    system.network.errors: true
+    system.network.io: true
+    system.network.packets: true
+  mapping:
+    device: interface
+
+
 # memory utilization
 - action: calculate_new_metric
   metric_name: memory.utilization
@@ -555,10 +556,38 @@ translation_rules:
     memory.utilization: 100
     cpu.utilization: 100
 
+# Virtual memory metrics
+- action: split_metric
+  metric_name: system.paging.operations
+  dimension_key: direction
+  mapping:
+    page_in: system.paging.operations.page_in
+    page_out: system.paging.operations.page_out
+
+- action: split_metric
+  metric_name: system.paging.operations.page_in
+  dimension_key: type
+  mapping:
+    major: vmpage_io.swap.in
+    minor: vmpage_io.memory.in
+
+- action: split_metric
+  metric_name: system.paging.operations.page_out
+  dimension_key: type
+  mapping:
+    major: vmpage_io.swap.out
+    minor: vmpage_io.memory.out
+
+- action: split_metric
+  metric_name: system.paging.faults
+  dimension_key: type
+  mapping:
+    major: vmpage_faults.majflt
+    minor: vmpage_faults.minflt
+
 # remove redundant metrics
 - action: drop_metrics
   metric_names:
-    df_complex.used: true
     df_complex.used_total: true
     disk.ops: true
     disk.summary_total: true
@@ -566,5 +595,7 @@ translation_rules:
     system.cpu.usage: true
     system.cpu.total: true
     system.cpu.delta: true
+    system.paging.operations.page_in: true
+    system.paging.operations.page_out: true
 `
 )

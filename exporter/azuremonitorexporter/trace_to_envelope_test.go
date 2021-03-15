@@ -96,7 +96,7 @@ var (
 )
 
 /*
-	https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/http.md#http-server-semantic-conventions
+	https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/http.md#http-server-semantic-conventions
 	We need to test the following attribute sets for HTTP Server Spans:
 	http.scheme, http.host, http.target
 	http.scheme, http.server_name, net.host.port, http.target
@@ -231,7 +231,7 @@ func TestHTTPServerSpanToRequestDataAttributeSet4(t *testing.T) {
 }
 
 /*
-	https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/http.md#http-server-semantic-conventions
+	https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/http.md#http-server-semantic-conventions
 	We need to test the following attribute sets for HTTP Client Spans:
 	http.url
 	http.scheme, http.host, http.target
@@ -417,22 +417,6 @@ func TestRPCClientSpanToRemoteDependencyData(t *testing.T) {
 
 	assert.Equal(t, "8", data.ResultCode)
 	assert.Equal(t, span.Status().Code().String(), data.Properties[attributeOtelStatusCode])
-	assert.Equal(t, pdata.DeprecatedStatusCodeUnknownError.String(), data.Properties[attributeOtelStatusDeprecatedCode])
-	assert.Equal(t, span.Status().Message(), data.Properties[attributeOtelStatusDescription])
-
-	// test RPC error using the legacy Deprecated status code
-	span.Status().SetCode(pdata.StatusCodeUnset)
-	spanAttributes.Delete(attributeRPCGRPCStatusCode)
-
-	span.Status().SetDeprecatedCode(8)
-	span.Status().SetMessage("Resource exhausted")
-
-	envelope, _ = spanToEnvelope(defaultResource, defaultInstrumentationLibrary, span, zap.NewNop())
-	data = envelope.Data.(*contracts.Data).BaseData.(*contracts.RemoteDependencyData)
-
-	assert.Equal(t, "8", data.ResultCode)
-	assert.Equal(t, pdata.StatusCodeUnset.String(), data.Properties[attributeOtelStatusCode])
-	assert.Equal(t, pdata.DeprecatedStatusCodeResourceExhausted.String(), data.Properties[attributeOtelStatusDeprecatedCode])
 	assert.Equal(t, span.Status().Message(), data.Properties[attributeOtelStatusDescription])
 }
 

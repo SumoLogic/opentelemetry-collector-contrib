@@ -16,6 +16,7 @@ package awsemfexporter
 
 import (
 	"context"
+	"errors"
 	"os"
 	"testing"
 
@@ -105,7 +106,7 @@ func TestConsumeMetrics(t *testing.T) {
 						Points: []*metricspb.Point{
 							{
 								Timestamp: &timestamp.Timestamp{
-									Seconds: 100,
+									Seconds: 0,
 								},
 								Value: &metricspb.Point_Int64Value{
 									Int64Value: 1,
@@ -166,7 +167,7 @@ func TestConsumeMetricsWithLogGroupStreamConfig(t *testing.T) {
 						Points: []*metricspb.Point{
 							{
 								Timestamp: &timestamp.Timestamp{
-									Seconds: 100,
+									Seconds: 0,
 								},
 								Value: &metricspb.Point_Int64Value{
 									Int64Value: 1,
@@ -235,7 +236,7 @@ func TestConsumeMetricsWithLogGroupStreamValidPlaceholder(t *testing.T) {
 						Points: []*metricspb.Point{
 							{
 								Timestamp: &timestamp.Timestamp{
-									Seconds: 100,
+									Seconds: 0,
 								},
 								Value: &metricspb.Point_Int64Value{
 									Int64Value: 1,
@@ -304,7 +305,7 @@ func TestConsumeMetricsWithOnlyLogStreamPlaceholder(t *testing.T) {
 						Points: []*metricspb.Point{
 							{
 								Timestamp: &timestamp.Timestamp{
-									Seconds: 100,
+									Seconds: 0,
 								},
 								Value: &metricspb.Point_Int64Value{
 									Int64Value: 1,
@@ -373,7 +374,7 @@ func TestConsumeMetricsWithWrongPlaceholder(t *testing.T) {
 						Points: []*metricspb.Point{
 							{
 								Timestamp: &timestamp.Timestamp{
-									Seconds: 100,
+									Seconds: 0,
 								},
 								Value: &metricspb.Point_Int64Value{
 									Int64Value: 1,
@@ -530,8 +531,8 @@ func TestNewExporterWithMetricDeclarations(t *testing.T) {
 	// Test output warning logs
 	expectedLogs := []observer.LoggedEntry{
 		{
-			Entry:   zapcore.Entry{Level: zap.WarnLevel, Message: "Dropped metric declaration. Error: invalid metric declaration: no metric name selectors defined."},
-			Context: []zapcore.Field{},
+			Entry:   zapcore.Entry{Level: zap.WarnLevel, Message: "Dropped metric declaration."},
+			Context: []zapcore.Field{zap.Error(errors.New("invalid metric declaration: no metric name selectors defined"))},
 		},
 		{
 			Entry:   zapcore.Entry{Level: zap.WarnLevel, Message: "Dropped dimension set: > 10 dimensions specified."},

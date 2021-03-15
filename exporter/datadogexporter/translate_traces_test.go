@@ -24,19 +24,22 @@ import (
 	"github.com/DataDog/datadog-agent/pkg/trace/exportable/pb"
 	"github.com/DataDog/datadog-agent/pkg/trace/exportable/stats"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/collector/consumer/pdata"
 	"go.opentelemetry.io/collector/translator/conventions"
 	tracetranslator "go.opentelemetry.io/collector/translator/trace"
+	"go.uber.org/zap"
+	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/ext"
 
 	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/datadogexporter/config"
+	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/datadogexporter/metadata"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/datadogexporter/utils"
 )
 
-func NewResourceSpansData(mockTraceID [16]byte, mockSpanID [8]byte, mockParentSpanID [8]byte, statusCode pdata.StatusCode, resourceEnvAndService bool) pdata.ResourceSpans {
+func NewResourceSpansData(mockTraceID [16]byte, mockSpanID [8]byte, mockParentSpanID [8]byte, statusCode pdata.StatusCode, resourceEnvAndService bool, endTime time.Time) pdata.ResourceSpans {
 	// The goal of this test is to ensure that each span in
 	// pdata.ResourceSpans is transformed to its *trace.SpanData correctly!
 
-	endTime := time.Now().Round(time.Second)
 	pdataEndTime := pdata.TimestampUnixNano(endTime.UnixNano())
 	startTime := endTime.Add(-90 * time.Second)
 	pdataStartTime := pdata.TimestampUnixNano(startTime.UnixNano())
@@ -51,6 +54,7 @@ func NewResourceSpansData(mockTraceID [16]byte, mockSpanID [8]byte, mockParentSp
 	spans.Resize(1)
 
 	span := spans.At(0)
+
 	traceID := pdata.NewTraceID(mockTraceID)
 	spanID := pdata.NewSpanID(mockSpanID)
 	parentSpanID := pdata.NewSpanID(mockParentSpanID)
@@ -126,16 +130,53 @@ func TestConvertToDatadogTd(t *testing.T) {
 	traces.ResourceSpans().Resize(1)
 	calculator := newSublayerCalculator()
 
-	outputTraces := convertToDatadogTd(traces, calculator, &config.Config{})
+	outputTraces, runningMetrics := convertToDatadogTd(traces, calculator, &config.Config{})
 	assert.Equal(t, 1, len(outputTraces))
+	assert.Equal(t, 1, len(runningMetrics))
 }
 
 func TestConvertToDatadogTdNoResourceSpans(t *testing.T) {
 	traces := pdata.NewTraces()
 	calculator := newSublayerCalculator()
 
-	outputTraces := convertToDatadogTd(traces, calculator, &config.Config{})
+	outputTraces, runningMetrics := convertToDatadogTd(traces, calculator, &config.Config{})
 	assert.Equal(t, 0, len(outputTraces))
+	assert.Equal(t, 0, len(runningMetrics))
+}
+
+func TestRunningTraces(t *testing.T) {
+	td := pdata.NewTraces()
+
+	rts := td.ResourceSpans()
+	rts.Resize(4)
+
+	rt := rts.At(0)
+	resAttrs := rt.Resource().Attributes()
+	resAttrs.Insert(metadata.AttributeDatadogHostname, pdata.NewAttributeValueString("resource-hostname-1"))
+
+	rt = rts.At(1)
+	resAttrs = rt.Resource().Attributes()
+	resAttrs.Insert(metadata.AttributeDatadogHostname, pdata.NewAttributeValueString("resource-hostname-1"))
+
+	rt = rts.At(2)
+	resAttrs = rt.Resource().Attributes()
+	resAttrs.Insert(metadata.AttributeDatadogHostname, pdata.NewAttributeValueString("resource-hostname-2"))
+
+	_, runningMetrics := convertToDatadogTd(td, newSublayerCalculator(), &config.Config{})
+
+	runningHostnames := []string{}
+	for _, metric := range runningMetrics {
+		require.Equal(t, *metric.Metric, "datadog_exporter.traces.running")
+		require.NotNil(t, metric.Host)
+		runningHostnames = append(runningHostnames, *metric.Host)
+	}
+
+	defaultHostname := *metadata.GetHost(zap.NewNop(), &config.Config{})
+
+	assert.ElementsMatch(t,
+		runningHostnames,
+		[]string{"resource-hostname-1", "resource-hostname-1", "resource-hostname-2", defaultHostname},
+	)
 }
 
 func TestObfuscation(t *testing.T) {
@@ -161,7 +202,7 @@ func TestObfuscation(t *testing.T) {
 	// of them is currently not supported.
 	span.Attributes().InsertString("testinfo?=123", "http.route")
 
-	outputTraces := convertToDatadogTd(traces, calculator, &config.Config{})
+	outputTraces, _ := convertToDatadogTd(traces, calculator, &config.Config{})
 	aggregatedTraces := aggregateTracePayloadsByEnv(outputTraces)
 
 	obfuscator := obfuscate.NewObfuscator(obfuscatorConfig)
@@ -179,10 +220,11 @@ func TestBasicTracesTranslation(t *testing.T) {
 	mockTraceID := [16]byte{0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F}
 	mockSpanID := [8]byte{0xF1, 0xF2, 0xF3, 0xF4, 0xF5, 0xF6, 0xF7, 0xF8}
 	mockParentSpanID := [8]byte{0xEF, 0xEE, 0xED, 0xEC, 0xEB, 0xEA, 0xE9, 0xE8}
+	mockEndTime := time.Now().Round(time.Second)
 
 	// create mock resource span data
 	// set shouldError and resourceServiceandEnv to false to test defaut behavior
-	rs := NewResourceSpansData(mockTraceID, mockSpanID, mockParentSpanID, pdata.StatusCodeUnset, false)
+	rs := NewResourceSpansData(mockTraceID, mockSpanID, mockParentSpanID, pdata.StatusCodeUnset, false, mockEndTime)
 
 	// translate mocks to datadog traces
 	datadogPayload := resourceSpansToDatadogSpans(rs, calculator, hostname, &config.Config{})
@@ -216,7 +258,7 @@ func TestBasicTracesTranslation(t *testing.T) {
 	assert.Equal(t, "web", datadogPayload.Traces[0].Spans[0].Type)
 
 	// ensure that span.meta and span.metrics pick up attibutes, instrumentation ibrary and resource attribs
-	assert.Equal(t, 9, len(datadogPayload.Traces[0].Spans[0].Meta))
+	assert.Equal(t, 10, len(datadogPayload.Traces[0].Spans[0].Meta))
 	assert.Equal(t, 1, len(datadogPayload.Traces[0].Spans[0].Metrics))
 
 	// ensure that span error is based on otlp span status
@@ -231,6 +273,13 @@ func TestBasicTracesTranslation(t *testing.T) {
 	// ensure a duration and start time are calculated
 	assert.NotNil(t, datadogPayload.Traces[0].Spans[0].Start)
 	assert.NotNil(t, datadogPayload.Traces[0].Spans[0].Duration)
+
+	pdataMockEndTime := pdata.TimestampUnixNano(mockEndTime.UnixNano())
+	pdataMockStartTime := pdata.TimestampUnixNano(mockEndTime.Add(-90 * time.Second).UnixNano())
+	mockEventsString := fmt.Sprintf("[{\"attributes\":{},\"name\":\"start\",\"time\":%d},{\"attributes\":{\"flag\":false},\"name\":\"end\",\"time\":%d}]", pdataMockStartTime, pdataMockEndTime)
+
+	// ensure that events tag is set if span events exist and contains structured json fields
+	assert.Equal(t, mockEventsString, datadogPayload.Traces[0].Spans[0].Meta["events"])
 }
 
 func TestTracesTranslationErrorsAndResource(t *testing.T) {
@@ -242,9 +291,11 @@ func TestTracesTranslationErrorsAndResource(t *testing.T) {
 	mockSpanID := [8]byte{0xF1, 0xF2, 0xF3, 0xF4, 0xF5, 0xF6, 0xF7, 0xF8}
 	mockParentSpanID := [8]byte{0xEF, 0xEE, 0xED, 0xEC, 0xEB, 0xEA, 0xE9, 0xE8}
 
+	mockEndTime := time.Now().Round(time.Second)
+
 	// create mock resource span data
 	// toggle on errors and custom service naming to test edge case code paths
-	rs := NewResourceSpansData(mockTraceID, mockSpanID, mockParentSpanID, pdata.StatusCodeError, true)
+	rs := NewResourceSpansData(mockTraceID, mockSpanID, mockParentSpanID, pdata.StatusCodeError, true, mockEndTime)
 
 	// translate mocks to datadog traces
 	cfg := config.Config{
@@ -276,10 +327,146 @@ func TestTracesTranslationErrorsAndResource(t *testing.T) {
 	// ensure that version gives resource service.version priority
 	assert.Equal(t, "test-version", datadogPayload.Traces[0].Spans[0].Meta["version"])
 
-	assert.Equal(t, 17, len(datadogPayload.Traces[0].Spans[0].Meta))
+	assert.Equal(t, 18, len(datadogPayload.Traces[0].Spans[0].Meta))
 
 	assert.Contains(t, datadogPayload.Traces[0].Spans[0].Meta[tagContainersTags], "container_id:3249847017410247")
 	assert.Contains(t, datadogPayload.Traces[0].Spans[0].Meta[tagContainersTags], "pod_name:example-pod-name")
+}
+
+// Ensures that if more than one error event occurs in a span, the last one is used for translation
+func TestTracesTranslationErrorsFromEventsUsesLast(t *testing.T) {
+	hostname := "testhostname"
+	calculator := newSublayerCalculator()
+
+	// generate mock trace, span and parent span ids
+	mockTraceID := [16]byte{0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F}
+	mockSpanID := [8]byte{0xF1, 0xF2, 0xF3, 0xF4, 0xF5, 0xF6, 0xF7, 0xF8}
+	mockParentSpanID := [8]byte{0xEF, 0xEE, 0xED, 0xEC, 0xEB, 0xEA, 0xE9, 0xE8}
+
+	mockEndTime := time.Now().Round(time.Second)
+
+	// create mock resource span data
+	// toggle on errors and custom service naming to test edge case code paths
+	rs := NewResourceSpansData(mockTraceID, mockSpanID, mockParentSpanID, pdata.StatusCodeError, true, mockEndTime)
+	span := rs.InstrumentationLibrarySpans().At(0).Spans().At(0)
+	events := span.Events()
+	events.Resize(4)
+
+	events.At(0).SetName("start")
+
+	events.At(1).SetName(conventions.AttributeExceptionEventName)
+	events.At(1).Attributes().InitFromMap(map[string]pdata.AttributeValue{
+		conventions.AttributeExceptionType:       pdata.NewAttributeValueString("SomeOtherErr"),
+		conventions.AttributeExceptionStacktrace: pdata.NewAttributeValueString("SomeOtherErr at line 67\nthing at line 45"),
+		conventions.AttributeExceptionMessage:    pdata.NewAttributeValueString("SomeOtherErr error occurred"),
+	})
+
+	attribs := map[string]pdata.AttributeValue{
+		conventions.AttributeExceptionType:       pdata.NewAttributeValueString("HttpError"),
+		conventions.AttributeExceptionStacktrace: pdata.NewAttributeValueString("HttpError at line 67\nthing at line 45"),
+		conventions.AttributeExceptionMessage:    pdata.NewAttributeValueString("HttpError error occurred"),
+	}
+	events.At(2).SetName(conventions.AttributeExceptionEventName)
+	events.At(2).Attributes().InitFromMap(attribs)
+
+	events.At(3).SetName("end")
+	events.At(3).Attributes().InitFromMap(map[string]pdata.AttributeValue{
+		"flag": pdata.NewAttributeValueBool(false),
+	})
+
+	// translate mocks to datadog traces
+	cfg := config.Config{
+		TagsConfig: config.TagsConfig{
+			Version: "v1",
+		},
+	}
+
+	datadogPayload := resourceSpansToDatadogSpans(rs, calculator, hostname, &cfg)
+
+	// Ensure the error type is copied over from the last error event logged
+	assert.Equal(t, attribs[conventions.AttributeExceptionType].StringVal(), datadogPayload.Traces[0].Spans[0].Meta[ext.ErrorType])
+
+	// Ensure the stack trace is copied over from the last error event logged
+	assert.Equal(t, attribs[conventions.AttributeExceptionStacktrace].StringVal(), datadogPayload.Traces[0].Spans[0].Meta[ext.ErrorStack])
+
+	// Ensure the error message is copied over from the last error event logged
+	assert.Equal(t, attribs[conventions.AttributeExceptionMessage].StringVal(), datadogPayload.Traces[0].Spans[0].Meta[ext.ErrorMsg])
+}
+
+// Ensures that if the first or last event in the list is the error, that translation still behaves properly
+func TestTracesTranslationErrorsFromEventsBounds(t *testing.T) {
+	hostname := "testhostname"
+	calculator := newSublayerCalculator()
+
+	// generate mock trace, span and parent span ids
+	mockTraceID := [16]byte{0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F}
+	mockSpanID := [8]byte{0xF1, 0xF2, 0xF3, 0xF4, 0xF5, 0xF6, 0xF7, 0xF8}
+	mockParentSpanID := [8]byte{0xEF, 0xEE, 0xED, 0xEC, 0xEB, 0xEA, 0xE9, 0xE8}
+
+	mockEndTime := time.Now().Round(time.Second)
+
+	// create mock resource span data
+	// toggle on errors and custom service naming to test edge case code paths
+	rs := NewResourceSpansData(mockTraceID, mockSpanID, mockParentSpanID, pdata.StatusCodeError, true, mockEndTime)
+	span := rs.InstrumentationLibrarySpans().At(0).Spans().At(0)
+	events := span.Events()
+	events.Resize(3)
+
+	// Start with the error as the first element in the list...
+	attribs := map[string]pdata.AttributeValue{
+		conventions.AttributeExceptionType:       pdata.NewAttributeValueString("HttpError"),
+		conventions.AttributeExceptionStacktrace: pdata.NewAttributeValueString("HttpError at line 67\nthing at line 45"),
+		conventions.AttributeExceptionMessage:    pdata.NewAttributeValueString("HttpError error occurred"),
+	}
+	events.At(0).SetName(conventions.AttributeExceptionEventName)
+	events.At(0).Attributes().InitFromMap(attribs)
+
+	events.At(1).SetName("start")
+
+	events.At(2).SetName("end")
+	events.At(2).Attributes().InitFromMap(map[string]pdata.AttributeValue{
+		"flag": pdata.NewAttributeValueBool(false),
+	})
+
+	// translate mocks to datadog traces
+	cfg := config.Config{
+		TagsConfig: config.TagsConfig{
+			Version: "v1",
+		},
+	}
+
+	datadogPayload := resourceSpansToDatadogSpans(rs, calculator, hostname, &cfg)
+
+	// Ensure the error type is copied over
+	assert.Equal(t, attribs[conventions.AttributeExceptionType].StringVal(), datadogPayload.Traces[0].Spans[0].Meta[ext.ErrorType])
+
+	// Ensure the stack trace is copied over
+	assert.Equal(t, attribs[conventions.AttributeExceptionStacktrace].StringVal(), datadogPayload.Traces[0].Spans[0].Meta[ext.ErrorStack])
+
+	// Ensure the error message is copied over
+	assert.Equal(t, attribs[conventions.AttributeExceptionMessage].StringVal(), datadogPayload.Traces[0].Spans[0].Meta[ext.ErrorMsg])
+
+	// Now with the error event at the end of the list...
+	events.At(0).SetName("start")
+	// Reset the attributes
+	events.At(0).Attributes().InitFromMap(map[string]pdata.AttributeValue{})
+
+	events.At(1).SetName("end")
+	events.At(1).Attributes().InitFromMap(map[string]pdata.AttributeValue{
+		"flag": pdata.NewAttributeValueBool(false),
+	})
+
+	events.At(2).SetName(conventions.AttributeExceptionEventName)
+	events.At(2).Attributes().InitFromMap(attribs)
+
+	// Ensure the error type is copied over
+	assert.Equal(t, attribs[conventions.AttributeExceptionType].StringVal(), datadogPayload.Traces[0].Spans[0].Meta[ext.ErrorType])
+
+	// Ensure the stack trace is copied over
+	assert.Equal(t, attribs[conventions.AttributeExceptionStacktrace].StringVal(), datadogPayload.Traces[0].Spans[0].Meta[ext.ErrorStack])
+
+	// Ensure the error message is copied over
+	assert.Equal(t, attribs[conventions.AttributeExceptionMessage].StringVal(), datadogPayload.Traces[0].Spans[0].Meta[ext.ErrorMsg])
 }
 
 func TestTracesTranslationOkStatus(t *testing.T) {
@@ -291,9 +478,11 @@ func TestTracesTranslationOkStatus(t *testing.T) {
 	mockSpanID := [8]byte{0xF1, 0xF2, 0xF3, 0xF4, 0xF5, 0xF6, 0xF7, 0xF8}
 	mockParentSpanID := [8]byte{0xEF, 0xEE, 0xED, 0xEC, 0xEB, 0xEA, 0xE9, 0xE8}
 
+	mockEndTime := time.Now().Round(time.Second)
+
 	// create mock resource span data
 	// toggle on errors and custom service naming to test edge case code paths
-	rs := NewResourceSpansData(mockTraceID, mockSpanID, mockParentSpanID, pdata.StatusCodeError, true)
+	rs := NewResourceSpansData(mockTraceID, mockSpanID, mockParentSpanID, pdata.StatusCodeError, true, mockEndTime)
 
 	// translate mocks to datadog traces
 	cfg := config.Config{
@@ -325,7 +514,7 @@ func TestTracesTranslationOkStatus(t *testing.T) {
 	// ensure that version gives resource service.version priority
 	assert.Equal(t, "test-version", datadogPayload.Traces[0].Spans[0].Meta["version"])
 
-	assert.Equal(t, 17, len(datadogPayload.Traces[0].Spans[0].Meta))
+	assert.Equal(t, 18, len(datadogPayload.Traces[0].Spans[0].Meta))
 }
 
 // ensure that the datadog span uses the configured unified service tags
@@ -338,9 +527,11 @@ func TestTracesTranslationConfig(t *testing.T) {
 	mockSpanID := [8]byte{0xF1, 0xF2, 0xF3, 0xF4, 0xF5, 0xF6, 0xF7, 0xF8}
 	mockParentSpanID := [8]byte{0xEF, 0xEE, 0xED, 0xEC, 0xEB, 0xEA, 0xE9, 0xE8}
 
+	mockEndTime := time.Now().Round(time.Second)
+
 	// create mock resource span data
 	// toggle on errors and custom service naming to test edge case code paths
-	rs := NewResourceSpansData(mockTraceID, mockSpanID, mockParentSpanID, pdata.StatusCodeUnset, true)
+	rs := NewResourceSpansData(mockTraceID, mockSpanID, mockParentSpanID, pdata.StatusCodeUnset, true, mockEndTime)
 
 	cfg := config.Config{
 		TagsConfig: config.TagsConfig{
@@ -370,7 +561,7 @@ func TestTracesTranslationConfig(t *testing.T) {
 	// ensure that version gives resource service.version priority
 	assert.Equal(t, "test-version", datadogPayload.Traces[0].Spans[0].Meta["version"])
 
-	assert.Equal(t, 14, len(datadogPayload.Traces[0].Spans[0].Meta))
+	assert.Equal(t, 15, len(datadogPayload.Traces[0].Spans[0].Meta))
 }
 
 // ensure that the translation returns early if no resource instrumentation library spans
@@ -407,9 +598,11 @@ func TestTracesTranslationInvalidService(t *testing.T) {
 	mockSpanID := [8]byte{0xF1, 0xF2, 0xF3, 0xF4, 0xF5, 0xF6, 0xF7, 0xF8}
 	mockParentSpanID := [8]byte{0xEF, 0xEE, 0xED, 0xEC, 0xEB, 0xEA, 0xE9, 0xE8}
 
+	mockEndTime := time.Now().Round(time.Second)
+
 	// create mock resource span data
 	// toggle on errors and custom service naming to test edge case code paths
-	rs := NewResourceSpansData(mockTraceID, mockSpanID, mockParentSpanID, pdata.StatusCodeUnset, false)
+	rs := NewResourceSpansData(mockTraceID, mockSpanID, mockParentSpanID, pdata.StatusCodeUnset, false, mockEndTime)
 
 	// add a tab and an invalid character to see if it gets normalized
 	cfgInvalidService := config.Config{
@@ -766,9 +959,11 @@ func TestStatsAggregations(t *testing.T) {
 	mockSpanID := [8]byte{0xF1, 0xF2, 0xF3, 0xF4, 0xF5, 0xF6, 0xF7, 0xF8}
 	mockParentSpanID := [8]byte{0xEF, 0xEE, 0xED, 0xEC, 0xEB, 0xEA, 0xE9, 0xE8}
 
+	mockEndTime := time.Now().Round(time.Second)
+
 	// create mock resource span data
 	// toggle on errors and custom service naming to test edge case code paths
-	rs := NewResourceSpansData(mockTraceID, mockSpanID, mockParentSpanID, pdata.StatusCodeError, true)
+	rs := NewResourceSpansData(mockTraceID, mockSpanID, mockParentSpanID, pdata.StatusCodeError, true, mockEndTime)
 
 	// translate mocks to datadog traces
 	cfg := config.Config{}

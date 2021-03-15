@@ -3,12 +3,12 @@
 Supported pipeline types: metrics, traces, logs
 
 The resource detection processor can be used to detect resource information from the host,
-in a format that conforms to the [OpenTelemetry resource semantic conventions](https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/resource/semantic_conventions/README.md), and append or
+in a format that conforms to the [OpenTelemetry resource semantic conventions](https://github.com/open-telemetry/opentelemetry-main/specification/resource/semantic_conventions/README.md), and append or
 override the resource value in telemetry data with this information.
 
 Currently supported detectors include:
 
-* Environment Variable: Reads resource information from the `OTEL_RESOURCE` environment
+* Environment Variable: Reads resource information from the `OTEL_RESOURCE_ATTRIBUTES` environment
 variable. This is expected to be in the format `<key1>=<value1>,<key2>=<value2>,...`, the
 details of which are currently pending confirmation in the OpenTelemetry specification.
 
