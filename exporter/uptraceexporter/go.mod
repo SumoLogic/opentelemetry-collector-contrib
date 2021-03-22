@@ -8,6 +8,6 @@ require (
 	github.com/uptrace/uptrace-go v0.9.0
 	github.com/vmihailenco/msgpack/v5 v5.2.0
 	go.opentelemetry.io/collector v0.22.0
-	go.opentelemetry.io/otel v0.18.0
+	go.opentelemetry.io/otel v0.19.0
 	go.uber.org/zap v1.16.0
 )
