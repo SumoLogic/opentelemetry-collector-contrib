@@ -4,7 +4,7 @@ go 1.14
 
 require (
 	github.com/cenkalti/backoff/v4 v4.1.0
-	github.com/elastic/go-elasticsearch/v7 v7.11.0
+	github.com/elastic/go-elasticsearch/v7 v7.12.0
 	github.com/stretchr/testify v1.7.0
 	go.opentelemetry.io/collector v0.22.0
 	go.uber.org/zap v1.16.0
