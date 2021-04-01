@@ -571,7 +571,6 @@ jobs:
         aws_auth:
           aws_access_key_id: ${TRACING_TESTS_AWS_ACCESS_KEY_ID}
           aws_secret_access_key: ${TRACING_TESTS_AWS_SECRET_ACCESS_KEY}
-          aws_region: us-west-2
     steps:
       - run:
           name: "Configure environment variables"
