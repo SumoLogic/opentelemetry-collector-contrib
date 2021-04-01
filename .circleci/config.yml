@@ -7,6 +7,9 @@ parameters:
   run-stability-tests:
     type: boolean
     default: false
+  run-tracing-tests:
+    type: boolean
+    default: false
   collector-sha:
     type: string
     default: ""
@@ -153,6 +156,22 @@ workflows:
       - publish-dev:
           requires:
             - run-stability-tests
+
+  tracing-tests:
+    when: << pipeline.parameters.run-tracing-tests >>
+    jobs:
+      - checkout-commit
+      - setup:
+          requires:
+            - checkout-commit
+      - cross-compile:
+          requires:
+            - setup
+      - run-tracing-tests:
+          requires:
+            - cross-compile
+      - publish-dev:
+          requires:
             - run-tracing-tests
 
   build-publish:
