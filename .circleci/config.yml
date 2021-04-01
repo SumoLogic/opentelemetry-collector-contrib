@@ -240,11 +240,11 @@ workflows:
             - windows-msi
             - deb-package
             - rpm-package
-            filters:
-              branches:
-                ignore: /.*/
-              tags:
-                only: /.*/
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /.*/
       - spawn-stability-tests-job:
           requires:
             - lint
