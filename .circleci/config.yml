@@ -241,6 +241,19 @@ workflows:
               only: /main|release\/.+/
             tags:
               ignore: /.*/
+      - spawn-tracing-tests-job:
+          requires:
+            - lint
+            - unit-tests
+            - loadtest
+            - windows-test
+            - integration-tests
+            - cross-compile
+          filters:
+            branches:
+              only: /main|release|tracing-tests\/.+/
+            tags:
+              ignore: /.*/
       - integration-tests:
           filters:
             tags:
