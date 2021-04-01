@@ -552,3 +552,22 @@ jobs:
       - persist_to_workspace:
           root: ~/
           paths: project/dist/*.<< parameters.package_type >>
+
+  tracing-tests:
+    docker:
+      - image: ${INFRASTRUCTURE_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com/tracing-tests/otelcol
+        aws_auth:
+          aws_access_key_id: ${TRACING_TESTS_AWS_ACCESS_KEY_ID}
+          aws_secret_access_key: ${TRACING_TESTS_AWS_SECRET_ACCESS_KEY}
+          aws_region: us-west-2
+    steps:
+      - run:
+          name: "Configure environment variables"
+          command: |
+            echo "export SUMO_API_ENDPOINT=${TRACING_TESTS_SUMO_API_ENDPOINT}" >> $BASH_ENV
+            echo "export KUBERNETES_METADATA_URL=${TRACING_TESTS_SUMO_API_ENDPOINT}" >> $BASH_ENV
+            echo "export SUMO_ACCESS_ID=${TRACING_TESTS_SUMO_ACCESS_ID}" >> $BASH_ENV
+            echo "export SUMO_ACCESS_KEY=${TRACING_TESTS_SUMO_ACCESS_KEY}" >> $BASH_ENV
+      - run:
+          name: "Execute Tracing Tests"
+          command: "pytest -vvv tests"
