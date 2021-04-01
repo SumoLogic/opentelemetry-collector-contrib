@@ -153,6 +153,7 @@ workflows:
       - publish-dev:
           requires:
             - run-stability-tests
+      - run-tracing-tests
 
   build-publish:
     when: << pipeline.parameters.run-build-publish >>
@@ -241,19 +242,19 @@ workflows:
               only: /main|release\/.+/
             tags:
               ignore: /.*/
-      - spawn-tracing-tests-job:
-          requires:
-            - lint
-            - unit-tests
-            - loadtest
-            - windows-test
-            - integration-tests
-            - cross-compile
-          filters:
-            branches:
-              only: /tracing-tests\/.+/
-            tags:
-              ignore: /.*/
+#      - spawn-tracing-tests-job:
+#          requires:
+#            - lint
+#            - unit-tests
+#            - loadtest
+#            - windows-test
+#            - integration-tests
+#            - cross-compile
+#          filters:
+#            branches:
+#              only: /tracing-tests\/.+/
+#            tags:
+#              ignore: /.*/
       - integration-tests:
           filters:
             tags:
@@ -447,16 +448,16 @@ jobs:
                 -H 'Accept: application/json' \
                 -d '{"parameters": {"run-build-publish": false, "run-stability-tests": true, "collector-sha": "'"${CIRCLE_SHA1}"'"}, "branch": "'"${CIRCLE_BRANCH}"'"}'
 
-  spawn-tracing-tests-job:
-    executor: golang
-    steps:
-      - run:
-          name: Trigger stability tests job
-          command: |
-            curl -f -X POST "https://circleci.com/api/v2/project/github/SumoLogic/${CIRCLE_PROJECT_REPONAME}/pipeline?circle-token=${CIRCLE_API_TOKEN}" \
-                -H 'Content-Type: application/json' \
-                -H 'Accept: application/json' \
-                -d '{"parameters": {"run-build-publish": false, "run-tracing-tests": true, "collector-sha": "'"${CIRCLE_SHA1}"'"}, "branch": "'"${CIRCLE_BRANCH}"'"}'
+#  spawn-tracing-tests-job:
+#    executor: golang
+#    steps:
+#      - run:
+#          name: Trigger stability tests job
+#          command: |
+#            curl -f -X POST "https://circleci.com/api/v2/project/github/SumoLogic/${CIRCLE_PROJECT_REPONAME}/pipeline?circle-token=${CIRCLE_API_TOKEN}" \
+#                -H 'Content-Type: application/json' \
+#                -H 'Accept: application/json' \
+#                -d '{"parameters": {"run-build-publish": false, "run-tracing-tests": true, "collector-sha": "'"${CIRCLE_SHA1}"'"}, "branch": "'"${CIRCLE_BRANCH}"'"}'
 
   checkout-commit:
     executor: golang
