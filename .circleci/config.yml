@@ -624,4 +624,4 @@ jobs:
             echo "export SUMO_ACCESS_KEY=${TRACING_TESTS_SUMO_ACCESS_KEY}" >> $BASH_ENV
       - run:
           name: "Execute Tracing Tests"
-          command: "pytest --rootdir=/opt/tracing-tests -vvv tests"
+          command: "pytest --rootdir=/opt/tracing-tests -vvv /opt/tracing-tests/tests"
