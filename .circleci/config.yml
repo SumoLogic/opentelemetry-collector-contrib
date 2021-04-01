@@ -435,7 +435,6 @@ jobs:
       - publish_docker_images:
           repo: opentelemetry-collector-dev
           tag: ${CIRCLE_SHA1}
-      - run-tracing-tests
 
   spawn-stability-tests-job:
     executor: golang
