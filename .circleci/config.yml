@@ -622,7 +622,7 @@ jobs:
             echo "export KUBERNETES_METADATA_URL=${TRACING_TESTS_SUMO_API_ENDPOINT}" >> $BASH_ENV
             echo "export SUMO_ACCESS_ID=${TRACING_TESTS_SUMO_ACCESS_ID}" >> $BASH_ENV
             echo "export SUMO_ACCESS_KEY=${TRACING_TESTS_SUMO_ACCESS_KEY}" >> $BASH_ENV
-            echo "export PYTHONWARNINGS="ignore:Unverified HTTPS request"
+            echo "export PYTHONWARNINGS=ignore:Unverified HTTPS request"  >> $BASH_ENV
       - run:
           name: "Execute Tracing Tests"
           command: "pytest --rootdir=/opt/tracing-tests -vvv /opt/tracing-tests/tests"
