@@ -17,7 +17,8 @@ parameters:
 orbs:
   win: circleci/windows@2.4.0
   aws-cli: circleci/aws-cli@1.3.1
-  kube-orb: circleci/kubernetes@1.0.0
+  kube-orb: circleci/kubernetes@0.11.2
+
 
 executors:
   golang:
@@ -633,7 +634,7 @@ jobs:
             echo "export PYTHONWARNINGS=ignore:Unverified HTTPS request"  >> $BASH_ENV
             echo "export AWS_ACCESS_KEY_ID=${TRACING_TESTS_CLUSTER_AWS_ACCESS_ID}" >> $BASH_ENV
             echo "export AWS_SECRET_ACCESS_KEY=${TRACING_TESTS_CLUSTER_AWS_ACCESS_KEY}" >> $BASH_ENV
-      - kube-orb/install-kubeconfig:
+      - kubernetes/install-kubeconfig:
           kubeconfig: ${TRACING_TESTS_CLUSTER_KUBECONFIG_DATA}
       - kubernetes/install-kubectl
       - run:
