@@ -166,17 +166,20 @@ workflows:
       - setup:
           requires:
             - checkout-commit
-      - cross-compile:
-          requires:
-            - setup
-      - publish-dev:
-          requires:
-            - cross-compile
       - run-tracing-tests:
           repo: opentelemetry-collector-dev
           tag: ${CIRCLE_SHA1}
           requires:
-            - publish-dev
+            - setup
+      #          requires:
+      #            - publish-dev
+#      - cross-compile:
+#          requires:
+#            - setup
+#      - publish-dev:
+#          requires:
+#            - cross-compile
+
 
   build-publish:
     when: << pipeline.parameters.run-build-publish >>
@@ -628,7 +631,8 @@ jobs:
           name: "Configure environment variables"
           command: |
             echo "export SUMO_API_ENDPOINT=${TRACING_TESTS_SUMO_API_ENDPOINT}" >> $BASH_ENV
-            echo "export KUBERNETES_METADATA_URL=${TRACING_TESTS_SUMO_API_ENDPOINT}" >> $BASH_ENV
+            echo "export KUBERNETES_METADATA_URL=${TRACING_TESTS_K8S_METADATA_URL}" >> $BASH_ENV
+            echo "export OTELCOL_HEALTHCHECK_URL=${TRACING_TESTS_OTELCOL_URL}" >> $BASH_ENV
             echo "export SUMO_ACCESS_ID=${TRACING_TESTS_SUMO_ACCESS_ID}" >> $BASH_ENV
             echo "export SUMO_ACCESS_KEY=${TRACING_TESTS_SUMO_ACCESS_KEY}" >> $BASH_ENV
             echo "export PYTHONWARNINGS=ignore:Unverified HTTPS request"  >> $BASH_ENV
@@ -639,7 +643,10 @@ jobs:
       - kubernetes/install-kubectl
       - run:
           name: "Update Sumologic OpenTelemetry Collector"
-          command: /opt/tracing-tests/deployment_scripts/deploy-otelcol.sh << parameters.repo >> << parameters.tag >>
+          command: /opt/tracing-tests/deployment_scripts/deploy-otelcol.sh opentelemetry-collector 0.19.3-sumo
+      - run:
+          name: "Wait for Sumologic OpenTelemetry Collector to be available"
+          command: /opt/tracing-tests/deployment_scripts/wait-for-otelcol.sh $OTELCOL_HEALTHCHECK_URL
       - run:
           name: "Execute Tracing Tests"
           command: "pytest --rootdir=/opt/tracing-tests -vvv /opt/tracing-tests/tests"
