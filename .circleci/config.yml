@@ -17,7 +17,7 @@ parameters:
 orbs:
   win: circleci/windows@2.4.0
   aws-cli: circleci/aws-cli@1.3.1
-  kube-orb: circleci/kubernetes@0.11.2
+  kubernetes: circleci/kubernetes@0.11.2
 
 
 executors:
