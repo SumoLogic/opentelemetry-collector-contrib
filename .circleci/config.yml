@@ -641,6 +641,7 @@ jobs:
       - kubernetes/install-kubeconfig:
           kubeconfig: TRACING_TESTS_CLUSTER_KUBECONFIG_DATA
       - kubernetes/install-kubectl
+      - aws-cli/install
       - run:
           name: "Update Sumologic OpenTelemetry Collector"
           command: /opt/tracing-tests/deployment_scripts/deploy-otelcol.sh opentelemetry-collector 0.19.3-sumo
