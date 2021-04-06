@@ -646,14 +646,14 @@ jobs:
           command: /opt/tracing-tests/deployment_scripts/deploy-otelcol.sh opentelemetry-collector 0.22.0-sumo
       - run:
           name: "Wait for Sumologic OpenTelemetry Collector to be available"
-          command: /opt/tracing-tests/deployment_scripts/wait-for-otelcol.sh $OTELCOL_HEALTHCHECK_URL
+          command: kubectl -n java-app wait --for=condition=ready --timeout=60s pod -l app=otelcol
       - run:
           name: "Deploy Java Test application"
           command: /opt/tracing-tests/deployment_scripts/deploy-javaapp.sh
 
       - run:
           name: "Wait for Kubernetes Metadata Provider"
-          command: kubectl -n java-app wait --for=condition=ready pod -l app=k8s-feeder
+          command: kubectl -n java-app wait --for=condition=ready --timeout=60s pod -l app=k8s-feeder
       - run:
           name: "Get Kubernetes Metadata provider URL"
           command: echo "export KUBERNETES_METADATA_URL=$(kubectl -n java-app get svc k8s-feeder-svc-pub -o json | jq .status.loadBalancer.ingress[0].hostname)" >> $BASH_ENV
