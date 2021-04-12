@@ -642,6 +642,9 @@ jobs:
       - kubernetes/install-kubectl
       - aws-cli/install
       - run:
+          name: "Clean up environment"
+          command: kubectl -n java-app delete all --all --now=true --wait=true
+      - run:
           name: "Deploy Sumologic OpenTelemetry Collector"
           command: /opt/tracing-tests/deployment_scripts/deploy-otelcol.sh opentelemetry-collector 0.22.0-sumo
       - run:
