@@ -642,15 +642,14 @@ jobs:
       - kubernetes/install-kubectl
       - aws-cli/install
       - run:
-          name: "Update Sumologic OpenTelemetry Collector"
+          name: "Deploy Sumologic OpenTelemetry Collector"
           command: /opt/tracing-tests/deployment_scripts/deploy-otelcol.sh opentelemetry-collector 0.22.0-sumo
       - run:
           name: "Wait for Sumologic OpenTelemetry Collector to be available"
           command: kubectl -n java-app wait --for=condition=ready --timeout=60s pod -l app=otelcol
       - run:
-          name: "Deploy Java Test application"
-          command: /opt/tracing-tests/deployment_scripts/deploy-javaapp.sh
-
+          name: "Deploy Kubernetes Metadata Provider application"
+          command: /opt/tracing-tests/deployment_scripts/deploy-k8sfeeder.sh
       - run:
           name: "Wait for Kubernetes Metadata Provider"
           command: kubectl -n java-app wait --for=condition=ready --timeout=60s pod -l app=k8s-feeder
@@ -658,8 +657,14 @@ jobs:
           name: "Get Kubernetes Metadata provider URL"
           command: echo "export KUBERNETES_METADATA_URL=$(kubectl -n java-app get svc k8s-feeder-svc-pub -o json | jq .status.loadBalancer.ingress[0].hostname)" >> $BASH_ENV
       - run:
+          name: "Deploy Java App application"
+          command: /opt/tracing-tests/deployment_scripts/deploy-javaapp.sh
+      - run:
+          name: "Wait for Kubernetes Metadata Provider"
+          command: kubectl -n java-app wait --for=condition=ready --timeout=60s pod -l app=server
+      - run:
           name: "Wait for data..."
-          command: sleep 240
+          command: sleep 180
       - run:
           name: "Execute Tracing Tests"
           command: "pytest --rootdir=/opt/tracing-tests -vvv /opt/tracing-tests/tests"
