@@ -622,7 +622,7 @@ jobs:
       tag:
         type: string
     docker:
-      - image: ${INFRASTRUCTURE_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com/tracing-tests/otelcol:latest
+      - image: ${INFRASTRUCTURE_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com/tracing-tests/tests:latest
         aws_auth:
           aws_access_key_id: ${TRACING_TESTS_AWS_ACCESS_KEY_ID}
           aws_secret_access_key: ${TRACING_TESTS_AWS_SECRET_ACCESS_KEY}
