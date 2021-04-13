@@ -650,6 +650,9 @@ jobs:
           name: "Wait for Sumologic OpenTelemetry Collector to be available"
           command: kubectl -n java-app wait --for=condition=ready --timeout=60s pod -l app=otelcol
       - run:
+          name: "Deploy ECR Registry Secret"
+          command: /opt/tracing-tests/deployment_scripts/deploy-ecr-registry-secret.sh
+      - run:
           name: "Deploy Kubernetes Metadata Provider application"
           command: /opt/tracing-tests/deployment_scripts/deploy-k8sfeeder.sh
       - run:
