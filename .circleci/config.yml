@@ -166,19 +166,18 @@ workflows:
       - setup:
           requires:
             - checkout-commit
+      - cross-compile:
+          requires:
+            - setup
+      - publish-dev:
+          requires:
+            - cross-compile
       - run-tracing-tests:
           repo: opentelemetry-collector-dev
           tag: ${CIRCLE_SHA1}
           requires:
-            - setup
-      #          requires:
-      #            - publish-dev
-#      - cross-compile:
-#          requires:
-#            - setup
-#      - publish-dev:
-#          requires:
-#            - cross-compile
+            - publish-dev
+
 
 
   build-publish:
@@ -268,7 +267,7 @@ workflows:
             - rpm-package
           filters:
             branches:
-              ignore: /.*/
+              only: /tracing-tests\/.+/
             tags:
               only: /.*/
       - spawn-stability-tests-job:
@@ -646,7 +645,7 @@ jobs:
           command: kubectl -n java-app delete all --all --now=true --wait=true
       - run:
           name: "Deploy Sumologic OpenTelemetry Collector"
-          command: /opt/tracing-tests/deployment_scripts/deploy-otelcol.sh opentelemetry-collector 0.22.0-sumo
+          command: /opt/tracing-tests/deployment_scripts/deploy-otelcol.sh << parameters.repo >> << parameters.tag >>
       - run:
           name: "Wait for Sumologic OpenTelemetry Collector to be available"
           command: kubectl -n java-app wait --for=condition=ready --timeout=60s pod -l app=otelcol
