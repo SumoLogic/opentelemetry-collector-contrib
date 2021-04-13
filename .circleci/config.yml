@@ -267,7 +267,7 @@ workflows:
             - rpm-package
           filters:
             branches:
-              only: /tracing-tests\/.+/
+              ignore: /.*/
             tags:
               only: /.*/
       - spawn-stability-tests-job:
@@ -288,7 +288,7 @@ workflows:
             - cross-compile
           filters:
             branches:
-              only: /tracing-tests\/.+/
+              only: /tracing-tests/
             tags:
               ignore: /.*/
       - integration-tests:
@@ -487,7 +487,7 @@ jobs:
     executor: golang
     steps:
       - run:
-          name: Trigger stability tests job
+          name: Trigger tracing tests job
           command: |
             curl -f -X POST "https://circleci.com/api/v2/project/github/SumoLogic/${CIRCLE_PROJECT_REPONAME}/pipeline?circle-token=${CIRCLE_API_TOKEN}" \
                 -H 'Content-Type: application/json' \
