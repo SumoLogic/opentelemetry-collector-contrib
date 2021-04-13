@@ -71,7 +71,7 @@ However, in total, this is `900` spans, which is more than the global limit of `
 will take care of that and randomly select only the spans up to the global limit. So eventually, it might
 for example send further only following traces: `A1, A2, B1, C2, C5` and filter out the others.
 
-When the processor receives spans belonging to the trace for which the decision was already taken, 
+When the processor receives spans belonging to the trace for which the positive decision was already taken, 
 it forwards them without checking whether the span rate limit has been exceeded or not. 
 If a lot of traces lasting longer than the `decision_wait` time are sent, the rate limit may be exceeded
 
