@@ -1,0 +1,21 @@
+name: OpenTelemetry Collector Builder
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  otelcolbuilder:
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        go: [ '1.16', '1.15', '1.14' ]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go }}
+        working-directory: ./otelcolbuilder/
+        run: make build
