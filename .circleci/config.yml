@@ -231,38 +231,38 @@ workflows:
             - windows-msi
             - deb-package
             - rpm-package
-#      - publish-stable:
-#          requires:
-#            - lint
-#            - unit-tests
-#            - integration-tests
-#            - cross-compile
-#            - loadtest
-#            - windows-test
-#            - windows-msi
-#            - deb-package
-#            - rpm-package
-#          filters:
-#            branches:
-#              ignore: /.*/
-#            tags:
-#              ignore: /.*/
-#      - publish-dev:
-#          requires:
-#            - lint
-#            - unit-tests
-#            - integration-tests
-#            - cross-compile
-#            - loadtest
-#            - windows-test
-#            - windows-msi
-#            - deb-package
-#            - rpm-package
-#          filters:
-#            branches:
-#              ignore: /.*/
-#            tags:
-#              ignore: /.*/
+      - publish-stable:
+          requires:
+            - lint
+            - unit-tests
+            - integration-tests
+            - cross-compile
+            - loadtest
+            - windows-test
+            - windows-msi
+            - deb-package
+            - rpm-package
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              ignore: /.*/
+      - publish-dev:
+          requires:
+            - lint
+            - unit-tests
+            - integration-tests
+            - cross-compile
+            - loadtest
+            - windows-test
+            - windows-msi
+            - deb-package
+            - rpm-package
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              ignore: /.*/
       - spawn-stability-tests-job:
           requires:
             - publish-check
@@ -271,14 +271,6 @@ workflows:
               only: /.*/
             tags:
               only: /.*/
-#      - spawn-tracing-tests-job:
-#          requires:
-#            - cross-compile
-#          filters:
-#            branches:
-#              only: /tracing-tests/
-#            tags:
-#              ignore: /.*/
       - integration-tests:
           filters:
             tags:
