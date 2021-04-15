@@ -271,9 +271,9 @@ workflows:
             - windows-test
             - integration-tests
             - cross-compile
-#            - windows-msi
-#            - deb-package
-#            - rpm-package
+            - windows-msi
+            - deb-package
+            - rpm-package
           filters:
             branches:
               only: /.*/
