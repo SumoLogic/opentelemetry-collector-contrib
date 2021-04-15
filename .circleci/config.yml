@@ -158,26 +158,19 @@ workflows:
       - publish-dev:
           requires:
             - run-stability-tests
-
-  tracing-tests:
-    when: << pipeline.parameters.run-tracing-tests >>
-    jobs:
-      - checkout-commit
-      - setup:
-          requires:
-            - checkout-commit
-      - cross-compile:
-          requires:
-            - setup
-      - publish-dev:
-          requires:
-            - cross-compile
       - run-tracing-tests:
           repo: opentelemetry-collector-dev
           tag: ${CIRCLE_SHA1}
           requires:
             - publish-dev
-
+      - publish-stable:
+          requires:
+            - run-tracing-tests
+          filters:
+            branch:
+              ignore: /.*/
+            tags:
+              only: /.*/
 
 
   build-publish:
@@ -238,38 +231,38 @@ workflows:
             - windows-msi
             - deb-package
             - rpm-package
-      - publish-stable:
-          requires:
-            - lint
-            - unit-tests
-            - integration-tests
-            - cross-compile
-            - loadtest
-            - windows-test
-            - windows-msi
-            - deb-package
-            - rpm-package
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /.*/
-      - publish-dev:
-          requires:
-            - lint
-            - unit-tests
-            - integration-tests
-            - cross-compile
-            - loadtest
-            - windows-test
-            - windows-msi
-            - deb-package
-            - rpm-package
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /.*/
+#      - publish-stable:
+#          requires:
+#            - lint
+#            - unit-tests
+#            - integration-tests
+#            - cross-compile
+#            - loadtest
+#            - windows-test
+#            - windows-msi
+#            - deb-package
+#            - rpm-package
+#          filters:
+#            branches:
+#              ignore: /.*/
+#            tags:
+#              ignore: /.*/
+#      - publish-dev:
+#          requires:
+#            - lint
+#            - unit-tests
+#            - integration-tests
+#            - cross-compile
+#            - loadtest
+#            - windows-test
+#            - windows-msi
+#            - deb-package
+#            - rpm-package
+#          filters:
+#            branches:
+#              ignore: /.*/
+#            tags:
+#              ignore: /.*/
       - spawn-stability-tests-job:
           requires:
             - lint
@@ -278,19 +271,22 @@ workflows:
             - windows-test
             - integration-tests
             - cross-compile
+#            - windows-msi
+#            - deb-package
+#            - rpm-package
           filters:
             branches:
-              only: /main|release\/.+/
+              only: /.*/
             tags:
-              ignore: /.*/
-      - spawn-tracing-tests-job:
-          requires:
-            - cross-compile
-          filters:
-            branches:
-              only: /tracing-tests/
-            tags:
-              ignore: /.*/
+              only: /.*/
+#      - spawn-tracing-tests-job:
+#          requires:
+#            - cross-compile
+#          filters:
+#            branches:
+#              only: /tracing-tests/
+#            tags:
+#              ignore: /.*/
       - integration-tests:
           filters:
             tags:
