@@ -167,7 +167,7 @@ workflows:
           requires:
             - run-tracing-tests
           filters:
-            branch:
+            branches:
               ignore: /.*/
             tags:
               only: /.*/
