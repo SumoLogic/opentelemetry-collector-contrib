@@ -27,7 +27,7 @@ import (
 
 func TestLoadConfig(t *testing.T) {
 	factories, err := componenttest.NopFactories()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	factory := NewFactory()
 	factories.Processors[factory.Type()] = factory
