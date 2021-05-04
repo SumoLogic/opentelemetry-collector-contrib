@@ -33,7 +33,7 @@ func TestLoadConfig(t *testing.T) {
 	factories.Processors[factory.Type()] = factory
 
 	cfg, err := configtest.LoadConfigFile(t, path.Join(".", "testdata", "sumologic_syslog_config.yaml"), factories)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.NotNil(t, cfg)
 
 	assert.Equal(t, cfg.Processors["sumologic_syslog"],
