@@ -24,7 +24,7 @@ const ()
 type Config struct {
 	*config.ProcessorSettings `mapstructure:"-"`
 
-	// FacilityAttr is attribute name when facility name should be placed
+	// FacilityAttr is the name of the attribute the facility name should be placed into.
 	FacilityAttr string `mapstructure:"facility_attr"`
 }
 
