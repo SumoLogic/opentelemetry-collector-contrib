@@ -18,8 +18,6 @@ import (
 	"go.opentelemetry.io/collector/config"
 )
 
-const ()
-
 // Config holds the configuration for tail-based sampling.
 type Config struct {
 	*config.ProcessorSettings `mapstructure:"-"`
