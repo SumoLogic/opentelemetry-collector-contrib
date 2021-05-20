@@ -16,6 +16,14 @@ processors:
     send_batch_size: 50
   batch/metrics:
     timeout: 60s
+  resourcedetection/ec2:
+    detectors: [env, ec2]
+    timeout: 10s
+    override: false
+  resourcedetection/ecs:
+    detectors: [env, ecs]
+    timeout: 10s
+    override: false
 exporters:
   otlphttp:
     endpoint: $SUMO_HTTP_TRACES_URL
@@ -24,9 +32,9 @@ service:
   pipelines:
     traces:
       receivers: [otlp,awsxray]
-      processors: [batch/traces]
+      processors: [resourcedetection/ec2, resourcedetection/ecs, batch/traces]
       exporters: [otlphttp]
     metrics:
       receivers: [otlp]
-      processors: [batch/metrics]
+      processors: [resourcedetection/ec2, resourcedetection/ecs, batch/metrics]
       exporters: [otlphttp]
