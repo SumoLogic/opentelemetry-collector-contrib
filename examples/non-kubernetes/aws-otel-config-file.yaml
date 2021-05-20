@@ -1,28 +1,38 @@
 extensions:
   health_check:
 receivers:
+  awsxray:
+    endpoint: 0.0.0.0:2000
+    transport: udp
+  jaeger:
+    protocols:
+      thrift_compact:
+        endpoint: 0.0.0.0:6831
+      thrift_binary:
+        endpoint: 0.0.0.0:6832
+      grpc:
+        endpoint: 0.0.0.0:14250
+      thrift_http:
+        endpoint: 0.0.0.0:14268
   otlp:
     protocols:
       grpc:
         endpoint: 0.0.0.0:4317
       http:
         endpoint: 0.0.0.0:55681
-  awsxray:
-    endpoint: 0.0.0.0:2000
-    transport: udp
+  zipkin:
+    endpoint: 0.0.0.0:9411
 processors:
   batch/traces:
-    timeout: 1s
-    send_batch_size: 50
-  batch/metrics:
-    timeout: 60s
+    timeout: 5s
+    send_batch_size: 256
   resourcedetection/ec2:
     detectors: [env, ec2]
-    timeout: 10s
-    override: false
+    timeout: 5s
+    override: true
   resourcedetection/ecs:
     detectors: [env, ecs]
-    timeout: 10s
+    timeout: 5s
     override: false
 exporters:
   otlphttp:
@@ -33,8 +43,4 @@ service:
     traces:
       receivers: [otlp,awsxray]
       processors: [resourcedetection/ec2, resourcedetection/ecs, batch/traces]
-      exporters: [otlphttp]
-    metrics:
-      receivers: [otlp]
-      processors: [resourcedetection/ec2, resourcedetection/ecs, batch/metrics]
       exporters: [otlphttp]
