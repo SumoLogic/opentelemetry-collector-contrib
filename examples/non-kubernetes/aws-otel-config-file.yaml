@@ -37,6 +37,6 @@ service:
   extensions: [health_check]
   pipelines:
     traces:
-      receivers: [otlp,awsxray]
-      processors: [resourcedetection, batch/traces]
+      receivers: [awsxray,jaeger,otlp,zipkin]
+      processors: [resourcedetection,batch/traces]
       exporters: [otlphttp]
