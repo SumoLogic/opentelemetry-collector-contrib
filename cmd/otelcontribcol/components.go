@@ -55,6 +55,7 @@ import (
 	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/routingprocessor"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/sourceprocessor"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/spanmetricsprocessor"
+	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/sumologicsyslogprocessor"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/tailsamplingprocessor"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/receiver/awsecscontainermetricsreceiver"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/receiver/awsxrayreceiver"
@@ -184,6 +185,7 @@ func components() (component.Factories, error) {
 		routingprocessor.NewFactory(),
 		tailsamplingprocessor.NewFactory(),
 		spanmetricsprocessor.NewFactory(),
+		sumologicsyslogprocessor.NewFactory(),
 	}
 	for _, pr := range factories.Processors {
 		processors = append(processors, pr)
