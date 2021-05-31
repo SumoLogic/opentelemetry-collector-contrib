@@ -214,6 +214,8 @@ replace github.com/open-telemetry/opentelemetry-collector-contrib/processor/sour
 
 replace github.com/open-telemetry/opentelemetry-collector-contrib/processor/resourcedetectionprocessor => ./processor/resourcedetectionprocessor/
 
+replace github.com/open-telemetry/opentelemetry-collector-contrib/processor/sumologicsyslogprocessor => ./processor/sumologicsyslogprocessor/
+
 replace github.com/open-telemetry/opentelemetry-collector-contrib/processor/metricstransformprocessor => ./processor/metricstransformprocessor/
 
 replace github.com/open-telemetry/opentelemetry-collector-contrib/processor/routingprocessor => ./processor/routingprocessor/
