@@ -6,7 +6,6 @@ require (
 	github.com/antonmedv/expr v1.8.9
 	github.com/armon/go-metrics v0.3.3 // indirect
 	github.com/census-instrumentation/opencensus-proto v0.3.0
-	github.com/gogo/googleapis v1.3.0 // indirect
 	github.com/hashicorp/go-immutable-radix v1.2.0 // indirect
 	github.com/hashicorp/go-msgpack v0.5.5 // indirect
 	github.com/mattn/go-colorable v0.1.7 // indirect
@@ -17,8 +16,8 @@ require (
 	github.com/spf13/cast v1.3.1
 	github.com/spf13/viper v1.7.1
 	github.com/stretchr/testify v1.7.0
-	go.opentelemetry.io/collector v0.24.0
-	go.uber.org/zap v1.16.0
+	go.opentelemetry.io/collector v0.28.0
+	go.uber.org/zap v1.17.0
 	gopkg.in/ini.v1 v1.57.0 // indirect
 )
 
