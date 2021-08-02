@@ -8,7 +8,7 @@ require (
 	github.com/census-instrumentation/opencensus-proto v0.3.0
 	github.com/gogo/googleapis v1.3.0 // indirect
 	github.com/golang/protobuf v1.5.2
-	github.com/google/uuid v1.2.0
+	github.com/google/uuid v1.3.0
 	github.com/hashicorp/go-immutable-radix v1.2.0 // indirect
 	github.com/hashicorp/go-msgpack v0.5.5 // indirect
 	github.com/mattn/go-colorable v0.1.7 // indirect
