@@ -98,11 +98,11 @@ func createLogProcessor(
 		return nil, fmt.Errorf("error creating \"attributes\" processor: %w of processor %v", err, cfg.ID())
 	}
 
-	include, err := filterlog.NewMatcher(oCfg.Include)
+	include, err := filterlog.NewClassicMatcher(oCfg.Include)
 	if err != nil {
 		return nil, err
 	}
-	exclude, err := filterlog.NewMatcher(oCfg.Exclude)
+	exclude, err := filterlog.NewClassicMatcher(oCfg.Exclude)
 	if err != nil {
 		return nil, err
 	}

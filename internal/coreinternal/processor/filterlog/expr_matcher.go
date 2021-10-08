@@ -12,22 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package filtermetric // import "github.com/open-telemetry/opentelemetry-collector-contrib/internal/coreinternal/processor/filtermetric"
+package filterlog
 
 import (
-	"go.opentelemetry.io/collector/pdata/pmetric"
+	"go.opentelemetry.io/collector/model/pdata"
 
 	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/coreinternal/processor/filterexpr"
 )
 
 type exprMatcher struct {
-	matchers []*filterexpr.MetricMatcher
+	matchers []*filterexpr.LogMatcher
 }
 
 func newExprMatcher(expressions []string) (*exprMatcher, error) {
 	m := &exprMatcher{}
 	for _, expression := range expressions {
-		matcher, err := filterexpr.NewMetricMatcher(expression)
+		matcher, err := filterexpr.NewLogMatcher(expression)
 		if err != nil {
 			return nil, err
 		}
@@ -36,15 +36,19 @@ func newExprMatcher(expressions []string) (*exprMatcher, error) {
 	return m, nil
 }
 
-func (m *exprMatcher) MatchMetric(metric pmetric.Metric) (bool, error) {
+func (m *exprMatcher) MatchLog(lr pdata.LogRecord, resource pdata.Resource, library pdata.InstrumentationLibrary) bool {
+	return m.MatchLogRecord(lr)
+}
+
+func (m *exprMatcher) MatchLogRecord(lr pdata.LogRecord) bool {
 	for _, matcher := range m.matchers {
-		matched, err := matcher.MatchMetric(metric)
+		matched, err := matcher.MatchLog(lr)
 		if err != nil {
-			return false, err
+			return false
 		}
 		if matched {
-			return true, nil
+			return true
 		}
 	}
-	return false, nil
+	return false
 }
