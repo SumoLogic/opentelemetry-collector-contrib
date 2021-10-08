@@ -18,6 +18,7 @@ import (
 	"go.opentelemetry.io/collector/config"
 
 	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/coreinternal/processor/filterconfig"
+	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/coreinternal/processor/filterlog"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/coreinternal/processor/filtermetric"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/coreinternal/processor/filterset"
 )
@@ -49,11 +50,11 @@ type LogFilters struct {
 	// Include match properties describe logs that should be included in the Collector Service pipeline,
 	// all other logs should be dropped from further processing.
 	// If both Include and Exclude are specified, Include filtering occurs first.
-	Include *LogMatchProperties `mapstructure:"include"`
+	Include *filterlog.LogMatchProperties `mapstructure:"include"`
 	// Exclude match properties describe logs that should be excluded from the Collector Service pipeline,
 	// all other logs should be included.
 	// If both Include and Exclude are specified, Include filtering occurs first.
-	Exclude *LogMatchProperties `mapstructure:"exclude"`
+	Exclude *filterlog.LogMatchProperties `mapstructure:"exclude"`
 }
 
 // LogMatchType specifies the strategy for matching against `plog.Log`s.

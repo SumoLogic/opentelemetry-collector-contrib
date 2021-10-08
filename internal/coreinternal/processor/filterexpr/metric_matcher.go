@@ -21,35 +21,35 @@ import (
 	"go.opentelemetry.io/collector/pdata/pmetric"
 )
 
-type Matcher struct {
+type MetricMatcher struct {
 	program *vm.Program
 	v       vm.VM
 }
 
-type env struct {
+type metricEnv struct {
 	MetricName string
 	attributes pcommon.Map
 }
 
-func (e *env) HasLabel(key string) bool {
+func (e *metricEnv) HasLabel(key string) bool {
 	_, ok := e.attributes.Get(key)
 	return ok
 }
 
-func (e *env) Label(key string) string {
+func (e *metricEnv) Label(key string) string {
 	v, _ := e.attributes.Get(key)
 	return v.StringVal()
 }
 
-func NewMatcher(expression string) (*Matcher, error) {
+func NewMetricMatcher(expression string) (*MetricMatcher, error) {
 	program, err := expr.Compile(expression)
 	if err != nil {
 		return nil, err
 	}
-	return &Matcher{program: program, v: vm.VM{}}, nil
+	return &MetricMatcher{program: program, v: vm.VM{}}, nil
 }
 
-func (m *Matcher) MatchMetric(metric pmetric.Metric) (bool, error) {
+func (m *MetricMatcher) MatchMetric(metric pmetric.Metric) (bool, error) {
 	metricName := metric.Name()
 	switch metric.DataType() {
 	case pmetric.MetricDataTypeGauge:
@@ -63,7 +63,7 @@ func (m *Matcher) MatchMetric(metric pmetric.Metric) (bool, error) {
 	}
 }
 
-func (m *Matcher) matchGauge(metricName string, gauge pmetric.Gauge) (bool, error) {
+func (m *MetricMatcher) matchGauge(metricName string, gauge pmetric.Gauge) (bool, error) {
 	pts := gauge.DataPoints()
 	for i := 0; i < pts.Len(); i++ {
 		matched, err := m.matchEnv(metricName, pts.At(i).Attributes())
@@ -77,7 +77,7 @@ func (m *Matcher) matchGauge(metricName string, gauge pmetric.Gauge) (bool, erro
 	return false, nil
 }
 
-func (m *Matcher) matchSum(metricName string, sum pmetric.Sum) (bool, error) {
+func (m *MetricMatcher) matchSum(metricName string, sum pmetric.Sum) (bool, error) {
 	pts := sum.DataPoints()
 	for i := 0; i < pts.Len(); i++ {
 		matched, err := m.matchEnv(metricName, pts.At(i).Attributes())
@@ -91,7 +91,7 @@ func (m *Matcher) matchSum(metricName string, sum pmetric.Sum) (bool, error) {
 	return false, nil
 }
 
-func (m *Matcher) matchDoubleHistogram(metricName string, histogram pmetric.Histogram) (bool, error) {
+func (m *MetricMatcher) matchDoubleHistogram(metricName string, histogram pmetric.Histogram) (bool, error) {
 	pts := histogram.DataPoints()
 	for i := 0; i < pts.Len(); i++ {
 		matched, err := m.matchEnv(metricName, pts.At(i).Attributes())
@@ -105,18 +105,18 @@ func (m *Matcher) matchDoubleHistogram(metricName string, histogram pmetric.Hist
 	return false, nil
 }
 
-func (m *Matcher) matchEnv(metricName string, attributes pcommon.Map) (bool, error) {
-	return m.match(createEnv(metricName, attributes))
+func (m *MetricMatcher) matchEnv(metricName string, attributes pcommon.Map) (bool, error) {
+	return m.match(createMetricEnv(metricName, attributes))
 }
 
-func createEnv(metricName string, attributes pcommon.Map) *env {
-	return &env{
+func createMetricEnv(metricName string, attributes pcommon.Map) *metricEnv {
+	return &metricEnv{
 		MetricName: metricName,
 		attributes: attributes,
 	}
 }
 
-func (m *Matcher) match(env *env) (bool, error) {
+func (m *MetricMatcher) match(env *metricEnv) (bool, error) {
 	result, err := m.v.Run(m.program, env)
 	if err != nil {
 		return false, err
