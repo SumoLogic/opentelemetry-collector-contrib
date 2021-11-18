@@ -10,6 +10,46 @@ otelcol:
   metrics:
     enabled:
       true
+  config:
+    processors:
+	  ## This processor allows to shape tracing traffic
+	  cascading_filter:
+	    ## 1. Pattern filtering
+	    ## Uncomment and Adjust the filters as needed
+	    # trace_reject_filters:
+	    #    - name: filter_out_pattern
+	    #      name_pattern: "/healtcheck" ## <- set to filter out spans with name matching this pattern
+
+	    ## 2. Probabilistic sampling  
+	    ## Uncomment and adjust the limit as needed
+	    # probabilistic_filtering_rate: 100 # <- output limit for this rule in spans/sec
+
+	    ## 3. Tail-based filtering
+	    ## Uncomment and adjust as needed
+	    trace_accept_filters:
+	      ## Adjust the duration threshold and limit as needed
+	      # - name: tail-based-duration
+	      #   properties:
+	      #     min_duration: 3s      ## <- traces longer then this will qualify to be sent
+	      #   spans_per_second: 500   ## <- output limit for this rule
+	      ## Adjust number of errors and limit as needed
+	      # - name: tail-based-errors
+	      #   properties:
+	      #     min_number_of_errors: 2 ## <- traces with at least this number of errors will qualify to be sent
+	      #   spans_per_second: 400     ## <- output limit for this rule
+	      ## Adjust number of errors and limit as needed
+	      # - name: tail-based-attributes
+	      #   attributes:               ## <- traces with at least one span or resource
+	      #     - key: service.name     ##    matching this attribute will qualify to be sent
+	      #       values:
+	      #         - login-service     ## <- pass all traces where at least one span belongs to "login-service" service
+	      #   spans_per_second: 300     ## <- output limit for this rule
+    service:
+      pipelines:
+        traces:
+          ## This is required to enable cascading_filter
+          processors: [memory_limiter, k8s_tagger, source, resource, cascading_filter, batch]
+		  
 ## Following enables OpenTelemetry Agent which runs on each node as a DaemonSet
 otelagent:
   enabled:
