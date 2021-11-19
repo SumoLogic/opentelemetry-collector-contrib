@@ -44,6 +44,13 @@ processors:
 
   ## This processor allows to shape tracing traffic
   cascading_filter:
+    ## (default = 30s): Wait time since the first span of a trace before making
+    ## a filtering decision
+    # decision_wait: 30s
+    ## (default = 100000): Number of traces kept in memory. This number must be greater
+	## than the number of traces which arrive within decision_wait time
+    # num_traces: 200000
+
     ## 1. Pattern filtering
     ## Uncomment and Adjust the filters as needed
     # trace_reject_filters:
