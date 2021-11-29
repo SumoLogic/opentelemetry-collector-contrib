@@ -5,7 +5,7 @@ go 1.17
 require (
 	github.com/influxdata/influxdb-observability/common v0.2.8
 	github.com/influxdata/influxdb-observability/influx2otel v0.2.8
-	github.com/influxdata/line-protocol/v2 v2.2.0
+	github.com/influxdata/line-protocol/v2 v2.2.1
 	go.opentelemetry.io/collector v0.38.0
 	go.uber.org/zap v1.19.1
 
