@@ -3,14 +3,14 @@ module github.com/open-telemetry/opentelemetry-collector-contrib/exporter/sapmex
 go 1.17
 
 require (
-	github.com/jaegertracing/jaeger v1.27.0
+	github.com/jaegertracing/jaeger v1.29.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/internal/splunk v0.38.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/batchperresourceattr v0.38.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/translator/jaeger v0.38.0
 	github.com/signalfx/sapm-proto v0.7.2
 	github.com/stretchr/testify v1.7.0
 	go.opentelemetry.io/collector v0.38.0
-	go.opentelemetry.io/collector/model v0.38.0
+	go.opentelemetry.io/collector/model v0.39.0
 	go.uber.org/zap v1.19.1
 )
 
