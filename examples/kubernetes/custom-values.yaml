@@ -18,7 +18,7 @@ otelcol:
         ## a filtering decision
         # decision_wait: 30s
         ## (default = 100000): Number of traces kept in memory. This number must be greater
-		## than the number of traces which arrive within decision_wait time
+        ## than the number of traces which arrive within decision_wait time
         # num_traces: 200000
 
         ## 1. Pattern filtering
