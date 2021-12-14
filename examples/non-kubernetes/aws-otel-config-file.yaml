@@ -32,7 +32,9 @@ processors:
     override: true
 exporters:
   otlphttp:
-    endpoint: $SUMO_HTTP_TRACES_URL
+    traces_endpoint: SUMO_HTTP_TRACES_URL
+    tls:
+      insecure: true
 service:
   extensions: [health_check]
   pipelines:
