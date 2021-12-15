@@ -263,15 +263,17 @@ require (
 	github.com/open-telemetry/opentelemetry-collector-contrib/processor/groupbyattrsprocessor v0.41.0 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/processor/groupbytraceprocessor v0.41.0 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/processor/k8sattributesprocessor v0.41.0 // indirect
-    github.com/open-telemetry/opentelemetry-collector-contrib/processor/k8sprocessor v0.41.0 // indirect
+	github.com/open-telemetry/opentelemetry-collector-contrib/processor/k8sprocessor v0.41.0 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/processor/metricsgenerationprocessor v0.41.0 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/processor/metricstransformprocessor v0.41.0 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/processor/probabilisticsamplerprocessor v0.41.0 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/processor/resourcedetectionprocessor v0.41.0 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/processor/resourceprocessor v0.41.0 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/processor/routingprocessor v0.41.0 // indirect
+	github.com/open-telemetry/opentelemetry-collector-contrib/processor/sourceprocessor v0.41.0 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/processor/spanmetricsprocessor v0.41.0 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/processor/spanprocessor v0.41.0 // indirect
+	github.com/open-telemetry/opentelemetry-collector-contrib/processor/sumologicsyslogprocessor v0.0.0-00010101000000-000000000000 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/processor/tailsamplingprocessor v0.41.0 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/receiver/awscontainerinsightreceiver v0.41.0 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/receiver/awsecscontainermetricsreceiver v0.41.0 // indirect

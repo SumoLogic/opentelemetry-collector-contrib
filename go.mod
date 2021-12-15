@@ -60,7 +60,7 @@ require (
 	github.com/open-telemetry/opentelemetry-collector-contrib/processor/groupbyattrsprocessor v0.41.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/processor/groupbytraceprocessor v0.41.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/processor/k8sattributesprocessor v0.41.0
-    github.com/open-telemetry/opentelemetry-collector-contrib/processor/k8sprocessor v0.41.0
+	github.com/open-telemetry/opentelemetry-collector-contrib/processor/k8sprocessor v0.41.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/processor/metricsgenerationprocessor v0.41.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/processor/metricstransformprocessor v0.41.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/processor/probabilisticsamplerprocessor v0.41.0
@@ -116,10 +116,7 @@ require (
 	golang.org/x/sys v0.0.0-20211205182925-97ca703d548d
 )
 
-require (
-	github.com/open-telemetry/opentelemetry-collector-contrib/processor/sumologicsyslogprocessor v0.0.0-00010101000000-000000000000
-	github.com/opencontainers/image-spec v1.0.2-0.20190823105129-775207bd45b6 // indirect
-)
+require github.com/open-telemetry/opentelemetry-collector-contrib/processor/sumologicsyslogprocessor v0.0.0-00010101000000-000000000000
 
 require (
 	bitbucket.org/atlassian/go-asap/v2 v2.6.0 // indirect

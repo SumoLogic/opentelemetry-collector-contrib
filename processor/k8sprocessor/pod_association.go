@@ -31,8 +31,9 @@ import (
 func extractPodID(ctx context.Context, attrs pdata.AttributeMap, associations []kube.Association) (podIdentifierKey string, podIdentifierValue kube.PodIdentifier) {
 	hostname := stringAttributeFromMap(attrs, conventions.AttributeHostName)
 	var connectionIP kube.PodIdentifier
-	if c, ok := client.FromContext(ctx); ok {
-		connectionIP = kube.PodIdentifier(c.IP)
+	c := client.FromContext(ctx)
+	if c.Addr != nil {
+		connectionIP = kube.PodIdentifier(c.Addr.String())
 	}
 	// If pod association is not set
 	if len(associations) == 0 {

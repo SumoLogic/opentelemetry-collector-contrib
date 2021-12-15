@@ -103,14 +103,18 @@ func newTraceStringAttrs(nodeAttrs map[string]pdata.AttributeValue, spanAttrKey 
 	var traceBatches []pdata.Traces
 	traces := pdata.NewTraces()
 	rs := traces.ResourceSpans().AppendEmpty()
-	rs.Resource().Attributes().InitFromMap(nodeAttrs)
+	for k, v := range nodeAttrs {
+		rs.Resource().Attributes().Insert(k, v)
+	}
 	ils := rs.InstrumentationLibrarySpans().AppendEmpty()
 	span := ils.Spans().AppendEmpty()
 	span.SetTraceID(pdata.NewTraceID([16]byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}))
 	span.SetSpanID(pdata.NewSpanID([8]byte{1, 2, 3, 4, 5, 6, 7, 8}))
 	attributes := make(map[string]pdata.AttributeValue)
 	attributes[spanAttrKey] = pdata.NewAttributeValueString(spanAttrValue)
-	span.Attributes().InitFromMap(attributes)
+	for k, v := range attributes {
+		span.Attributes().Insert(k, v)
+	}
 	traceBatches = append(traceBatches, traces)
 	return &TraceData{
 		ReceivedBatches: traceBatches,
