@@ -31,7 +31,7 @@ Parameters:
     ConstraintDescription: Must be an existing IAM Instance Profile which will be attached to IAM Role.
   SumoHttpTracesURL:
     Type: String
-    Description: Enther the Sumologic HTTP Traces Endpoint URL
+    Description: Enter the Sumologic HTTP Traces Endpoint URL
 Resources:
   EC2Instance:
     Type: AWS::EC2::Instance
@@ -57,9 +57,9 @@ Resources:
                     otlp:
                       protocols:
                         grpc:
-                          endpoint: 0.0.0.0:4317
+                          endpoint:
                         http:
-                          endpoint: 0.0.0.0:55681
+                          endpoint:
                     awsxray:
                       endpoint: 0.0.0.0:2000
                       transport: udp
@@ -69,6 +69,10 @@ Resources:
                       send_batch_size: 50
                     batch/metrics:
                       timeout: 60s
+                    resourcedetection:
+                      detectors: [env, ec2]
+                      timeout: 5s
+                      override: true
                   exporters:
                     otlphttp:
                       endpoint: ${sumo_http_traces_url}
@@ -77,11 +81,7 @@ Resources:
                     pipelines:
                       traces:
                         receivers: [otlp,awsxray]
-                        processors: [batch/traces]
-                        exporters: [otlphttp]
-                      metrics:
-                        receivers: [otlp]
-                        processors: [batch/metrics]
+                        processors: [resourcedetection,batch/traces]
                         exporters: [otlphttp]
               - sumo_http_traces_url: !Ref SumoHttpTracesURL
         # Invoke aws-otel-collector-ctl to restart aws-otel-collector.
@@ -153,7 +153,7 @@ Resources:
             #!/bin/bash
 
             # Download AWS OTel Collector RPM
-            sudo rpm -Uvh https://aws-otel-collector.s3.amazonaws.com/amazon_linux/amd64/latest/aws-otel-collector.rpm
+            sudo rpm -Uvh https://aws-otel-collector.s3.amazonaws.com/amazon_linux/amd64/v0.15.0/aws-otel-collector.rpm
 
             # Setup Sumologic HTTP Traces URL ENV
             echo "export SUMO_HTTP_TRACES_URL=${sumo_http_traces_url}" > /etc/profile.d/setSumoVar.sh
@@ -218,7 +218,7 @@ Resources:
   InstanceSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Enable SSH access via port 22
+      GroupDescription: Enable access via ports 22, 2000, 4317, 55681
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 22
@@ -229,8 +229,8 @@ Resources:
           ToPort: 4317
           CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
-          FromPort: 55680
-          ToPort: 55680
+          FromPort: 4318
+          ToPort: 4318
           CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
           FromPort: 55681

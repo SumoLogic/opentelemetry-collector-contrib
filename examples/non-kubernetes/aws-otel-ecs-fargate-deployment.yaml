@@ -25,13 +25,14 @@ Parameters:
   Subnets:
     Type: CommaDelimitedList
     Description: The list of Subnets in your Virtual Private Cloud (VPC)
-  SumoHttpTracesURL:
-    Type: String
-    Description: Enther the Sumologic HTTP Traces Endpoint URL
   SumoAWSOTelColConfig:
     Type: AWS::SSM::Parameter::Value<String>
     Default: sumologic-otel-col-config
     Description: AWS SSM Parameter which contains OTel Collector config file
+  SumologicReplicaServiceName:
+    Type: String
+    Default: sumologic-aws-otel-col-svc-ecs-fargate
+    Description: ECS Service Name
 Resources:
   ECSTaskDefinition:
     Type: 'AWS::ECS::TaskDefinition'
@@ -48,37 +49,10 @@ Resources:
               awslogs-group: /ecs/aws-otel-collector
               awslogs-region: !Ref 'AWS::Region'
               awslogs-stream-prefix: ecs
-          portMappings:
-            - hostPort: 2000
-              protocol: udp
-              containerPort: 2000
-            - hostPort: 4317
-              protocol: tcp
-              containerPort: 4317
-            - hostPort: 6831
-              protocol: udp
-              containerPort: 6831
-            - hostPort: 6832
-              protocol: udp
-              containerPort: 6832
-            - hostPort: 9411
-              protocol: tcp
-              containerPort: 9411
-            - hostPort: 14250
-              protocol: tcp
-              containerPort: 14250
-            - hostPort: 14268
-              protocol: tcp
-              containerPort: 14268
-            - hostPort: 55681
-              protocol: tcp
-              containerPort: 55681
           environment:
-            - name: SUMO_HTTP_TRACES_URL
-              value: !Ref SumoHttpTracesURL
             - name: AOT_CONFIG_CONTENT
               value: !Ref SumoAWSOTelColConfig
-          image: amazon/aws-otel-collector:latest
+          image: public.ecr.aws/aws-observability/aws-otel-collector:v0.15.0
           name: sumologic-aws-otel-collector
       RequiresCompatibilities:
         - FARGATE
@@ -95,7 +69,7 @@ Resources:
       LaunchType: FARGATE
       SchedulingStrategy: REPLICA
       DesiredCount: 1
-      ServiceName: sumologic-aws-otel-col-svc-ecs-fargate
+      ServiceName: !Ref SumologicReplicaServiceName
       NetworkConfiguration:
         AwsvpcConfiguration:
           AssignPublicIp: ENABLED
