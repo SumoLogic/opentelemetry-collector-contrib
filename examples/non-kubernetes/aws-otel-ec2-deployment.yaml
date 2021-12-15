@@ -57,9 +57,9 @@ Resources:
                     otlp:
                       protocols:
                         grpc:
-                          endpoint: 0.0.0.0:4317
+                          endpoint:
                         http:
-                          endpoint: 0.0.0.0:55681
+                          endpoint:
                     awsxray:
                       endpoint: 0.0.0.0:2000
                       transport: udp
@@ -75,9 +75,7 @@ Resources:
                       override: true
                   exporters:
                     otlphttp:
-                      traces_endpoint: ${sumo_http_traces_url}
-                      tls:
-                        insecure: true
+                      endpoint: ${sumo_http_traces_url}
                   service:
                     extensions: [health_check]
                     pipelines:
@@ -229,6 +227,10 @@ Resources:
         - IpProtocol: tcp
           FromPort: 4317
           ToPort: 4317
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 4318
+          ToPort: 4318
           CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
           FromPort: 55681

@@ -7,9 +7,9 @@ receivers:
   otlp:
     protocols:
       grpc:
-        endpoint: 0.0.0.0:4317
+        endpoint:
       http:
-        endpoint: 0.0.0.0:55681
+        endpoint:
 processors:
   batch/traces:
     timeout: 5s
@@ -20,9 +20,7 @@ processors:
     override: true
 exporters:
   otlphttp:
-    traces_endpoint: SUMO_HTTP_TRACES_URL
-    tls:
-      insecure: true
+    endpoint: SUMO_HTTP_TRACES_URL
 service:
   extensions: [health_check]
   pipelines:

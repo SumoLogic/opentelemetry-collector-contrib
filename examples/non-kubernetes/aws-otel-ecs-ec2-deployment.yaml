@@ -49,9 +49,9 @@ Resources:
             - hostPort: 4317
               protocol: tcp
               containerPort: 4317
-            - hostPort: 9411
+            - hostPort: 4318
               protocol: tcp
-              containerPort: 9411
+              containerPort: 4318
             - hostPort: 55681
               protocol: tcp
               containerPort: 55681
