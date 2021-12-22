@@ -14,7 +14,7 @@ jobs:
   #   steps:
   #     - uses: actions/checkout@v2
   #     - name: Setup go
-  #       uses: actions/setup-go@v2
+  #       uses: actions/setup-go@v2.1.5
   #       with:
   #         go-version: ${{ matrix.go }}
   #     - name: Print go version
@@ -35,7 +35,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Setup go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v2.1.5
         with:
           go-version: ${{ matrix.go }}
       - name: Print go version
