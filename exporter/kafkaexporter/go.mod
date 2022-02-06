@@ -11,8 +11,8 @@ require (
 	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/translator/jaeger v0.43.0
 	github.com/stretchr/testify v1.7.0
 	github.com/xdg-go/scram v1.1.0
-	go.opentelemetry.io/collector v0.43.1
-	go.opentelemetry.io/collector/model v0.43.1
+	go.opentelemetry.io/collector v0.44.0
+	go.opentelemetry.io/collector/model v0.44.0
 	go.uber.org/multierr v1.7.0
 	go.uber.org/zap v1.20.0
 )
@@ -32,7 +32,7 @@ require (
 	github.com/jcmturner/gokrb5/v8 v8.4.2 // indirect
 	github.com/jcmturner/rpc/v2 v2.0.3 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
-	github.com/klauspost/compress v1.14.1 // indirect
+	github.com/klauspost/compress v1.14.2 // indirect
 	github.com/knadh/koanf v1.4.0 // indirect
 	github.com/magiconair/properties v1.8.5 // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
