@@ -7,7 +7,7 @@ require (
 	github.com/open-telemetry/opentelemetry-log-collection v0.24.0
 	github.com/stretchr/testify v1.7.0
 	go.opentelemetry.io/collector v0.43.1
-	go.opentelemetry.io/collector/model v0.43.1
+	go.opentelemetry.io/collector/model v0.45.0
 	gopkg.in/yaml.v2 v2.4.0
 )
 
