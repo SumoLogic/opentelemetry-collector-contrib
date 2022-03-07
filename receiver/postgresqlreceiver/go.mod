@@ -11,7 +11,7 @@ require (
 	go.uber.org/zap v1.20.0
 )
 
-require go.opentelemetry.io/collector/model v0.43.1
+require go.opentelemetry.io/collector/model v0.46.0
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
