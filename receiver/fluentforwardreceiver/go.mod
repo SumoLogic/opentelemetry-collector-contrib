@@ -7,7 +7,7 @@ require (
 	github.com/tinylib/msgp v1.1.6
 	go.opencensus.io v0.23.0
 	go.opentelemetry.io/collector v0.43.1
-	go.opentelemetry.io/collector/model v0.43.1
+	go.opentelemetry.io/collector/model v0.46.0
 	go.uber.org/zap v1.20.0
 
 )
