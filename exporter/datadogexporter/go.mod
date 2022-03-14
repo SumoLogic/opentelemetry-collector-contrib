@@ -6,7 +6,7 @@ require (
 	github.com/DataDog/agent-payload/v5 v5.0.10
 	github.com/DataDog/datadog-agent/pkg/quantile v0.32.4
 	github.com/DataDog/datadog-agent/pkg/trace/exportable v0.0.0-20201016145401-4646cf596b02
-	github.com/aws/aws-sdk-go v1.42.40
+	github.com/aws/aws-sdk-go v1.43.17
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
 	github.com/gogo/protobuf v1.3.2
 	github.com/open-telemetry/opentelemetry-collector-contrib/internal/coreinternal v0.43.0
@@ -57,7 +57,7 @@ require (
 	go.opentelemetry.io/otel/metric v0.26.0 // indirect
 	go.opentelemetry.io/otel/trace v1.3.0 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
-	golang.org/x/sys v0.0.0-20211205182925-97ca703d548d // indirect
+	golang.org/x/sys v0.0.0-20211216021012-1d35b9e2eb4e // indirect
 	golang.org/x/time v0.0.0-20211116232009-f0f3c7e86c11 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
