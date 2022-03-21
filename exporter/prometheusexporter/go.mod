@@ -6,13 +6,13 @@ require (
 	github.com/open-telemetry/opentelemetry-collector-contrib/internal/coreinternal v0.43.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/resourcetotelemetry v0.43.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/receiver/prometheusreceiver v0.43.0
-	github.com/prometheus/client_golang v1.12.0
+	github.com/prometheus/client_golang v1.12.1
 	github.com/prometheus/client_model v0.2.0
 	github.com/prometheus/prometheus v1.8.2-0.20220111145625-076109fa1910
 	github.com/stretchr/testify v1.7.0
-	go.opentelemetry.io/collector v0.43.1
-	go.opentelemetry.io/collector/model v0.43.1
-	go.uber.org/zap v1.20.0
+	go.opentelemetry.io/collector v0.47.0
+	go.opentelemetry.io/collector/model v0.47.0
+	go.uber.org/zap v1.21.0
 	gopkg.in/yaml.v2 v2.4.0
 )
 
@@ -50,7 +50,7 @@ require (
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/go-kit/log v0.2.0 // indirect
 	github.com/go-logfmt/logfmt v0.5.1 // indirect
-	github.com/go-logr/logr v1.2.1 // indirect
+	github.com/go-logr/logr v1.2.2 // indirect
 	github.com/go-resty/resty/v2 v2.1.1-0.20191201195748-d7b97669fe48 // indirect
 	github.com/go-zookeeper/zk v1.0.2 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
@@ -78,7 +78,7 @@ require (
 	github.com/knadh/koanf v1.4.0 // indirect
 	github.com/kolo/xmlrpc v0.0.0-20201022064351-38db28db192b // indirect
 	github.com/linode/linodego v1.2.1 // indirect
-	github.com/magiconair/properties v1.8.5 // indirect
+	github.com/magiconair/properties v1.8.6 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369 // indirect
@@ -103,12 +103,12 @@ require (
 	github.com/spf13/cast v1.4.1 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	go.opencensus.io v0.23.0 // indirect
-	go.opentelemetry.io/otel v1.3.0 // indirect
-	go.opentelemetry.io/otel/metric v0.26.0 // indirect
-	go.opentelemetry.io/otel/trace v1.3.0 // indirect
+	go.opentelemetry.io/otel v1.4.1 // indirect
+	go.opentelemetry.io/otel/metric v0.27.0 // indirect
+	go.opentelemetry.io/otel/trace v1.4.1 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/goleak v1.1.12 // indirect
-	go.uber.org/multierr v1.7.0 // indirect
+	go.uber.org/multierr v1.8.0 // indirect
 	golang.org/x/crypto v0.0.0-20211202192323-5770296d904e // indirect
 	golang.org/x/mod v0.5.1 // indirect
 	golang.org/x/net v0.0.0-20220105145211-5b0dc2dfae98 // indirect
@@ -122,7 +122,7 @@ require (
 	google.golang.org/api v0.65.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20220111164026-67b88f271998 // indirect
-	google.golang.org/grpc v1.43.0 // indirect
+	google.golang.org/grpc v1.45.0 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
