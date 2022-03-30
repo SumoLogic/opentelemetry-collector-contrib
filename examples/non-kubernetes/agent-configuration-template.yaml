@@ -35,7 +35,7 @@ processors:
 
   ## Please enable/disable accordingly if on AWS, GCE, ECS, elastic_beanstalk or neither
   resourcedetection:
-    detectors: [ ec2, gce, ecs, elastic_beanstalk ]
+    detectors: [ system, ec2, gce, ecs, elastic_beanstalk ]
     timeout: 5s
     override: false
 
