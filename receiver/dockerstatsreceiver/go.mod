@@ -6,9 +6,9 @@ require (
 	github.com/docker/docker v20.10.12+incompatible
 	github.com/open-telemetry/opentelemetry-collector-contrib/internal/common v0.43.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/internal/docker v0.43.0
-	github.com/stretchr/testify v1.7.0
+	github.com/stretchr/testify v1.7.1
 	go.opentelemetry.io/collector v0.43.1
-	go.opentelemetry.io/collector/model v0.43.1
+	go.opentelemetry.io/collector/model v0.48.0
 	go.uber.org/zap v1.20.0
 
 )
@@ -49,8 +49,8 @@ require (
 	go.uber.org/atomic v1.9.0 // indirect
 	golang.org/x/sys v0.0.0-20211205182925-97ca703d548d // indirect
 	google.golang.org/genproto v0.0.0-20211208223120-3a66f561d7aa // indirect
-	google.golang.org/grpc v1.43.0 // indirect
-	google.golang.org/protobuf v1.27.1 // indirect
+	google.golang.org/grpc v1.45.0 // indirect
+	google.golang.org/protobuf v1.28.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 )
