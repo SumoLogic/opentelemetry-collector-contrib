@@ -53,7 +53,7 @@ type LogMatchProperties struct {
 func (lmp *LogMatchProperties) convertToFilterConfig() *filterconfig.MatchProperties {
 	return &filterconfig.MatchProperties{
 		Config: filterset.Config{
-			MatchType:    filterset.MatchType(lmp.MatchType),
+			MatchType:    lmp.MatchType,
 			RegexpConfig: lmp.RegexpConfig,
 		},
 		Attributes: lmp.RecordAttributes,

@@ -17,7 +17,6 @@ package filterlog // import "github.com/open-telemetry/opentelemetry-collector-c
 import (
 	"fmt"
 
-	"go.opentelemetry.io/collector/model/pdata"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/plog"
 
@@ -112,7 +111,7 @@ func (mp *propertiesMatcher) MatchLog(lr plog.LogRecord, resource pcommon.Resour
 
 // MatchLogRecord matches a log record to a set of properties.
 // Only the log record name is matched, if specified.
-func (mp *propertiesMatcher) MatchLogRecord(lr pdata.LogRecord) bool {
+func (mp *propertiesMatcher) MatchLogRecord(lr plog.LogRecord) bool {
 	if lr.Body().Type() == pcommon.ValueTypeString && mp.bodyFilters != nil && mp.bodyFilters.Matches(lr.Body().StringVal()) {
 		return true
 	}

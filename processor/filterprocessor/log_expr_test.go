@@ -20,7 +20,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.opentelemetry.io/collector/model/pdata"
+	"go.opentelemetry.io/collector/pdata/plog"
 	"go.uber.org/zap"
 
 	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/coreinternal/processor/filterlog"
@@ -29,13 +29,13 @@ import (
 type log struct {
 	body               string
 	name               string
-	severity           pdata.SeverityNumber
+	severity           plog.SeverityNumber
 	attributes         map[string]string
 	resourceAttributes map[string]string
 }
 
-func logsToPdata(logs []log) pdata.Logs {
-	pl := pdata.NewLogs()
+func logsToPdata(logs []log) plog.Logs {
+	pl := plog.NewLogs()
 	pl.ResourceLogs().EnsureCapacity(len(logs))
 
 	for _, log := range logs {
@@ -49,8 +49,8 @@ func logsToPdata(logs []log) pdata.Logs {
 		// sort to ensure that assert.Equal works as expected
 		attrs.Sort()
 
-		rl.InstrumentationLibraryLogs().EnsureCapacity(1)
-		l := rl.InstrumentationLibraryLogs().AppendEmpty().LogRecords().AppendEmpty()
+		rl.ScopeLogs().EnsureCapacity(1)
+		l := rl.ScopeLogs().AppendEmpty().LogRecords().AppendEmpty()
 		attrs = l.Attributes()
 		for k, v := range log.attributes {
 			attrs.InsertString(k, v)
@@ -80,7 +80,7 @@ func TestLogExpr(t *testing.T) {
 		{
 			body:     "Example log",
 			name:     "first",
-			severity: pdata.SeverityNumberDEBUG,
+			severity: plog.SeverityNumberDEBUG,
 			attributes: map[string]string{
 				"foo":       "bar",
 				"file.name": "first.log",
@@ -94,7 +94,7 @@ func TestLogExpr(t *testing.T) {
 		{
 			body:     "[INFO] Another example log",
 			name:     "second",
-			severity: pdata.SeverityNumberWARN,
+			severity: plog.SeverityNumberWARN,
 			attributes: map[string]string{
 				"foo":       "bar",
 				"file.name": "second.log",
@@ -108,7 +108,7 @@ func TestLogExpr(t *testing.T) {
 		{
 			body:     "Info log",
 			name:     "third",
-			severity: pdata.SeverityNumberINFO,
+			severity: plog.SeverityNumberINFO,
 			attributes: map[string]string{
 				"foo":       "bar",
 				"file.name": "third.log",

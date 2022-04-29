@@ -15,7 +15,8 @@
 package filterlog
 
 import (
-	"go.opentelemetry.io/collector/model/pdata"
+	"go.opentelemetry.io/collector/pdata/pcommon"
+	"go.opentelemetry.io/collector/pdata/plog"
 
 	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/coreinternal/processor/filterexpr"
 )
@@ -36,11 +37,11 @@ func newExprMatcher(expressions []string) (*exprMatcher, error) {
 	return m, nil
 }
 
-func (m *exprMatcher) MatchLog(lr pdata.LogRecord, resource pdata.Resource, library pdata.InstrumentationLibrary) bool {
+func (m *exprMatcher) MatchLog(lr plog.LogRecord, resource pcommon.Resource, scope pcommon.InstrumentationScope) bool {
 	return m.MatchLogRecord(lr)
 }
 
-func (m *exprMatcher) MatchLogRecord(lr pdata.LogRecord) bool {
+func (m *exprMatcher) MatchLogRecord(lr plog.LogRecord) bool {
 	for _, matcher := range m.matchers {
 		matched, err := matcher.MatchLog(lr)
 		if err != nil {

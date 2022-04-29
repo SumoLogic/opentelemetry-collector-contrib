@@ -19,7 +19,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.opentelemetry.io/collector/model/pdata"
+	"go.opentelemetry.io/collector/pdata/pcommon"
+	"go.opentelemetry.io/collector/pdata/plog"
 )
 
 func TestLogCompileExprError(t *testing.T) {
@@ -39,7 +40,7 @@ func TestExpression(t *testing.T) {
 		name         string
 		expression   string
 		expected     bool
-		body         pdata.AttributeValue
+		body         pcommon.Value
 		logName      string
 		severity     int32
 		severityText string
@@ -50,54 +51,54 @@ func TestExpression(t *testing.T) {
 			name:       "match body",
 			expression: `Body matches 'my.log'`,
 			expected:   true,
-			body:       pdata.NewAttributeValueString("my.log"),
+			body:       pcommon.NewValueString("my.log"),
 		},
 		{
 			name:       "do not match body",
 			expression: `Body matches 'my.log'`,
 			expected:   false,
-			body:       pdata.NewAttributeValueString("mys.log"),
+			body:       pcommon.NewValueString("mys.log"),
 		},
 		{
 			name:       "match name",
 			expression: `Name matches 'my l.g'`,
 			expected:   true,
-			body:       pdata.NewAttributeValueEmpty(),
+			body:       pcommon.NewValueEmpty(),
 			logName:    "my log",
 		},
 		{
 			name:       "do not match name",
 			expression: `Name matches 'my l..g'`,
 			expected:   false,
-			body:       pdata.NewAttributeValueEmpty(),
+			body:       pcommon.NewValueEmpty(),
 			logName:    "my log",
 		},
 		{
 			name:       "match severity",
 			expression: `SeverityNumber > 3`,
 			expected:   true,
-			body:       pdata.NewAttributeValueEmpty(),
+			body:       pcommon.NewValueEmpty(),
 			severity:   5,
 		},
 		{
 			name:       "do not match severity",
 			expression: `SeverityNumber <= 3`,
 			expected:   false,
-			body:       pdata.NewAttributeValueEmpty(),
+			body:       pcommon.NewValueEmpty(),
 			severity:   5,
 		},
 		{
 			name:         "match severity name",
 			expression:   `SeverityText matches 'foo'`,
 			expected:     true,
-			body:         pdata.NewAttributeValueEmpty(),
+			body:         pcommon.NewValueEmpty(),
 			severityText: "foo bar",
 		},
 		{
 			name:         "match severity name",
 			expression:   `SeverityText matches 'foos'`,
 			expected:     false,
-			body:         pdata.NewAttributeValueEmpty(),
+			body:         pcommon.NewValueEmpty(),
 			severityText: "foo bar",
 		},
 	}
@@ -106,10 +107,10 @@ func TestExpression(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			matcher, err := NewLogMatcher(tc.expression)
 			require.NoError(t, err)
-			l := pdata.NewLogRecord()
+			l := plog.NewLogRecord()
 			l.SetName(tc.logName)
 			tc.body.CopyTo(l.Body())
-			l.SetSeverityNumber(pdata.SeverityNumber(tc.severity))
+			l.SetSeverityNumber(plog.SeverityNumber(tc.severity))
 			l.SetSeverityText(tc.severityText)
 
 			matched, err := matcher.MatchLog(l)

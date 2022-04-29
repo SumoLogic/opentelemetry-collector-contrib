@@ -77,7 +77,7 @@ func createLogsMatcher(lp *filterlog.LogMatchProperties) (logMatcher filterlog.M
 
 	recordMatcher, err = filtermatcher.NewAttributesMatcher(
 		filterset.Config{
-			MatchType: filterset.MatchType(lp.MatchType),
+			MatchType: lp.MatchType,
 		},
 		lp.RecordAttributes,
 	)
@@ -87,7 +87,7 @@ func createLogsMatcher(lp *filterlog.LogMatchProperties) (logMatcher filterlog.M
 
 	resourceMatcher, err = filtermatcher.NewAttributesMatcher(
 		filterset.Config{
-			MatchType: filterset.MatchType(lp.MatchType),
+			MatchType: lp.MatchType,
 		},
 		lp.ResourceAttributes,
 	)

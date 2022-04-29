@@ -17,7 +17,7 @@ package filterexpr
 import (
 	"github.com/antonmedv/expr"
 	"github.com/antonmedv/expr/vm"
-	"go.opentelemetry.io/collector/model/pdata"
+	"go.opentelemetry.io/collector/pdata/plog"
 )
 
 type LogMatcher struct {
@@ -43,7 +43,7 @@ func NewLogMatcher(expression string) (*LogMatcher, error) {
 }
 
 // MatchLog returns true if log matches the matcher
-func (m *LogMatcher) MatchLog(log pdata.LogRecord) (bool, error) {
+func (m *LogMatcher) MatchLog(log plog.LogRecord) (bool, error) {
 	matched, err := m.match(createLogEnv(log))
 	if err != nil {
 		return false, err
@@ -57,7 +57,7 @@ func (m *LogMatcher) MatchLog(log pdata.LogRecord) (bool, error) {
 }
 
 // createLogEnv converts pdata.LogRecord to logEnv
-func createLogEnv(log pdata.LogRecord) logEnv {
+func createLogEnv(log plog.LogRecord) logEnv {
 	return logEnv{
 		Name:           log.Name(),
 		Body:           log.Body().AsString(),
