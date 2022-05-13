@@ -57,8 +57,8 @@ processors:
 extensions:
   health_check: {}
 exporters:
-  otlp:
-    ## Please enter OpenTelemetry Collector Gateway address here
+  otlphttp:
+    ## Please enter OpenTelemetry Collector OTLP HTTP Gateway address here
     endpoint: HOSTNAME
     tls:
       insecure: true
@@ -74,4 +74,4 @@ service:
     traces:
       receivers: [jaeger, opencensus, otlp, zipkin]
       processors: [memory_limiter, resourcedetection, batch]
-      exporters: [otlp]
+      exporters: [otlphttp]
