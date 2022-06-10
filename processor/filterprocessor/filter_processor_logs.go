@@ -174,6 +174,13 @@ func (flp *filterLogProcessor) shouldSkipLogsForRecord(lr plog.LogRecord) bool {
 		}
 	}
 
+	if flp.exclude != nil {
+		matches := flp.exclude.MatchLogRecord(lr)
+		if matches {
+			return true
+		}
+	}
+
 	return false
 }
 
