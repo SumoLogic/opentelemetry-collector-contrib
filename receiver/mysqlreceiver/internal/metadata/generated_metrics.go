@@ -19,42 +19,46 @@ type MetricSettings struct {
 
 // MetricsSettings provides settings for mysqlreceiver metrics.
 type MetricsSettings struct {
-	MysqlBufferPoolDataPages    MetricSettings `mapstructure:"mysql.buffer_pool.data_pages"`
-	MysqlBufferPoolLimit        MetricSettings `mapstructure:"mysql.buffer_pool.limit"`
-	MysqlBufferPoolOperations   MetricSettings `mapstructure:"mysql.buffer_pool.operations"`
-	MysqlBufferPoolPageFlushes  MetricSettings `mapstructure:"mysql.buffer_pool.page_flushes"`
-	MysqlBufferPoolPages        MetricSettings `mapstructure:"mysql.buffer_pool.pages"`
-	MysqlBufferPoolUsage        MetricSettings `mapstructure:"mysql.buffer_pool.usage"`
-	MysqlClientNetworkIo        MetricSettings `mapstructure:"mysql.client.network.io"`
-	MysqlConnectionCount        MetricSettings `mapstructure:"mysql.connection.count"`
-	MysqlConnectionErrors       MetricSettings `mapstructure:"mysql.connection.errors"`
-	MysqlDoubleWrites           MetricSettings `mapstructure:"mysql.double_writes"`
-	MysqlHandlers               MetricSettings `mapstructure:"mysql.handlers"`
-	MysqlIndexIoWaitCount       MetricSettings `mapstructure:"mysql.index.io.wait.count"`
-	MysqlIndexIoWaitTime        MetricSettings `mapstructure:"mysql.index.io.wait.time"`
-	MysqlJoins                  MetricSettings `mapstructure:"mysql.joins"`
-	MysqlLockedConnects         MetricSettings `mapstructure:"mysql.locked_connects"`
-	MysqlLocks                  MetricSettings `mapstructure:"mysql.locks"`
-	MysqlLogOperations          MetricSettings `mapstructure:"mysql.log_operations"`
-	MysqlMysqlxConnections      MetricSettings `mapstructure:"mysql.mysqlx_connections"`
-	MysqlMysqlxWorkerThreads    MetricSettings `mapstructure:"mysql.mysqlx_worker_threads"`
-	MysqlOpenedResources        MetricSettings `mapstructure:"mysql.opened_resources"`
-	MysqlOperations             MetricSettings `mapstructure:"mysql.operations"`
-	MysqlPageOperations         MetricSettings `mapstructure:"mysql.page_operations"`
-	MysqlPreparedStatements     MetricSettings `mapstructure:"mysql.prepared_statements"`
-	MysqlQueriesClientCount     MetricSettings `mapstructure:"mysql.queries.client.count"`
-	MysqlQueriesCount           MetricSettings `mapstructure:"mysql.queries.count"`
-	MysqlQueriesSlowCount       MetricSettings `mapstructure:"mysql.queries.slow.count"`
-	MysqlRowLocks               MetricSettings `mapstructure:"mysql.row_locks"`
-	MysqlRowOperations          MetricSettings `mapstructure:"mysql.row_operations"`
-	MysqlSorts                  MetricSettings `mapstructure:"mysql.sorts"`
-	MysqlStatementEventCount    MetricSettings `mapstructure:"mysql.statement_event.count"`
-	MysqlStatementEventWaitTime MetricSettings `mapstructure:"mysql.statement_event.wait.time"`
-	MysqlTableIoWaitCount       MetricSettings `mapstructure:"mysql.table.io.wait.count"`
-	MysqlTableIoWaitTime        MetricSettings `mapstructure:"mysql.table.io.wait.time"`
-	MysqlTableOpenCache         MetricSettings `mapstructure:"mysql.table_open_cache"`
-	MysqlThreads                MetricSettings `mapstructure:"mysql.threads"`
-	MysqlTmpResources           MetricSettings `mapstructure:"mysql.tmp_resources"`
+	MysqlBufferPoolDataPages     MetricSettings `mapstructure:"mysql.buffer_pool.data_pages"`
+	MysqlBufferPoolLimit         MetricSettings `mapstructure:"mysql.buffer_pool.limit"`
+	MysqlBufferPoolOperations    MetricSettings `mapstructure:"mysql.buffer_pool.operations"`
+	MysqlBufferPoolPageFlushes   MetricSettings `mapstructure:"mysql.buffer_pool.page_flushes"`
+	MysqlBufferPoolPages         MetricSettings `mapstructure:"mysql.buffer_pool.pages"`
+	MysqlBufferPoolUsage         MetricSettings `mapstructure:"mysql.buffer_pool.usage"`
+	MysqlClientNetworkIo         MetricSettings `mapstructure:"mysql.client.network.io"`
+	MysqlConnectionCount         MetricSettings `mapstructure:"mysql.connection.count"`
+	MysqlConnectionErrors        MetricSettings `mapstructure:"mysql.connection.errors"`
+	MysqlDoubleWrites            MetricSettings `mapstructure:"mysql.double_writes"`
+	MysqlHandlers                MetricSettings `mapstructure:"mysql.handlers"`
+	MysqlIndexIoWaitCount        MetricSettings `mapstructure:"mysql.index.io.wait.count"`
+	MysqlIndexIoWaitTime         MetricSettings `mapstructure:"mysql.index.io.wait.time"`
+	MysqlJoins                   MetricSettings `mapstructure:"mysql.joins"`
+	MysqlLockedConnects          MetricSettings `mapstructure:"mysql.locked_connects"`
+	MysqlLocks                   MetricSettings `mapstructure:"mysql.locks"`
+	MysqlLogOperations           MetricSettings `mapstructure:"mysql.log_operations"`
+	MysqlMysqlxConnections       MetricSettings `mapstructure:"mysql.mysqlx_connections"`
+	MysqlMysqlxWorkerThreads     MetricSettings `mapstructure:"mysql.mysqlx_worker_threads"`
+	MysqlOpenedResources         MetricSettings `mapstructure:"mysql.opened_resources"`
+	MysqlOperations              MetricSettings `mapstructure:"mysql.operations"`
+	MysqlPageOperations          MetricSettings `mapstructure:"mysql.page_operations"`
+	MysqlPreparedStatements      MetricSettings `mapstructure:"mysql.prepared_statements"`
+	MysqlQueriesClientCount      MetricSettings `mapstructure:"mysql.queries.client.count"`
+	MysqlQueriesCount            MetricSettings `mapstructure:"mysql.queries.count"`
+	MysqlQueriesSlowCount        MetricSettings `mapstructure:"mysql.queries.slow.count"`
+	MysqlRowLocks                MetricSettings `mapstructure:"mysql.row_locks"`
+	MysqlRowOperations           MetricSettings `mapstructure:"mysql.row_operations"`
+	MysqlSorts                   MetricSettings `mapstructure:"mysql.sorts"`
+	MysqlStatementEventCount     MetricSettings `mapstructure:"mysql.statement_event.count"`
+	MysqlStatementEventWaitTime  MetricSettings `mapstructure:"mysql.statement_event.wait.time"`
+	MysqlTableIoWaitCount        MetricSettings `mapstructure:"mysql.table.io.wait.count"`
+	MysqlTableIoWaitTime         MetricSettings `mapstructure:"mysql.table.io.wait.time"`
+	MysqlTableLockWaitReadCount  MetricSettings `mapstructure:"mysql.table.lock_wait.read.count"`
+	MysqlTableLockWaitReadTime   MetricSettings `mapstructure:"mysql.table.lock_wait.read.time"`
+	MysqlTableLockWaitWriteCount MetricSettings `mapstructure:"mysql.table.lock_wait.write.count"`
+	MysqlTableLockWaitWriteTime  MetricSettings `mapstructure:"mysql.table.lock_wait.write.time"`
+	MysqlTableOpenCache          MetricSettings `mapstructure:"mysql.table_open_cache"`
+	MysqlThreads                 MetricSettings `mapstructure:"mysql.threads"`
+	MysqlTmpResources            MetricSettings `mapstructure:"mysql.tmp_resources"`
 }
 
 func DefaultMetricsSettings() MetricsSettings {
@@ -157,6 +161,18 @@ func DefaultMetricsSettings() MetricsSettings {
 		},
 		MysqlTableIoWaitTime: MetricSettings{
 			Enabled: true,
+		},
+		MysqlTableLockWaitReadCount: MetricSettings{
+			Enabled: false,
+		},
+		MysqlTableLockWaitReadTime: MetricSettings{
+			Enabled: false,
+		},
+		MysqlTableLockWaitWriteCount: MetricSettings{
+			Enabled: false,
+		},
+		MysqlTableLockWaitWriteTime: MetricSettings{
+			Enabled: false,
 		},
 		MysqlTableOpenCache: MetricSettings{
 			Enabled: true,
@@ -834,6 +850,44 @@ var MapAttributePreparedStatementsCommand = map[string]AttributePreparedStatemen
 	"send_long_data": AttributePreparedStatementsCommandSendLongData,
 }
 
+// AttributeReadLockType specifies the a value read_lock_type attribute.
+type AttributeReadLockType int
+
+const (
+	_ AttributeReadLockType = iota
+	AttributeReadLockTypeNormal
+	AttributeReadLockTypeWithSharedLocks
+	AttributeReadLockTypeHighPriority
+	AttributeReadLockTypeNoInsert
+	AttributeReadLockTypeExternal
+)
+
+// String returns the string representation of the AttributeReadLockType.
+func (av AttributeReadLockType) String() string {
+	switch av {
+	case AttributeReadLockTypeNormal:
+		return "normal"
+	case AttributeReadLockTypeWithSharedLocks:
+		return "with_shared_locks"
+	case AttributeReadLockTypeHighPriority:
+		return "high_priority"
+	case AttributeReadLockTypeNoInsert:
+		return "no_insert"
+	case AttributeReadLockTypeExternal:
+		return "external"
+	}
+	return ""
+}
+
+// MapAttributeReadLockType is a helper map of string to AttributeReadLockType attribute value.
+var MapAttributeReadLockType = map[string]AttributeReadLockType{
+	"normal":            AttributeReadLockTypeNormal,
+	"with_shared_locks": AttributeReadLockTypeWithSharedLocks,
+	"high_priority":     AttributeReadLockTypeHighPriority,
+	"no_insert":         AttributeReadLockTypeNoInsert,
+	"external":          AttributeReadLockTypeExternal,
+}
+
 // AttributeRowLocks specifies the a value row_locks attribute.
 type AttributeRowLocks int
 
@@ -1016,6 +1070,44 @@ func (av AttributeTransmissionDirection) String() string {
 var MapAttributeTransmissionDirection = map[string]AttributeTransmissionDirection{
 	"received": AttributeTransmissionDirectionReceived,
 	"sent":     AttributeTransmissionDirectionSent,
+}
+
+// AttributeWriteLockType specifies the a value write_lock_type attribute.
+type AttributeWriteLockType int
+
+const (
+	_ AttributeWriteLockType = iota
+	AttributeWriteLockTypeAllowWrite
+	AttributeWriteLockTypeConcurrentInsert
+	AttributeWriteLockTypeLowPriority
+	AttributeWriteLockTypeNormal
+	AttributeWriteLockTypeExternal
+)
+
+// String returns the string representation of the AttributeWriteLockType.
+func (av AttributeWriteLockType) String() string {
+	switch av {
+	case AttributeWriteLockTypeAllowWrite:
+		return "allow_write"
+	case AttributeWriteLockTypeConcurrentInsert:
+		return "concurrent_insert"
+	case AttributeWriteLockTypeLowPriority:
+		return "low_priority"
+	case AttributeWriteLockTypeNormal:
+		return "normal"
+	case AttributeWriteLockTypeExternal:
+		return "external"
+	}
+	return ""
+}
+
+// MapAttributeWriteLockType is a helper map of string to AttributeWriteLockType attribute value.
+var MapAttributeWriteLockType = map[string]AttributeWriteLockType{
+	"allow_write":       AttributeWriteLockTypeAllowWrite,
+	"concurrent_insert": AttributeWriteLockTypeConcurrentInsert,
+	"low_priority":      AttributeWriteLockTypeLowPriority,
+	"normal":            AttributeWriteLockTypeNormal,
+	"external":          AttributeWriteLockTypeExternal,
 }
 
 type metricMysqlBufferPoolDataPages struct {
@@ -2768,6 +2860,226 @@ func newMetricMysqlTableIoWaitTime(settings MetricSettings) metricMysqlTableIoWa
 	return m
 }
 
+type metricMysqlTableLockWaitReadCount struct {
+	data     pmetric.Metric // data buffer for generated metric.
+	settings MetricSettings // metric settings provided by user.
+	capacity int            // max observed number of data points added to the metric.
+}
+
+// init fills mysql.table.lock_wait.read.count metric with initial data.
+func (m *metricMysqlTableLockWaitReadCount) init() {
+	m.data.SetName("mysql.table.lock_wait.read.count")
+	m.data.SetDescription("The total table lock wait read events.")
+	m.data.SetUnit("1")
+	m.data.SetEmptySum()
+	m.data.Sum().SetIsMonotonic(false)
+	m.data.Sum().SetAggregationTemporality(pmetric.AggregationTemporalityCumulative)
+	m.data.Sum().DataPoints().EnsureCapacity(m.capacity)
+}
+
+func (m *metricMysqlTableLockWaitReadCount) recordDataPoint(start pcommon.Timestamp, ts pcommon.Timestamp, val int64, schemaAttributeValue string, tableNameAttributeValue string, readLockTypeAttributeValue string) {
+	if !m.settings.Enabled {
+		return
+	}
+	dp := m.data.Sum().DataPoints().AppendEmpty()
+	dp.SetStartTimestamp(start)
+	dp.SetTimestamp(ts)
+	dp.SetIntValue(val)
+	dp.Attributes().PutStr("schema", schemaAttributeValue)
+	dp.Attributes().PutStr("table", tableNameAttributeValue)
+	dp.Attributes().PutStr("kind", readLockTypeAttributeValue)
+}
+
+// updateCapacity saves max length of data point slices that will be used for the slice capacity.
+func (m *metricMysqlTableLockWaitReadCount) updateCapacity() {
+	if m.data.Sum().DataPoints().Len() > m.capacity {
+		m.capacity = m.data.Sum().DataPoints().Len()
+	}
+}
+
+// emit appends recorded metric data to a metrics slice and prepares it for recording another set of data points.
+func (m *metricMysqlTableLockWaitReadCount) emit(metrics pmetric.MetricSlice) {
+	if m.settings.Enabled && m.data.Sum().DataPoints().Len() > 0 {
+		m.updateCapacity()
+		m.data.MoveTo(metrics.AppendEmpty())
+		m.init()
+	}
+}
+
+func newMetricMysqlTableLockWaitReadCount(settings MetricSettings) metricMysqlTableLockWaitReadCount {
+	m := metricMysqlTableLockWaitReadCount{settings: settings}
+	if settings.Enabled {
+		m.data = pmetric.NewMetric()
+		m.init()
+	}
+	return m
+}
+
+type metricMysqlTableLockWaitReadTime struct {
+	data     pmetric.Metric // data buffer for generated metric.
+	settings MetricSettings // metric settings provided by user.
+	capacity int            // max observed number of data points added to the metric.
+}
+
+// init fills mysql.table.lock_wait.read.time metric with initial data.
+func (m *metricMysqlTableLockWaitReadTime) init() {
+	m.data.SetName("mysql.table.lock_wait.read.time")
+	m.data.SetDescription("The total table lock wait read events times.")
+	m.data.SetUnit("ns")
+	m.data.SetEmptySum()
+	m.data.Sum().SetIsMonotonic(false)
+	m.data.Sum().SetAggregationTemporality(pmetric.AggregationTemporalityCumulative)
+	m.data.Sum().DataPoints().EnsureCapacity(m.capacity)
+}
+
+func (m *metricMysqlTableLockWaitReadTime) recordDataPoint(start pcommon.Timestamp, ts pcommon.Timestamp, val int64, schemaAttributeValue string, tableNameAttributeValue string, readLockTypeAttributeValue string) {
+	if !m.settings.Enabled {
+		return
+	}
+	dp := m.data.Sum().DataPoints().AppendEmpty()
+	dp.SetStartTimestamp(start)
+	dp.SetTimestamp(ts)
+	dp.SetIntValue(val)
+	dp.Attributes().PutStr("schema", schemaAttributeValue)
+	dp.Attributes().PutStr("table", tableNameAttributeValue)
+	dp.Attributes().PutStr("kind", readLockTypeAttributeValue)
+}
+
+// updateCapacity saves max length of data point slices that will be used for the slice capacity.
+func (m *metricMysqlTableLockWaitReadTime) updateCapacity() {
+	if m.data.Sum().DataPoints().Len() > m.capacity {
+		m.capacity = m.data.Sum().DataPoints().Len()
+	}
+}
+
+// emit appends recorded metric data to a metrics slice and prepares it for recording another set of data points.
+func (m *metricMysqlTableLockWaitReadTime) emit(metrics pmetric.MetricSlice) {
+	if m.settings.Enabled && m.data.Sum().DataPoints().Len() > 0 {
+		m.updateCapacity()
+		m.data.MoveTo(metrics.AppendEmpty())
+		m.init()
+	}
+}
+
+func newMetricMysqlTableLockWaitReadTime(settings MetricSettings) metricMysqlTableLockWaitReadTime {
+	m := metricMysqlTableLockWaitReadTime{settings: settings}
+	if settings.Enabled {
+		m.data = pmetric.NewMetric()
+		m.init()
+	}
+	return m
+}
+
+type metricMysqlTableLockWaitWriteCount struct {
+	data     pmetric.Metric // data buffer for generated metric.
+	settings MetricSettings // metric settings provided by user.
+	capacity int            // max observed number of data points added to the metric.
+}
+
+// init fills mysql.table.lock_wait.write.count metric with initial data.
+func (m *metricMysqlTableLockWaitWriteCount) init() {
+	m.data.SetName("mysql.table.lock_wait.write.count")
+	m.data.SetDescription("The total table lock wait write events.")
+	m.data.SetUnit("1")
+	m.data.SetEmptySum()
+	m.data.Sum().SetIsMonotonic(false)
+	m.data.Sum().SetAggregationTemporality(pmetric.AggregationTemporalityCumulative)
+	m.data.Sum().DataPoints().EnsureCapacity(m.capacity)
+}
+
+func (m *metricMysqlTableLockWaitWriteCount) recordDataPoint(start pcommon.Timestamp, ts pcommon.Timestamp, val int64, schemaAttributeValue string, tableNameAttributeValue string, writeLockTypeAttributeValue string) {
+	if !m.settings.Enabled {
+		return
+	}
+	dp := m.data.Sum().DataPoints().AppendEmpty()
+	dp.SetStartTimestamp(start)
+	dp.SetTimestamp(ts)
+	dp.SetIntValue(val)
+	dp.Attributes().PutStr("schema", schemaAttributeValue)
+	dp.Attributes().PutStr("table", tableNameAttributeValue)
+	dp.Attributes().PutStr("kind", writeLockTypeAttributeValue)
+}
+
+// updateCapacity saves max length of data point slices that will be used for the slice capacity.
+func (m *metricMysqlTableLockWaitWriteCount) updateCapacity() {
+	if m.data.Sum().DataPoints().Len() > m.capacity {
+		m.capacity = m.data.Sum().DataPoints().Len()
+	}
+}
+
+// emit appends recorded metric data to a metrics slice and prepares it for recording another set of data points.
+func (m *metricMysqlTableLockWaitWriteCount) emit(metrics pmetric.MetricSlice) {
+	if m.settings.Enabled && m.data.Sum().DataPoints().Len() > 0 {
+		m.updateCapacity()
+		m.data.MoveTo(metrics.AppendEmpty())
+		m.init()
+	}
+}
+
+func newMetricMysqlTableLockWaitWriteCount(settings MetricSettings) metricMysqlTableLockWaitWriteCount {
+	m := metricMysqlTableLockWaitWriteCount{settings: settings}
+	if settings.Enabled {
+		m.data = pmetric.NewMetric()
+		m.init()
+	}
+	return m
+}
+
+type metricMysqlTableLockWaitWriteTime struct {
+	data     pmetric.Metric // data buffer for generated metric.
+	settings MetricSettings // metric settings provided by user.
+	capacity int            // max observed number of data points added to the metric.
+}
+
+// init fills mysql.table.lock_wait.write.time metric with initial data.
+func (m *metricMysqlTableLockWaitWriteTime) init() {
+	m.data.SetName("mysql.table.lock_wait.write.time")
+	m.data.SetDescription("The total table lock wait write events times.")
+	m.data.SetUnit("ns")
+	m.data.SetEmptySum()
+	m.data.Sum().SetIsMonotonic(false)
+	m.data.Sum().SetAggregationTemporality(pmetric.AggregationTemporalityCumulative)
+	m.data.Sum().DataPoints().EnsureCapacity(m.capacity)
+}
+
+func (m *metricMysqlTableLockWaitWriteTime) recordDataPoint(start pcommon.Timestamp, ts pcommon.Timestamp, val int64, schemaAttributeValue string, tableNameAttributeValue string, writeLockTypeAttributeValue string) {
+	if !m.settings.Enabled {
+		return
+	}
+	dp := m.data.Sum().DataPoints().AppendEmpty()
+	dp.SetStartTimestamp(start)
+	dp.SetTimestamp(ts)
+	dp.SetIntValue(val)
+	dp.Attributes().PutStr("schema", schemaAttributeValue)
+	dp.Attributes().PutStr("table", tableNameAttributeValue)
+	dp.Attributes().PutStr("kind", writeLockTypeAttributeValue)
+}
+
+// updateCapacity saves max length of data point slices that will be used for the slice capacity.
+func (m *metricMysqlTableLockWaitWriteTime) updateCapacity() {
+	if m.data.Sum().DataPoints().Len() > m.capacity {
+		m.capacity = m.data.Sum().DataPoints().Len()
+	}
+}
+
+// emit appends recorded metric data to a metrics slice and prepares it for recording another set of data points.
+func (m *metricMysqlTableLockWaitWriteTime) emit(metrics pmetric.MetricSlice) {
+	if m.settings.Enabled && m.data.Sum().DataPoints().Len() > 0 {
+		m.updateCapacity()
+		m.data.MoveTo(metrics.AppendEmpty())
+		m.init()
+	}
+}
+
+func newMetricMysqlTableLockWaitWriteTime(settings MetricSettings) metricMysqlTableLockWaitWriteTime {
+	m := metricMysqlTableLockWaitWriteTime{settings: settings}
+	if settings.Enabled {
+		m.data = pmetric.NewMetric()
+		m.init()
+	}
+	return m
+}
+
 type metricMysqlTableOpenCache struct {
 	data     pmetric.Metric // data buffer for generated metric.
 	settings MetricSettings // metric settings provided by user.
@@ -2930,47 +3242,51 @@ func newMetricMysqlTmpResources(settings MetricSettings) metricMysqlTmpResources
 // MetricsBuilder provides an interface for scrapers to report metrics while taking care of all the transformations
 // required to produce metric representation defined in metadata and user settings.
 type MetricsBuilder struct {
-	startTime                         pcommon.Timestamp   // start time that will be applied to all recorded data points.
-	metricsCapacity                   int                 // maximum observed number of metrics per resource.
-	resourceCapacity                  int                 // maximum observed number of resource attributes.
-	metricsBuffer                     pmetric.Metrics     // accumulates metrics data before emitting.
-	buildInfo                         component.BuildInfo // contains version information
-	metricMysqlBufferPoolDataPages    metricMysqlBufferPoolDataPages
-	metricMysqlBufferPoolLimit        metricMysqlBufferPoolLimit
-	metricMysqlBufferPoolOperations   metricMysqlBufferPoolOperations
-	metricMysqlBufferPoolPageFlushes  metricMysqlBufferPoolPageFlushes
-	metricMysqlBufferPoolPages        metricMysqlBufferPoolPages
-	metricMysqlBufferPoolUsage        metricMysqlBufferPoolUsage
-	metricMysqlClientNetworkIo        metricMysqlClientNetworkIo
-	metricMysqlConnectionCount        metricMysqlConnectionCount
-	metricMysqlConnectionErrors       metricMysqlConnectionErrors
-	metricMysqlDoubleWrites           metricMysqlDoubleWrites
-	metricMysqlHandlers               metricMysqlHandlers
-	metricMysqlIndexIoWaitCount       metricMysqlIndexIoWaitCount
-	metricMysqlIndexIoWaitTime        metricMysqlIndexIoWaitTime
-	metricMysqlJoins                  metricMysqlJoins
-	metricMysqlLockedConnects         metricMysqlLockedConnects
-	metricMysqlLocks                  metricMysqlLocks
-	metricMysqlLogOperations          metricMysqlLogOperations
-	metricMysqlMysqlxConnections      metricMysqlMysqlxConnections
-	metricMysqlMysqlxWorkerThreads    metricMysqlMysqlxWorkerThreads
-	metricMysqlOpenedResources        metricMysqlOpenedResources
-	metricMysqlOperations             metricMysqlOperations
-	metricMysqlPageOperations         metricMysqlPageOperations
-	metricMysqlPreparedStatements     metricMysqlPreparedStatements
-	metricMysqlQueriesClientCount     metricMysqlQueriesClientCount
-	metricMysqlQueriesCount           metricMysqlQueriesCount
-	metricMysqlQueriesSlowCount       metricMysqlQueriesSlowCount
-	metricMysqlRowLocks               metricMysqlRowLocks
-	metricMysqlRowOperations          metricMysqlRowOperations
-	metricMysqlSorts                  metricMysqlSorts
-	metricMysqlStatementEventCount    metricMysqlStatementEventCount
-	metricMysqlStatementEventWaitTime metricMysqlStatementEventWaitTime
-	metricMysqlTableIoWaitCount       metricMysqlTableIoWaitCount
-	metricMysqlTableIoWaitTime        metricMysqlTableIoWaitTime
-	metricMysqlTableOpenCache         metricMysqlTableOpenCache
-	metricMysqlThreads                metricMysqlThreads
-	metricMysqlTmpResources           metricMysqlTmpResources
+	startTime                          pcommon.Timestamp   // start time that will be applied to all recorded data points.
+	metricsCapacity                    int                 // maximum observed number of metrics per resource.
+	resourceCapacity                   int                 // maximum observed number of resource attributes.
+	metricsBuffer                      pmetric.Metrics     // accumulates metrics data before emitting.
+	buildInfo                          component.BuildInfo // contains version information
+	metricMysqlBufferPoolDataPages     metricMysqlBufferPoolDataPages
+	metricMysqlBufferPoolLimit         metricMysqlBufferPoolLimit
+	metricMysqlBufferPoolOperations    metricMysqlBufferPoolOperations
+	metricMysqlBufferPoolPageFlushes   metricMysqlBufferPoolPageFlushes
+	metricMysqlBufferPoolPages         metricMysqlBufferPoolPages
+	metricMysqlBufferPoolUsage         metricMysqlBufferPoolUsage
+	metricMysqlClientNetworkIo         metricMysqlClientNetworkIo
+	metricMysqlConnectionCount         metricMysqlConnectionCount
+	metricMysqlConnectionErrors        metricMysqlConnectionErrors
+	metricMysqlDoubleWrites            metricMysqlDoubleWrites
+	metricMysqlHandlers                metricMysqlHandlers
+	metricMysqlIndexIoWaitCount        metricMysqlIndexIoWaitCount
+	metricMysqlIndexIoWaitTime         metricMysqlIndexIoWaitTime
+	metricMysqlJoins                   metricMysqlJoins
+	metricMysqlLockedConnects          metricMysqlLockedConnects
+	metricMysqlLocks                   metricMysqlLocks
+	metricMysqlLogOperations           metricMysqlLogOperations
+	metricMysqlMysqlxConnections       metricMysqlMysqlxConnections
+	metricMysqlMysqlxWorkerThreads     metricMysqlMysqlxWorkerThreads
+	metricMysqlOpenedResources         metricMysqlOpenedResources
+	metricMysqlOperations              metricMysqlOperations
+	metricMysqlPageOperations          metricMysqlPageOperations
+	metricMysqlPreparedStatements      metricMysqlPreparedStatements
+	metricMysqlQueriesClientCount      metricMysqlQueriesClientCount
+	metricMysqlQueriesCount            metricMysqlQueriesCount
+	metricMysqlQueriesSlowCount        metricMysqlQueriesSlowCount
+	metricMysqlRowLocks                metricMysqlRowLocks
+	metricMysqlRowOperations           metricMysqlRowOperations
+	metricMysqlSorts                   metricMysqlSorts
+	metricMysqlStatementEventCount     metricMysqlStatementEventCount
+	metricMysqlStatementEventWaitTime  metricMysqlStatementEventWaitTime
+	metricMysqlTableIoWaitCount        metricMysqlTableIoWaitCount
+	metricMysqlTableIoWaitTime         metricMysqlTableIoWaitTime
+	metricMysqlTableLockWaitReadCount  metricMysqlTableLockWaitReadCount
+	metricMysqlTableLockWaitReadTime   metricMysqlTableLockWaitReadTime
+	metricMysqlTableLockWaitWriteCount metricMysqlTableLockWaitWriteCount
+	metricMysqlTableLockWaitWriteTime  metricMysqlTableLockWaitWriteTime
+	metricMysqlTableOpenCache          metricMysqlTableOpenCache
+	metricMysqlThreads                 metricMysqlThreads
+	metricMysqlTmpResources            metricMysqlTmpResources
 }
 
 // metricBuilderOption applies changes to default metrics builder.
@@ -2985,45 +3301,49 @@ func WithStartTime(startTime pcommon.Timestamp) metricBuilderOption {
 
 func NewMetricsBuilder(settings MetricsSettings, buildInfo component.BuildInfo, options ...metricBuilderOption) *MetricsBuilder {
 	mb := &MetricsBuilder{
-		startTime:                         pcommon.NewTimestampFromTime(time.Now()),
-		metricsBuffer:                     pmetric.NewMetrics(),
-		buildInfo:                         buildInfo,
-		metricMysqlBufferPoolDataPages:    newMetricMysqlBufferPoolDataPages(settings.MysqlBufferPoolDataPages),
-		metricMysqlBufferPoolLimit:        newMetricMysqlBufferPoolLimit(settings.MysqlBufferPoolLimit),
-		metricMysqlBufferPoolOperations:   newMetricMysqlBufferPoolOperations(settings.MysqlBufferPoolOperations),
-		metricMysqlBufferPoolPageFlushes:  newMetricMysqlBufferPoolPageFlushes(settings.MysqlBufferPoolPageFlushes),
-		metricMysqlBufferPoolPages:        newMetricMysqlBufferPoolPages(settings.MysqlBufferPoolPages),
-		metricMysqlBufferPoolUsage:        newMetricMysqlBufferPoolUsage(settings.MysqlBufferPoolUsage),
-		metricMysqlClientNetworkIo:        newMetricMysqlClientNetworkIo(settings.MysqlClientNetworkIo),
-		metricMysqlConnectionCount:        newMetricMysqlConnectionCount(settings.MysqlConnectionCount),
-		metricMysqlConnectionErrors:       newMetricMysqlConnectionErrors(settings.MysqlConnectionErrors),
-		metricMysqlDoubleWrites:           newMetricMysqlDoubleWrites(settings.MysqlDoubleWrites),
-		metricMysqlHandlers:               newMetricMysqlHandlers(settings.MysqlHandlers),
-		metricMysqlIndexIoWaitCount:       newMetricMysqlIndexIoWaitCount(settings.MysqlIndexIoWaitCount),
-		metricMysqlIndexIoWaitTime:        newMetricMysqlIndexIoWaitTime(settings.MysqlIndexIoWaitTime),
-		metricMysqlJoins:                  newMetricMysqlJoins(settings.MysqlJoins),
-		metricMysqlLockedConnects:         newMetricMysqlLockedConnects(settings.MysqlLockedConnects),
-		metricMysqlLocks:                  newMetricMysqlLocks(settings.MysqlLocks),
-		metricMysqlLogOperations:          newMetricMysqlLogOperations(settings.MysqlLogOperations),
-		metricMysqlMysqlxConnections:      newMetricMysqlMysqlxConnections(settings.MysqlMysqlxConnections),
-		metricMysqlMysqlxWorkerThreads:    newMetricMysqlMysqlxWorkerThreads(settings.MysqlMysqlxWorkerThreads),
-		metricMysqlOpenedResources:        newMetricMysqlOpenedResources(settings.MysqlOpenedResources),
-		metricMysqlOperations:             newMetricMysqlOperations(settings.MysqlOperations),
-		metricMysqlPageOperations:         newMetricMysqlPageOperations(settings.MysqlPageOperations),
-		metricMysqlPreparedStatements:     newMetricMysqlPreparedStatements(settings.MysqlPreparedStatements),
-		metricMysqlQueriesClientCount:     newMetricMysqlQueriesClientCount(settings.MysqlQueriesClientCount),
-		metricMysqlQueriesCount:           newMetricMysqlQueriesCount(settings.MysqlQueriesCount),
-		metricMysqlQueriesSlowCount:       newMetricMysqlQueriesSlowCount(settings.MysqlQueriesSlowCount),
-		metricMysqlRowLocks:               newMetricMysqlRowLocks(settings.MysqlRowLocks),
-		metricMysqlRowOperations:          newMetricMysqlRowOperations(settings.MysqlRowOperations),
-		metricMysqlSorts:                  newMetricMysqlSorts(settings.MysqlSorts),
-		metricMysqlStatementEventCount:    newMetricMysqlStatementEventCount(settings.MysqlStatementEventCount),
-		metricMysqlStatementEventWaitTime: newMetricMysqlStatementEventWaitTime(settings.MysqlStatementEventWaitTime),
-		metricMysqlTableIoWaitCount:       newMetricMysqlTableIoWaitCount(settings.MysqlTableIoWaitCount),
-		metricMysqlTableIoWaitTime:        newMetricMysqlTableIoWaitTime(settings.MysqlTableIoWaitTime),
-		metricMysqlTableOpenCache:         newMetricMysqlTableOpenCache(settings.MysqlTableOpenCache),
-		metricMysqlThreads:                newMetricMysqlThreads(settings.MysqlThreads),
-		metricMysqlTmpResources:           newMetricMysqlTmpResources(settings.MysqlTmpResources),
+		startTime:                          pcommon.NewTimestampFromTime(time.Now()),
+		metricsBuffer:                      pmetric.NewMetrics(),
+		buildInfo:                          buildInfo,
+		metricMysqlBufferPoolDataPages:     newMetricMysqlBufferPoolDataPages(settings.MysqlBufferPoolDataPages),
+		metricMysqlBufferPoolLimit:         newMetricMysqlBufferPoolLimit(settings.MysqlBufferPoolLimit),
+		metricMysqlBufferPoolOperations:    newMetricMysqlBufferPoolOperations(settings.MysqlBufferPoolOperations),
+		metricMysqlBufferPoolPageFlushes:   newMetricMysqlBufferPoolPageFlushes(settings.MysqlBufferPoolPageFlushes),
+		metricMysqlBufferPoolPages:         newMetricMysqlBufferPoolPages(settings.MysqlBufferPoolPages),
+		metricMysqlBufferPoolUsage:         newMetricMysqlBufferPoolUsage(settings.MysqlBufferPoolUsage),
+		metricMysqlClientNetworkIo:         newMetricMysqlClientNetworkIo(settings.MysqlClientNetworkIo),
+		metricMysqlConnectionCount:         newMetricMysqlConnectionCount(settings.MysqlConnectionCount),
+		metricMysqlConnectionErrors:        newMetricMysqlConnectionErrors(settings.MysqlConnectionErrors),
+		metricMysqlDoubleWrites:            newMetricMysqlDoubleWrites(settings.MysqlDoubleWrites),
+		metricMysqlHandlers:                newMetricMysqlHandlers(settings.MysqlHandlers),
+		metricMysqlIndexIoWaitCount:        newMetricMysqlIndexIoWaitCount(settings.MysqlIndexIoWaitCount),
+		metricMysqlIndexIoWaitTime:         newMetricMysqlIndexIoWaitTime(settings.MysqlIndexIoWaitTime),
+		metricMysqlJoins:                   newMetricMysqlJoins(settings.MysqlJoins),
+		metricMysqlLockedConnects:          newMetricMysqlLockedConnects(settings.MysqlLockedConnects),
+		metricMysqlLocks:                   newMetricMysqlLocks(settings.MysqlLocks),
+		metricMysqlLogOperations:           newMetricMysqlLogOperations(settings.MysqlLogOperations),
+		metricMysqlMysqlxConnections:       newMetricMysqlMysqlxConnections(settings.MysqlMysqlxConnections),
+		metricMysqlMysqlxWorkerThreads:     newMetricMysqlMysqlxWorkerThreads(settings.MysqlMysqlxWorkerThreads),
+		metricMysqlOpenedResources:         newMetricMysqlOpenedResources(settings.MysqlOpenedResources),
+		metricMysqlOperations:              newMetricMysqlOperations(settings.MysqlOperations),
+		metricMysqlPageOperations:          newMetricMysqlPageOperations(settings.MysqlPageOperations),
+		metricMysqlPreparedStatements:      newMetricMysqlPreparedStatements(settings.MysqlPreparedStatements),
+		metricMysqlQueriesClientCount:      newMetricMysqlQueriesClientCount(settings.MysqlQueriesClientCount),
+		metricMysqlQueriesCount:            newMetricMysqlQueriesCount(settings.MysqlQueriesCount),
+		metricMysqlQueriesSlowCount:        newMetricMysqlQueriesSlowCount(settings.MysqlQueriesSlowCount),
+		metricMysqlRowLocks:                newMetricMysqlRowLocks(settings.MysqlRowLocks),
+		metricMysqlRowOperations:           newMetricMysqlRowOperations(settings.MysqlRowOperations),
+		metricMysqlSorts:                   newMetricMysqlSorts(settings.MysqlSorts),
+		metricMysqlStatementEventCount:     newMetricMysqlStatementEventCount(settings.MysqlStatementEventCount),
+		metricMysqlStatementEventWaitTime:  newMetricMysqlStatementEventWaitTime(settings.MysqlStatementEventWaitTime),
+		metricMysqlTableIoWaitCount:        newMetricMysqlTableIoWaitCount(settings.MysqlTableIoWaitCount),
+		metricMysqlTableIoWaitTime:         newMetricMysqlTableIoWaitTime(settings.MysqlTableIoWaitTime),
+		metricMysqlTableLockWaitReadCount:  newMetricMysqlTableLockWaitReadCount(settings.MysqlTableLockWaitReadCount),
+		metricMysqlTableLockWaitReadTime:   newMetricMysqlTableLockWaitReadTime(settings.MysqlTableLockWaitReadTime),
+		metricMysqlTableLockWaitWriteCount: newMetricMysqlTableLockWaitWriteCount(settings.MysqlTableLockWaitWriteCount),
+		metricMysqlTableLockWaitWriteTime:  newMetricMysqlTableLockWaitWriteTime(settings.MysqlTableLockWaitWriteTime),
+		metricMysqlTableOpenCache:          newMetricMysqlTableOpenCache(settings.MysqlTableOpenCache),
+		metricMysqlThreads:                 newMetricMysqlThreads(settings.MysqlThreads),
+		metricMysqlTmpResources:            newMetricMysqlTmpResources(settings.MysqlTmpResources),
 	}
 	for _, op := range options {
 		op(mb)
@@ -3116,6 +3436,10 @@ func (mb *MetricsBuilder) EmitForResource(rmo ...ResourceMetricsOption) {
 	mb.metricMysqlStatementEventWaitTime.emit(ils.Metrics())
 	mb.metricMysqlTableIoWaitCount.emit(ils.Metrics())
 	mb.metricMysqlTableIoWaitTime.emit(ils.Metrics())
+	mb.metricMysqlTableLockWaitReadCount.emit(ils.Metrics())
+	mb.metricMysqlTableLockWaitReadTime.emit(ils.Metrics())
+	mb.metricMysqlTableLockWaitWriteCount.emit(ils.Metrics())
+	mb.metricMysqlTableLockWaitWriteTime.emit(ils.Metrics())
 	mb.metricMysqlTableOpenCache.emit(ils.Metrics())
 	mb.metricMysqlThreads.emit(ils.Metrics())
 	mb.metricMysqlTmpResources.emit(ils.Metrics())
@@ -3426,6 +3750,26 @@ func (mb *MetricsBuilder) RecordMysqlTableIoWaitCountDataPoint(ts pcommon.Timest
 // RecordMysqlTableIoWaitTimeDataPoint adds a data point to mysql.table.io.wait.time metric.
 func (mb *MetricsBuilder) RecordMysqlTableIoWaitTimeDataPoint(ts pcommon.Timestamp, val int64, ioWaitsOperationsAttributeValue AttributeIoWaitsOperations, tableNameAttributeValue string, schemaAttributeValue string) {
 	mb.metricMysqlTableIoWaitTime.recordDataPoint(mb.startTime, ts, val, ioWaitsOperationsAttributeValue.String(), tableNameAttributeValue, schemaAttributeValue)
+}
+
+// RecordMysqlTableLockWaitReadCountDataPoint adds a data point to mysql.table.lock_wait.read.count metric.
+func (mb *MetricsBuilder) RecordMysqlTableLockWaitReadCountDataPoint(ts pcommon.Timestamp, val int64, schemaAttributeValue string, tableNameAttributeValue string, readLockTypeAttributeValue AttributeReadLockType) {
+	mb.metricMysqlTableLockWaitReadCount.recordDataPoint(mb.startTime, ts, val, schemaAttributeValue, tableNameAttributeValue, readLockTypeAttributeValue.String())
+}
+
+// RecordMysqlTableLockWaitReadTimeDataPoint adds a data point to mysql.table.lock_wait.read.time metric.
+func (mb *MetricsBuilder) RecordMysqlTableLockWaitReadTimeDataPoint(ts pcommon.Timestamp, val int64, schemaAttributeValue string, tableNameAttributeValue string, readLockTypeAttributeValue AttributeReadLockType) {
+	mb.metricMysqlTableLockWaitReadTime.recordDataPoint(mb.startTime, ts, val, schemaAttributeValue, tableNameAttributeValue, readLockTypeAttributeValue.String())
+}
+
+// RecordMysqlTableLockWaitWriteCountDataPoint adds a data point to mysql.table.lock_wait.write.count metric.
+func (mb *MetricsBuilder) RecordMysqlTableLockWaitWriteCountDataPoint(ts pcommon.Timestamp, val int64, schemaAttributeValue string, tableNameAttributeValue string, writeLockTypeAttributeValue AttributeWriteLockType) {
+	mb.metricMysqlTableLockWaitWriteCount.recordDataPoint(mb.startTime, ts, val, schemaAttributeValue, tableNameAttributeValue, writeLockTypeAttributeValue.String())
+}
+
+// RecordMysqlTableLockWaitWriteTimeDataPoint adds a data point to mysql.table.lock_wait.write.time metric.
+func (mb *MetricsBuilder) RecordMysqlTableLockWaitWriteTimeDataPoint(ts pcommon.Timestamp, val int64, schemaAttributeValue string, tableNameAttributeValue string, writeLockTypeAttributeValue AttributeWriteLockType) {
+	mb.metricMysqlTableLockWaitWriteTime.recordDataPoint(mb.startTime, ts, val, schemaAttributeValue, tableNameAttributeValue, writeLockTypeAttributeValue.String())
 }
 
 // RecordMysqlTableOpenCacheDataPoint adds a data point to mysql.table_open_cache metric.
