@@ -263,8 +263,8 @@
                      "unit": "By"
                   },
                   {
-                     "description": "The number of times each type of command has been executed.",
-                     "name": "mysql.commands",
+                     "description": "The number of times each type of prepared statement command has been issued.",
+                     "name": "mysql.prepared_statements",
                      "sum": {
                         "aggregationTemporality": "AGGREGATION_TEMPORALITY_CUMULATIVE",
                         "dataPoints": [

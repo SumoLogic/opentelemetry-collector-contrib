@@ -14,7 +14,6 @@ These are the metrics available for this scraper.
 | **mysql.buffer_pool.page_flushes** | The number of requests to flush pages from the InnoDB buffer pool. | 1 | Sum(Int) | <ul> </ul> |
 | **mysql.buffer_pool.pages** | The number of pages in the InnoDB buffer pool. | 1 | Sum(Int) | <ul> <li>buffer_pool_pages</li> </ul> |
 | **mysql.buffer_pool.usage** | The number of bytes in the InnoDB buffer pool. | By | Sum(Int) | <ul> <li>buffer_pool_data</li> </ul> |
-| **mysql.commands** | The number of times each type of command has been executed. | 1 | Sum(Int) | <ul> <li>command</li> </ul> |
 | **mysql.double_writes** | The number of writes to the InnoDB doublewrite buffer. | 1 | Sum(Int) | <ul> <li>double_writes</li> </ul> |
 | **mysql.handlers** | The number of requests to various MySQL handlers. | 1 | Sum(Int) | <ul> <li>handler</li> </ul> |
 | **mysql.index.io.wait.count** | The total count of I/O wait events for an index. | 1 | Sum(Int) | <ul> <li>io_waits_operations</li> <li>table_name</li> <li>schema</li> <li>index_name</li> </ul> |
@@ -26,6 +25,7 @@ These are the metrics available for this scraper.
 | **mysql.opened_resources** | The number of opened resources. | 1 | Sum(Int) | <ul> <li>opened_resources</li> </ul> |
 | **mysql.operations** | The number of InnoDB operations. | 1 | Sum(Int) | <ul> <li>operations</li> </ul> |
 | **mysql.page_operations** | The number of InnoDB page operations. | 1 | Sum(Int) | <ul> <li>page_operations</li> </ul> |
+| **mysql.prepared_statements** | The number of times each type of prepared statement command has been issued. | 1 | Sum(Int) | <ul> <li>prepared_statements_command</li> </ul> |
 | **mysql.row_locks** | The number of InnoDB row locks. | 1 | Sum(Int) | <ul> <li>row_locks</li> </ul> |
 | **mysql.row_operations** | The number of InnoDB row operations. | 1 | Sum(Int) | <ul> <li>row_operations</li> </ul> |
 | **mysql.sorts** | The number of MySQL sorts. | 1 | Sum(Int) | <ul> <li>sorts</li> </ul> |
@@ -58,7 +58,6 @@ metrics:
 | buffer_pool_data (status) | The status of buffer pool data. | dirty, clean |
 | buffer_pool_operations (operation) | The buffer pool operations types. | read_ahead_rnd, read_ahead, read_ahead_evicted, read_requests, reads, wait_free, write_requests |
 | buffer_pool_pages (kind) | The buffer pool pages types. | data, free, misc |
-| command (command) | The command types. | execute, close, fetch, prepare, reset, send_long_data |
 | digest (digest) | Digest. |  |
 | digest_text (digest_text) | Text before digestion. |  |
 | double_writes (kind) | The doublewrite types. | pages_written, writes |
@@ -72,6 +71,7 @@ metrics:
 | opened_resources (kind) | The kind of the resource. | file, table_definition, table |
 | operations (operation) | The operation types. | fsyncs, reads, writes |
 | page_operations (operation) | The page operation types. | created, read, written |
+| prepared_statements_command (command) | The prepare statement command types. | execute, close, fetch, prepare, reset, send_long_data |
 | row_locks (kind) | The row lock type. | waits, time |
 | row_operations (operation) | The row operation type. | deleted, inserted, read, updated |
 | schema (schema) | The schema of the object. |  |

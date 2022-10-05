@@ -163,17 +163,23 @@ func (m *mySQLScraper) scrapeGlobalStats(now pcommon.Timestamp, errs *scrapererr
 
 		// commands
 		case "Com_stmt_execute":
-			addPartialIfError(errs, m.mb.RecordMysqlCommandsDataPoint(now, v, metadata.AttributeCommandExecute))
+			addPartialIfError(errs, m.mb.RecordMysqlPreparedStatementsDataPoint(now, v,
+				metadata.AttributePreparedStatementsCommandExecute))
 		case "Com_stmt_close":
-			addPartialIfError(errs, m.mb.RecordMysqlCommandsDataPoint(now, v, metadata.AttributeCommandClose))
+			addPartialIfError(errs, m.mb.RecordMysqlPreparedStatementsDataPoint(now, v,
+				metadata.AttributePreparedStatementsCommandClose))
 		case "Com_stmt_fetch":
-			addPartialIfError(errs, m.mb.RecordMysqlCommandsDataPoint(now, v, metadata.AttributeCommandFetch))
+			addPartialIfError(errs, m.mb.RecordMysqlPreparedStatementsDataPoint(now, v,
+				metadata.AttributePreparedStatementsCommandFetch))
 		case "Com_stmt_prepare":
-			addPartialIfError(errs, m.mb.RecordMysqlCommandsDataPoint(now, v, metadata.AttributeCommandPrepare))
+			addPartialIfError(errs, m.mb.RecordMysqlPreparedStatementsDataPoint(now, v,
+				metadata.AttributePreparedStatementsCommandPrepare))
 		case "Com_stmt_reset":
-			addPartialIfError(errs, m.mb.RecordMysqlCommandsDataPoint(now, v, metadata.AttributeCommandReset))
+			addPartialIfError(errs, m.mb.RecordMysqlPreparedStatementsDataPoint(now, v,
+				metadata.AttributePreparedStatementsCommandReset))
 		case "Com_stmt_send_long_data":
-			addPartialIfError(errs, m.mb.RecordMysqlCommandsDataPoint(now, v, metadata.AttributeCommandSendLongData))
+			addPartialIfError(errs, m.mb.RecordMysqlPreparedStatementsDataPoint(now, v,
+				metadata.AttributePreparedStatementsCommandSendLongData))
 
 		// created tmps
 		case "Created_tmp_disk_tables":
