@@ -15,6 +15,7 @@ These are the metrics available for this scraper.
 | **mysql.buffer_pool.pages** | The number of pages in the InnoDB buffer pool. | 1 | Sum(Int) | <ul> <li>buffer_pool_pages</li> </ul> |
 | **mysql.buffer_pool.usage** | The number of bytes in the InnoDB buffer pool. | By | Sum(Int) | <ul> <li>buffer_pool_data</li> </ul> |
 | **mysql.client.network.io** | The number of transmitted bytes between server and clients. | By | Sum(Int) | <ul> <li>transmission_direction</li> </ul> |
+| **mysql.commands** | The number of times each type of command has been executed. | 1 | Sum(Int) | <ul> <li>command</li> </ul> |
 | **mysql.connection.count** | The number of connection attempts (successful or not) to the MySQL server. | 1 | Sum(Int) | <ul> </ul> |
 | **mysql.connection.errors** | Errors that occur during the client connection process. | 1 | Sum(Int) | <ul> <li>connection_error</li> </ul> |
 | **mysql.double_writes** | The number of writes to the InnoDB doublewrite buffer. | 1 | Sum(Int) | <ul> <li>double_writes</li> </ul> |
@@ -74,6 +75,7 @@ metrics:
 | buffer_pool_operations (operation) | The buffer pool operations types. | read_ahead_rnd, read_ahead, read_ahead_evicted, read_requests, reads, wait_free, write_requests |
 | buffer_pool_pages (kind) | The buffer pool pages types. | data, free, misc |
 | cache_status (status) | The status of cache access. | hit, miss, overflow |
+| command (command) | The command types. | delete, insert, select, update |
 | connection_error (error) | The connection error type. | accept, internal, max_connections, peer_address, select, tcpwrap |
 | connection_status (status) | The connection status. | accepted, closed, rejected |
 | digest (digest) | Digest. |  |
