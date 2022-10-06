@@ -18,6 +18,10 @@ attributes:
     value: operation
     description: The buffer pool operations types.
     enum: [read_ahead_rnd, read_ahead, read_ahead_evicted, read_requests, reads, wait_free, write_requests]
+  command:
+    value: command
+    description: The command types.
+    enum: [delete, insert, select, update]
   prepared_statements_command:
     value: command
     description: The prepare statement command types.
@@ -183,6 +187,16 @@ metrics:
       monotonic: false
       aggregation: cumulative
     attributes: [buffer_pool_data]
+  mysql.commands:
+    enabled: true
+    description: The number of times each type of command has been executed.
+    unit: 1
+    sum:
+      value_type: int
+      input_type: string
+      monotonic: true
+      aggregation: cumulative
+    attributes: [command]
   mysql.prepared_statements:
     enabled: true
     description: The number of times each type of prepared statement command has been issued.
