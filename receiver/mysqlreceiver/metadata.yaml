@@ -109,6 +109,10 @@ attributes:
     value: status
     description: The connection status.
     enum: [accepted, closed, rejected]
+  cache_status:
+    value: status
+    description: The status of cache access.
+    enum: [hit, miss, overflow]
 
 metrics:
   mysql.buffer_pool.pages:
@@ -411,3 +415,13 @@ metrics:
       monotonic: false
       aggregation: cumulative
     attributes: [mysqlx_threads]
+  mysql.table_open_cache:
+    enabled: true
+    description: The number of statuses (e.g. hit) for open tables cache lookups.
+    unit: 1
+    sum:
+      value_type: int
+      input_type: string
+      monotonic: true
+      aggregation: cumulative
+    attributes: [cache_status]
