@@ -331,6 +331,14 @@ func (m *mySQLScraper) scrapeGlobalStats(now pcommon.Timestamp, errs *scrapererr
 		case "Table_open_cache_overflows":
 			addPartialIfError(errs, m.mb.RecordMysqlTableOpenCacheDataPoint(now, v, metadata.AttributeCacheStatusOverflow))
 
+		// queries
+		case "Queries":
+			addPartialIfError(errs, m.mb.RecordMysqlQueriesCountDataPoint(now, v))
+		case "Questions":
+			addPartialIfError(errs, m.mb.RecordMysqlQueriesClientCountDataPoint(now, v))
+		case "Slow_queries":
+			addPartialIfError(errs, m.mb.RecordMysqlQueriesSlowCountDataPoint(now, v))
+
 		// sorts
 		case "Sort_merge_passes":
 			addPartialIfError(errs, m.mb.RecordMysqlSortsDataPoint(now, v, metadata.AttributeSortsMergePasses))
