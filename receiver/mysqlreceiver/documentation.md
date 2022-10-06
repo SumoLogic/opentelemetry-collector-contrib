@@ -50,6 +50,7 @@ These are the metrics available for this scraper.
 | **mysql.table_open_cache** | The number of statuses (e.g. hit) for open tables cache lookups. | 1 | Sum(Int) | <ul> <li>cache_status</li> </ul> |
 | **mysql.threads** | The state of MySQL threads. | 1 | Sum(Int) | <ul> <li>threads</li> </ul> |
 | **mysql.tmp_resources** | The number of created temporary resources. | 1 | Sum(Int) | <ul> <li>tmp_resource</li> </ul> |
+| **mysql.uptime** | The number of seconds that the server has been up. | s | Sum(Int) | <ul> </ul> |
 
 **Highlighted metrics** are emitted by default. Other metrics are optional and not emitted by default.
 Any metric can be enabled or disabled with the following scraper configuration:

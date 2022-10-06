@@ -434,6 +434,15 @@ metrics:
       input_type: string
       monotonic: true
       aggregation: cumulative
+  mysql.uptime:
+    enabled: true
+    description: The number of seconds that the server has been up.
+    unit: s
+    sum:
+      value_type: int
+      input_type: string
+      monotonic: true
+      aggregation: cumulative
   mysql.tmp_resources:
     enabled: true
     description: The number of created temporary resources.

@@ -61,6 +61,7 @@ type MetricsSettings struct {
 	MysqlTableOpenCache          MetricSettings `mapstructure:"mysql.table_open_cache"`
 	MysqlThreads                 MetricSettings `mapstructure:"mysql.threads"`
 	MysqlTmpResources            MetricSettings `mapstructure:"mysql.tmp_resources"`
+	MysqlUptime                  MetricSettings `mapstructure:"mysql.uptime"`
 }
 
 func DefaultMetricsSettings() MetricsSettings {
@@ -189,6 +190,9 @@ func DefaultMetricsSettings() MetricsSettings {
 			Enabled: true,
 		},
 		MysqlTmpResources: MetricSettings{
+			Enabled: true,
+		},
+		MysqlUptime: MetricSettings{
 			Enabled: true,
 		},
 	}
@@ -3349,6 +3353,57 @@ func newMetricMysqlTmpResources(settings MetricSettings) metricMysqlTmpResources
 	return m
 }
 
+type metricMysqlUptime struct {
+	data     pmetric.Metric // data buffer for generated metric.
+	settings MetricSettings // metric settings provided by user.
+	capacity int            // max observed number of data points added to the metric.
+}
+
+// init fills mysql.uptime metric with initial data.
+func (m *metricMysqlUptime) init() {
+	m.data.SetName("mysql.uptime")
+	m.data.SetDescription("The number of seconds that the server has been up.")
+	m.data.SetUnit("s")
+	m.data.SetEmptySum()
+	m.data.Sum().SetIsMonotonic(true)
+	m.data.Sum().SetAggregationTemporality(pmetric.AggregationTemporalityCumulative)
+}
+
+func (m *metricMysqlUptime) recordDataPoint(start pcommon.Timestamp, ts pcommon.Timestamp, val int64) {
+	if !m.settings.Enabled {
+		return
+	}
+	dp := m.data.Sum().DataPoints().AppendEmpty()
+	dp.SetStartTimestamp(start)
+	dp.SetTimestamp(ts)
+	dp.SetIntValue(val)
+}
+
+// updateCapacity saves max length of data point slices that will be used for the slice capacity.
+func (m *metricMysqlUptime) updateCapacity() {
+	if m.data.Sum().DataPoints().Len() > m.capacity {
+		m.capacity = m.data.Sum().DataPoints().Len()
+	}
+}
+
+// emit appends recorded metric data to a metrics slice and prepares it for recording another set of data points.
+func (m *metricMysqlUptime) emit(metrics pmetric.MetricSlice) {
+	if m.settings.Enabled && m.data.Sum().DataPoints().Len() > 0 {
+		m.updateCapacity()
+		m.data.MoveTo(metrics.AppendEmpty())
+		m.init()
+	}
+}
+
+func newMetricMysqlUptime(settings MetricSettings) metricMysqlUptime {
+	m := metricMysqlUptime{settings: settings}
+	if settings.Enabled {
+		m.data = pmetric.NewMetric()
+		m.init()
+	}
+	return m
+}
+
 // MetricsBuilder provides an interface for scrapers to report metrics while taking care of all the transformations
 // required to produce metric representation defined in metadata and user settings.
 type MetricsBuilder struct {
@@ -3399,6 +3454,7 @@ type MetricsBuilder struct {
 	metricMysqlTableOpenCache          metricMysqlTableOpenCache
 	metricMysqlThreads                 metricMysqlThreads
 	metricMysqlTmpResources            metricMysqlTmpResources
+	metricMysqlUptime                  metricMysqlUptime
 }
 
 // metricBuilderOption applies changes to default metrics builder.
@@ -3458,6 +3514,7 @@ func NewMetricsBuilder(settings MetricsSettings, buildInfo component.BuildInfo, 
 		metricMysqlTableOpenCache:          newMetricMysqlTableOpenCache(settings.MysqlTableOpenCache),
 		metricMysqlThreads:                 newMetricMysqlThreads(settings.MysqlThreads),
 		metricMysqlTmpResources:            newMetricMysqlTmpResources(settings.MysqlTmpResources),
+		metricMysqlUptime:                  newMetricMysqlUptime(settings.MysqlUptime),
 	}
 	for _, op := range options {
 		op(mb)
@@ -3559,6 +3616,7 @@ func (mb *MetricsBuilder) EmitForResource(rmo ...ResourceMetricsOption) {
 	mb.metricMysqlTableOpenCache.emit(ils.Metrics())
 	mb.metricMysqlThreads.emit(ils.Metrics())
 	mb.metricMysqlTmpResources.emit(ils.Metrics())
+	mb.metricMysqlUptime.emit(ils.Metrics())
 	for _, op := range rmo {
 		op(rm)
 	}
@@ -3925,6 +3983,16 @@ func (mb *MetricsBuilder) RecordMysqlTmpResourcesDataPoint(ts pcommon.Timestamp,
 		return fmt.Errorf("failed to parse int64 for MysqlTmpResources, value was %s: %w", inputVal, err)
 	}
 	mb.metricMysqlTmpResources.recordDataPoint(mb.startTime, ts, val, tmpResourceAttributeValue.String())
+	return nil
+}
+
+// RecordMysqlUptimeDataPoint adds a data point to mysql.uptime metric.
+func (mb *MetricsBuilder) RecordMysqlUptimeDataPoint(ts pcommon.Timestamp, inputVal string) error {
+	val, err := strconv.ParseInt(inputVal, 10, 64)
+	if err != nil {
+		return fmt.Errorf("failed to parse int64 for MysqlUptime, value was %s: %w", inputVal, err)
+	}
+	mb.metricMysqlUptime.recordDataPoint(mb.startTime, ts, val)
 	return nil
 }
 

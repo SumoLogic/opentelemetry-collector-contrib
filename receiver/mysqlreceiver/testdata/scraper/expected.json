@@ -2799,6 +2799,22 @@
                      "unit": "1"
                   },
                   {
+                     "description": "The number of seconds that the server has been up.",
+                     "name": "mysql.uptime",
+                     "sum": {
+                        "aggregationTemporality": "AGGREGATION_TEMPORALITY_CUMULATIVE",
+                        "dataPoints": [
+                           {
+                              "asInt": "452",
+                              "startTimeUnixNano": "1644862687825728000",
+                              "timeUnixNano": "1644862687825772000"
+                           }
+                        ],
+                        "isMonotonic": true
+                     },
+                     "unit": "s"
+                  },
+                  {
                      "description": "The number of created temporary resources.",
                      "name": "mysql.tmp_resources",
                      "sum": {
