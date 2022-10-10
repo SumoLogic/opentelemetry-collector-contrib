@@ -17,6 +17,7 @@ package mysqlreceiver
 import (
 	"bufio"
 	"context"
+	"database/sql"
 	"errors"
 	"os"
 	"path/filepath"
@@ -47,6 +48,9 @@ func TestScrape(t *testing.T) {
 		cfg.Metrics.MysqlTableLockWaitWriteCount.Enabled = true
 		cfg.Metrics.MysqlTableLockWaitWriteTime.Enabled = true
 
+		cfg.Metrics.MysqlReplicaSQLDelay.Enabled = true
+		cfg.Metrics.MysqlReplicaTimeBehindSource.Enabled = true
+
 		scraper := newMySQLScraper(componenttest.NewNopReceiverCreateSettings(), cfg)
 		scraper.sqlclient = &mockClient{
 			globalStatsFile:             "global_stats",
@@ -55,6 +59,7 @@ func TestScrape(t *testing.T) {
 			indexIoWaitsFile:            "index_io_waits_stats",
 			statementEventsFile:         "statement_events",
 			tableLockWaitEventStatsFile: "table_lock_wait_event_stats",
+			replicaStatusFile:           "replica_stats",
 		}
 
 		actualMetrics, err := scraper.scrape(context.Background())
@@ -78,6 +83,9 @@ func TestScrape(t *testing.T) {
 		cfg.Metrics.MysqlTableLockWaitWriteCount.Enabled = true
 		cfg.Metrics.MysqlTableLockWaitWriteTime.Enabled = true
 
+		cfg.Metrics.MysqlReplicaSQLDelay.Enabled = true
+		cfg.Metrics.MysqlReplicaTimeBehindSource.Enabled = true
+
 		scraper := newMySQLScraper(componenttest.NewNopReceiverCreateSettings(), cfg)
 		scraper.sqlclient = &mockClient{
 			globalStatsFile:             "global_stats_partial",
@@ -86,6 +94,7 @@ func TestScrape(t *testing.T) {
 			indexIoWaitsFile:            "index_io_waits_stats_empty",
 			statementEventsFile:         "statement_events_empty",
 			tableLockWaitEventStatsFile: "table_lock_wait_event_stats_empty",
+			replicaStatusFile:           "replica_stats_empty",
 		}
 
 		actualMetrics, scrapeErr := scraper.scrape(context.Background())
@@ -114,6 +123,7 @@ type mockClient struct {
 	indexIoWaitsFile            string
 	statementEventsFile         string
 	tableLockWaitEventStatsFile string
+	replicaStatusFile           string
 }
 
 func readFile(fname string) (map[string]string, error) {
@@ -271,6 +281,87 @@ func (c *mockClient) getTableLockWaitEventStats() ([]tableLockWaitEventStats, er
 		s.sumTimerWriteLowPriority, _ = parseInt(text[19])
 		s.sumTimerWriteNormal, _ = parseInt(text[20])
 		s.sumTimerWriteExternal, _ = parseInt(text[21])
+
+		stats = append(stats, s)
+	}
+	return stats, nil
+}
+
+func (c *mockClient) getReplicaStatusStats() ([]ReplicaStatusStats, error) {
+	var stats []ReplicaStatusStats
+	file, err := os.Open(filepath.Join("testdata", "scraper", c.replicaStatusFile+".txt"))
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		var s ReplicaStatusStats
+		text := strings.Split(scanner.Text(), "\t")
+
+		s.replicaIOState = text[0]
+		s.sourceHost = text[1]
+		s.sourceUser = text[2]
+		s.sourcePort, _ = parseInt(text[3])
+		s.connectRetry, _ = parseInt(text[4])
+		s.sourceLogFile = text[5]
+		s.readSourceLogPos, _ = parseInt(text[6])
+		s.relayLogFile = text[7]
+		s.relayLogPos, _ = parseInt(text[8])
+		s.relaySourceLogFile = text[9]
+		s.replicaIORunning = text[10]
+		s.replicaSQLRunning = text[11]
+		s.replicateDoDB = text[12]
+		s.replicateIgnoreDB = text[13]
+		s.replicateDoTable = text[14]
+		s.replicateIgnoreTable = text[15]
+		s.replicateWildDoTable = text[16]
+		s.replicateWildIgnoreTable = text[17]
+		s.lastErrno, _ = parseInt(text[18])
+		s.lastError = text[19]
+		s.skipCounter, _ = parseInt(text[20])
+		s.execSourceLogPos, _ = parseInt(text[21])
+		s.relayLogSpace, _ = parseInt(text[22])
+		s.untilCondition = text[23]
+		s.untilLogFile = text[24]
+		s.untilLogPos = text[25]
+		s.sourceSSLAllowed = text[26]
+		s.sourceSSLCAFile = text[27]
+		s.sourceSSLCAPath = text[28]
+		s.sourceSSLCert = text[29]
+		s.sourceSSLCipher = text[30]
+		s.sourceSSLKey = text[31]
+		v, _ := parseInt(text[32])
+		s.secondsBehindSource = sql.NullInt64{Int64: v, Valid: true}
+		s.sourceSSLVerifyServerCert = text[33]
+		s.lastIOErrno, _ = parseInt(text[34])
+		s.lastIOError = text[35]
+		s.lastSQLErrno, _ = parseInt(text[36])
+		s.lastSQLError = text[37]
+		s.replicateIgnoreServerIds = text[38]
+		s.sourceServerID, _ = parseInt(text[39])
+		s.sourceUUID = text[40]
+		s.sourceInfoFile = text[41]
+		s.sqlDelay, _ = parseInt(text[42])
+		v, _ = parseInt(text[43])
+		s.sqlRemainingDelay = sql.NullInt64{Int64: v, Valid: true}
+		s.replicaSQLRunningState = text[44]
+		s.sourceRetryCount, _ = parseInt(text[45])
+		s.sourceBind = text[46]
+		s.lastIOErrorTimestamp = text[47]
+		s.lastSQLErrorTimestamp = text[48]
+		s.sourceSSLCrl = text[49]
+		s.sourceSSLCrlpath = text[50]
+		s.retrievedGtidSet = text[51]
+		s.executedGtidSet = text[52]
+		s.autoPosition = text[53]
+		s.replicateRewriteDB = text[54]
+		s.channelName = text[55]
+		s.sourceTLSVersion = text[56]
+		s.sourcePublicKeyPath = text[57]
+		s.getSourcePublicKey, _ = parseInt(text[58])
+		s.networkNamespace = text[59]
 
 		stats = append(stats, s)
 	}

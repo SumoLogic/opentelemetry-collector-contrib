@@ -34,6 +34,8 @@ These are the metrics available for this scraper.
 | **mysql.queries.client.count** | The number of statements executed by the server. This includes only statements sent to the server by clients. | 1 | Sum(Int) | <ul> </ul> |
 | **mysql.queries.count** | The number of statements executed by the server. | 1 | Sum(Int) | <ul> </ul> |
 | **mysql.queries.slow.count** | The number of slow queries. | 1 | Sum(Int) | <ul> </ul> |
+| mysql.replica.sql_delay | The number of seconds that the replica must lag the source. | s | Sum(Int) | <ul> </ul> |
+| mysql.replica.time_behind_source | This field is an indication of how “late” the replica is. | s | Sum(Int) | <ul> </ul> |
 | **mysql.row_locks** | The number of InnoDB row locks. | 1 | Sum(Int) | <ul> <li>row_locks</li> </ul> |
 | **mysql.row_operations** | The number of InnoDB row operations. | 1 | Sum(Int) | <ul> <li>row_operations</li> </ul> |
 | **mysql.sorts** | The number of MySQL sorts. | 1 | Sum(Int) | <ul> <li>sorts</li> </ul> |
