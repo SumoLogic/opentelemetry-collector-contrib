@@ -45,6 +45,8 @@ type MetricsSettings struct {
 	MysqlQueriesClientCount      MetricSettings `mapstructure:"mysql.queries.client.count"`
 	MysqlQueriesCount            MetricSettings `mapstructure:"mysql.queries.count"`
 	MysqlQueriesSlowCount        MetricSettings `mapstructure:"mysql.queries.slow.count"`
+	MysqlReplicaSQLDelay         MetricSettings `mapstructure:"mysql.replica.sql_delay"`
+	MysqlReplicaTimeBehindSource MetricSettings `mapstructure:"mysql.replica.time_behind_source"`
 	MysqlRowLocks                MetricSettings `mapstructure:"mysql.row_locks"`
 	MysqlRowOperations           MetricSettings `mapstructure:"mysql.row_operations"`
 	MysqlSorts                   MetricSettings `mapstructure:"mysql.sorts"`
@@ -140,6 +142,12 @@ func DefaultMetricsSettings() MetricsSettings {
 		},
 		MysqlQueriesSlowCount: MetricSettings{
 			Enabled: true,
+		},
+		MysqlReplicaSQLDelay: MetricSettings{
+			Enabled: false,
+		},
+		MysqlReplicaTimeBehindSource: MetricSettings{
+			Enabled: false,
 		},
 		MysqlRowLocks: MetricSettings{
 			Enabled: true,
@@ -2480,6 +2488,108 @@ func newMetricMysqlQueriesSlowCount(settings MetricSettings) metricMysqlQueriesS
 	return m
 }
 
+type metricMysqlReplicaSQLDelay struct {
+	data     pmetric.Metric // data buffer for generated metric.
+	settings MetricSettings // metric settings provided by user.
+	capacity int            // max observed number of data points added to the metric.
+}
+
+// init fills mysql.replica.sql_delay metric with initial data.
+func (m *metricMysqlReplicaSQLDelay) init() {
+	m.data.SetName("mysql.replica.sql_delay")
+	m.data.SetDescription("The number of seconds that the replica must lag the source.")
+	m.data.SetUnit("s")
+	m.data.SetEmptySum()
+	m.data.Sum().SetIsMonotonic(false)
+	m.data.Sum().SetAggregationTemporality(pmetric.AggregationTemporalityCumulative)
+}
+
+func (m *metricMysqlReplicaSQLDelay) recordDataPoint(start pcommon.Timestamp, ts pcommon.Timestamp, val int64) {
+	if !m.settings.Enabled {
+		return
+	}
+	dp := m.data.Sum().DataPoints().AppendEmpty()
+	dp.SetStartTimestamp(start)
+	dp.SetTimestamp(ts)
+	dp.SetIntValue(val)
+}
+
+// updateCapacity saves max length of data point slices that will be used for the slice capacity.
+func (m *metricMysqlReplicaSQLDelay) updateCapacity() {
+	if m.data.Sum().DataPoints().Len() > m.capacity {
+		m.capacity = m.data.Sum().DataPoints().Len()
+	}
+}
+
+// emit appends recorded metric data to a metrics slice and prepares it for recording another set of data points.
+func (m *metricMysqlReplicaSQLDelay) emit(metrics pmetric.MetricSlice) {
+	if m.settings.Enabled && m.data.Sum().DataPoints().Len() > 0 {
+		m.updateCapacity()
+		m.data.MoveTo(metrics.AppendEmpty())
+		m.init()
+	}
+}
+
+func newMetricMysqlReplicaSQLDelay(settings MetricSettings) metricMysqlReplicaSQLDelay {
+	m := metricMysqlReplicaSQLDelay{settings: settings}
+	if settings.Enabled {
+		m.data = pmetric.NewMetric()
+		m.init()
+	}
+	return m
+}
+
+type metricMysqlReplicaTimeBehindSource struct {
+	data     pmetric.Metric // data buffer for generated metric.
+	settings MetricSettings // metric settings provided by user.
+	capacity int            // max observed number of data points added to the metric.
+}
+
+// init fills mysql.replica.time_behind_source metric with initial data.
+func (m *metricMysqlReplicaTimeBehindSource) init() {
+	m.data.SetName("mysql.replica.time_behind_source")
+	m.data.SetDescription("This field is an indication of how “late” the replica is.")
+	m.data.SetUnit("s")
+	m.data.SetEmptySum()
+	m.data.Sum().SetIsMonotonic(false)
+	m.data.Sum().SetAggregationTemporality(pmetric.AggregationTemporalityCumulative)
+}
+
+func (m *metricMysqlReplicaTimeBehindSource) recordDataPoint(start pcommon.Timestamp, ts pcommon.Timestamp, val int64) {
+	if !m.settings.Enabled {
+		return
+	}
+	dp := m.data.Sum().DataPoints().AppendEmpty()
+	dp.SetStartTimestamp(start)
+	dp.SetTimestamp(ts)
+	dp.SetIntValue(val)
+}
+
+// updateCapacity saves max length of data point slices that will be used for the slice capacity.
+func (m *metricMysqlReplicaTimeBehindSource) updateCapacity() {
+	if m.data.Sum().DataPoints().Len() > m.capacity {
+		m.capacity = m.data.Sum().DataPoints().Len()
+	}
+}
+
+// emit appends recorded metric data to a metrics slice and prepares it for recording another set of data points.
+func (m *metricMysqlReplicaTimeBehindSource) emit(metrics pmetric.MetricSlice) {
+	if m.settings.Enabled && m.data.Sum().DataPoints().Len() > 0 {
+		m.updateCapacity()
+		m.data.MoveTo(metrics.AppendEmpty())
+		m.init()
+	}
+}
+
+func newMetricMysqlReplicaTimeBehindSource(settings MetricSettings) metricMysqlReplicaTimeBehindSource {
+	m := metricMysqlReplicaTimeBehindSource{settings: settings}
+	if settings.Enabled {
+		m.data = pmetric.NewMetric()
+		m.init()
+	}
+	return m
+}
+
 type metricMysqlRowLocks struct {
 	data     pmetric.Metric // data buffer for generated metric.
 	settings MetricSettings // metric settings provided by user.
@@ -3273,6 +3383,8 @@ type MetricsBuilder struct {
 	metricMysqlQueriesClientCount      metricMysqlQueriesClientCount
 	metricMysqlQueriesCount            metricMysqlQueriesCount
 	metricMysqlQueriesSlowCount        metricMysqlQueriesSlowCount
+	metricMysqlReplicaSQLDelay         metricMysqlReplicaSQLDelay
+	metricMysqlReplicaTimeBehindSource metricMysqlReplicaTimeBehindSource
 	metricMysqlRowLocks                metricMysqlRowLocks
 	metricMysqlRowOperations           metricMysqlRowOperations
 	metricMysqlSorts                   metricMysqlSorts
@@ -3330,6 +3442,8 @@ func NewMetricsBuilder(settings MetricsSettings, buildInfo component.BuildInfo, 
 		metricMysqlQueriesClientCount:      newMetricMysqlQueriesClientCount(settings.MysqlQueriesClientCount),
 		metricMysqlQueriesCount:            newMetricMysqlQueriesCount(settings.MysqlQueriesCount),
 		metricMysqlQueriesSlowCount:        newMetricMysqlQueriesSlowCount(settings.MysqlQueriesSlowCount),
+		metricMysqlReplicaSQLDelay:         newMetricMysqlReplicaSQLDelay(settings.MysqlReplicaSQLDelay),
+		metricMysqlReplicaTimeBehindSource: newMetricMysqlReplicaTimeBehindSource(settings.MysqlReplicaTimeBehindSource),
 		metricMysqlRowLocks:                newMetricMysqlRowLocks(settings.MysqlRowLocks),
 		metricMysqlRowOperations:           newMetricMysqlRowOperations(settings.MysqlRowOperations),
 		metricMysqlSorts:                   newMetricMysqlSorts(settings.MysqlSorts),
@@ -3429,6 +3543,8 @@ func (mb *MetricsBuilder) EmitForResource(rmo ...ResourceMetricsOption) {
 	mb.metricMysqlQueriesClientCount.emit(ils.Metrics())
 	mb.metricMysqlQueriesCount.emit(ils.Metrics())
 	mb.metricMysqlQueriesSlowCount.emit(ils.Metrics())
+	mb.metricMysqlReplicaSQLDelay.emit(ils.Metrics())
+	mb.metricMysqlReplicaTimeBehindSource.emit(ils.Metrics())
 	mb.metricMysqlRowLocks.emit(ils.Metrics())
 	mb.metricMysqlRowOperations.emit(ils.Metrics())
 	mb.metricMysqlSorts.emit(ils.Metrics())
@@ -3700,6 +3816,16 @@ func (mb *MetricsBuilder) RecordMysqlQueriesSlowCountDataPoint(ts pcommon.Timest
 	}
 	mb.metricMysqlQueriesSlowCount.recordDataPoint(mb.startTime, ts, val)
 	return nil
+}
+
+// RecordMysqlReplicaSQLDelayDataPoint adds a data point to mysql.replica.sql_delay metric.
+func (mb *MetricsBuilder) RecordMysqlReplicaSQLDelayDataPoint(ts pcommon.Timestamp, val int64) {
+	mb.metricMysqlReplicaSQLDelay.recordDataPoint(mb.startTime, ts, val)
+}
+
+// RecordMysqlReplicaTimeBehindSourceDataPoint adds a data point to mysql.replica.time_behind_source metric.
+func (mb *MetricsBuilder) RecordMysqlReplicaTimeBehindSourceDataPoint(ts pcommon.Timestamp, val int64) {
+	mb.metricMysqlReplicaTimeBehindSource.recordDataPoint(mb.startTime, ts, val)
 }
 
 // RecordMysqlRowLocksDataPoint adds a data point to mysql.row_locks metric.
