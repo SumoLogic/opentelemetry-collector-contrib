@@ -1,3 +1,6 @@
+# Deprecation notice
+Sumo Logic has ended development of this project, which has been replaced by the officially supported [Sumo Logic Distribution for OpenTelemetry Collector](https://github.com/SumoLogic/sumologic-otel-collector) project. If you are planning to set up collection, we highly recommend that you use the supported Sumo Logic Distribution for OpenTelemetry Collector project rather than this one.
+
 # SumoLogic / OpenTelemetry Collector Contrib
 This is a repository for OpenTelemetry Collector Contrib with additional Sumo Logic extensions. It is based
 on the [opentelemetry-collector-contrib](https://github.com/open-telemetry/opentelemetry-collector-contrib) and
