@@ -119,7 +119,7 @@ require (
 	github.com/prometheus/prometheus v1.8.2-0.20220111145625-076109fa1910
 	github.com/stretchr/testify v1.7.0
 	go.opentelemetry.io/collector v0.43.1
-	golang.org/x/sys v0.0.0-20220114195835-da31bd327af9
+	golang.org/x/sys v0.1.0
 )
 
 require github.com/open-telemetry/opentelemetry-collector-contrib/processor/sumologicsyslogprocessor v0.43.0
