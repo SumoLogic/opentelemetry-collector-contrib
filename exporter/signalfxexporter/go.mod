@@ -70,7 +70,7 @@ require (
 
 require (
 	github.com/jaegertracing/jaeger v1.30.0 // indirect
-	golang.org/x/sys v0.0.0-20211210111614-af8b64212486
+	golang.org/x/sys v0.1.0
 )
 
 replace github.com/open-telemetry/opentelemetry-collector-contrib/internal/common => ../../internal/common
