@@ -81,7 +81,7 @@ require (
 	github.com/dennwc/varint v1.0.0 // indirect
 	github.com/dgraph-io/ristretto v0.1.0 // indirect
 	github.com/digitalocean/godo v1.73.0 // indirect
-	github.com/docker/distribution v2.7.1+incompatible // indirect
+	github.com/docker/distribution v2.8.2+incompatible // indirect
 	github.com/docker/docker v20.10.12+incompatible // indirect
 	github.com/docker/go-connections v0.4.1-0.20210727194412-58542c764a11 // indirect
 	github.com/docker/go-units v0.4.0 // indirect
@@ -290,20 +290,18 @@ require (
 	github.com/open-telemetry/opentelemetry-collector-contrib/processor/groupbyattrsprocessor v0.43.0 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/processor/groupbytraceprocessor v0.43.0 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/processor/k8sattributesprocessor v0.43.0 // indirect
-    github.com/open-telemetry/opentelemetry-collector-contrib/processor/k8sprocessor v0.43.0 // indirect
+	github.com/open-telemetry/opentelemetry-collector-contrib/processor/k8sprocessor v0.43.0 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/processor/metricsgenerationprocessor v0.43.0 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/processor/metricstransformprocessor v0.43.0 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/processor/probabilisticsamplerprocessor v0.43.0 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/processor/resourcedetectionprocessor v0.43.0 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/processor/resourceprocessor v0.43.0 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/processor/routingprocessor v0.43.0 // indirect
+	github.com/open-telemetry/opentelemetry-collector-contrib/processor/sourceprocessor v0.43.0 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/processor/spanmetricsprocessor v0.43.0 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/processor/spanprocessor v0.43.0 // indirect
-	github.com/open-telemetry/opentelemetry-collector-contrib/processor/tailsamplingprocessor v0.43.0 // indirect
-	github.com/open-telemetry/opentelemetry-collector-contrib/processor/sourceprocessor v0.43.0 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/processor/sumologicsyslogprocessor v0.43.0 // indirect
-	github.com/open-telemetry/opentelemetry-collector-contrib/processor/k8sprocessor v0.43.0 // indirect
-	github.com/open-telemetry/opentelemetry-collector-contrib/processor/cascadingfilterprocessor v0.43.0 // indirect
+	github.com/open-telemetry/opentelemetry-collector-contrib/processor/tailsamplingprocessor v0.43.0 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/receiver/awscontainerinsightreceiver v0.43.0 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/receiver/awsecscontainermetricsreceiver v0.43.0 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/receiver/awsxrayreceiver v0.43.0 // indirect
@@ -756,7 +754,6 @@ replace github.com/open-telemetry/opentelemetry-collector-contrib/processor/k8sp
 replace github.com/open-telemetry/opentelemetry-collector-contrib/processor/sourceprocessor => ../../processor/sourceprocessor/
 
 replace github.com/open-telemetry/opentelemetry-collector-contrib/processor/sumologicsyslogprocessor => ../../processor/sumologicsyslogprocessor/
-
 
 // see https://github.com/open-telemetry/opentelemetry-collector-contrib/issues/4433
 exclude github.com/StackExchange/wmi v1.2.0
