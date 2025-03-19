@@ -844,7 +844,7 @@ func (se *SumologicExtension) updateMetadataWithHTTPClient(ctx context.Context, 
 			Environment: se.conf.CollectorEnvironment,
 		},
 		CollectorDetails: api.OpenMetadataCollectorDetails{
-			RunningVersion: se.buildVersion,
+			RunningVersion: cleanupBuildVersion(se.buildVersion),
 		},
 		NetworkDetails: api.OpenMetadataNetworkDetails{
 			HostIPAddress: ip,
